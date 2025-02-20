@@ -8,10 +8,7 @@ export class UsersController {
 	@Get(":id")
 	public async getById(@Param("id") id: string) {}
 
-	@Put(":id")
-	public async updateById(@Param("id") id: string) {}
-
-	@Get("my")
+	@Get("my-profile")
 	public async get() {}
 
 	@Delete(":id")
