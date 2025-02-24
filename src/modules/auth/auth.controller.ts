@@ -1,13 +1,13 @@
-import { Controller, Post } from '@nestjs/common';
+import { Controller, Post } from "@nestjs/common";
 
-@Controller('auth')
+@Controller("auth")
 export class AuthController {
-	@Post('login')
+	@Post("login")
 	public async login() {}
 
-	@Post('register')
+	@Post("register")
 	public async register() {}
 
-	@Post('refresh-token')
+	@Post("refresh-token")
 	public async refreshToken() {}
 }

@@ -1,3 +1,5 @@
+import { validate } from "class-validator";
+
 export abstract class Entity<TId extends string | number> {
 	protected id?: TId;
 
@@ -5,5 +7,7 @@ export abstract class Entity<TId extends string | number> {
 		this.id = id;
 	}
 
-	protected async validate() {}
+	protected async validate() {
+		const errors = await validate(this);
+	}
 }
