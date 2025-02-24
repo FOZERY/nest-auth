@@ -9,10 +9,10 @@ export class UserPrismaMapper {
 			email: prismaUser.email,
 			login: prismaUser.login,
 			password: prismaUser.password,
-			about: prismaUser.about ?? undefined,
+			about: prismaUser.about,
 			createdAt: prismaUser.createdAt,
 			updatedAt: prismaUser.updatedAt,
-			deletedAt: prismaUser.deletedAt ?? undefined,
+			deletedAt: prismaUser.deletedAt,
 		});
 	}
 }

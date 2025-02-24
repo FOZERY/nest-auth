@@ -23,6 +23,15 @@ export class UsersRepositoryImpl implements UsersRepository {
 	}
 
 	public async create(user: User): Promise<void> {
-		throw new Error("not implemented");
+		await this.prisma.user.create({
+			data: {
+				id: user.id,
+				age: user.age,
+				email: user.email,
+				login: user.login,
+				password: user.password,
+				about: user.about,
+			},
+		});
 	}
 }
