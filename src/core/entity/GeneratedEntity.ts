@@ -1,4 +1,4 @@
-import { BadRequestException } from "@nestjs/common";
+import { InternalServerErrorException } from "@nestjs/common";
 import { validate, ValidationError } from "class-validator";
 
 export abstract class EntityWithGeneratedId<TId extends number | string> {
@@ -11,7 +11,7 @@ export abstract class EntityWithGeneratedId<TId extends number | string> {
 	public async validate(): Promise<void> {
 		const errors = await validate(this);
 		if (errors.length > 0) {
-			throw new BadRequestException("Domain entity validation error", {
+			throw new InternalServerErrorException("Domain entity validation error", {
 				cause: this.formatValidationErrors(errors),
 				description: "Domain entity validation error",
 			});

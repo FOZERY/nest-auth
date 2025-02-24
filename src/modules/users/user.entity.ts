@@ -1,7 +1,16 @@
 import argon, { argon2id } from "argon2";
-import { IsDate, IsEmail, IsNumber, IsString, Max, MaxLength, Min } from "class-validator";
+import {
+	IsDate,
+	IsEmail,
+	IsNumber,
+	IsOptional,
+	IsString,
+	Max,
+	MaxLength,
+	Min,
+} from "class-validator";
 import { randomUUID } from "crypto";
-import { Entity } from "../../core/entity/entity";
+import { Entity } from "../../core/entity/Entity";
 import { Nullable } from "../../core/types/utility.types";
 export interface UserProps {
 	id?: string;
@@ -32,16 +41,20 @@ export class User extends Entity<string> {
 	private _age: number;
 
 	@IsString()
+	@IsOptional()
 	@MaxLength(1000)
 	private _about: Nullable<string>;
 
 	@IsDate()
+	@IsOptional()
 	private _updatedAt: Nullable<Date>;
 
 	@IsDate()
+	@IsOptional()
 	private _createdAt: Nullable<Date>;
 
 	@IsDate()
+	@IsOptional()
 	private _deletedAt: Nullable<Date>;
 
 	private constructor(props: UserProps) {
@@ -78,6 +91,10 @@ export class User extends Entity<string> {
 	}
 
 	public async hashPassword() {
+		if (this._password.startsWith("$argon2")) {
+			return;
+		}
+
 		this._password = await argon.hash(this._password, {
 			type: argon2id,
 		});

@@ -22,6 +22,20 @@ export class UsersRepositoryImpl implements UsersRepository {
 		return await UserPrismaMapper.toEntity(prismaUser);
 	}
 
+	public async findByEmail(email: string): Promise<User | null> {
+		const prismaUser = await this.prisma.user.findUnique({
+			where: {
+				email: email,
+			},
+		});
+
+		if (!prismaUser) {
+			return null;
+		}
+
+		return await UserPrismaMapper.toEntity(prismaUser);
+	}
+
 	public async create(user: User): Promise<void> {
 		await this.prisma.user.create({
 			data: {
