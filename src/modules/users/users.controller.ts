@@ -1,15 +1,11 @@
-import { Controller, Delete, Get, Param, Put } from "@nestjs/common";
+import { Controller, Delete, Get, Param, Put, Request, UseGuards } from "@nestjs/common";
+import { AccessTokenGuard } from "../auth/guards/access-token-auth.guard";
 
 @Controller("users")
 export class UsersController {
 	@Get()
 	public async getAll() {
 		return "get all users";
-	}
-
-	@Get(":id")
-	public async getById(@Param("id") id: string) {
-		return `get user with id=${id}`;
 	}
 
 	@Put()
@@ -20,8 +16,11 @@ export class UsersController {
 		return `delete user with id=${id}`;
 	}
 
+	@UseGuards(AccessTokenGuard)
 	@Get("my-profile")
-	public async getMyProfile() {}
+	public async getMyProfile(@Request() req) {
+		return req.user;
+	}
 
 	@Put("my-profile")
 	public async updateMyProfile() {}
