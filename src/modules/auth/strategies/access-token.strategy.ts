@@ -15,7 +15,6 @@ export class AccessTokenStrategy extends PassportStrategy(Strategy, "access-toke
 	}
 
 	async validate(payload: AuthenticatedRequestUser) {
-		console.log(payload);
 		return payload;
 	}
 }
