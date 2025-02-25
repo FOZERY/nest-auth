@@ -1,9 +1,11 @@
 import {
 	IsEmail,
+	IsIP,
 	IsNotEmpty,
 	IsNumber,
 	IsOptional,
 	IsString,
+	IsUUID,
 	Max,
 	MaxLength,
 	Min,
@@ -35,4 +37,16 @@ export class RegisterUserDTO {
 	@IsNotEmpty()
 	@MaxLength(1000)
 	about?: string;
+
+	@IsIP()
+	@IsNotEmpty()
+	ipAddress: string;
+
+	@IsUUID()
+	@IsNotEmpty()
+	deviceId: string;
+
+	@IsString()
+	@IsNotEmpty()
+	userAgent: string;
 }

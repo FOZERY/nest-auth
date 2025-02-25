@@ -1,6 +1,7 @@
 import { Body, Controller, Get, HttpCode, Post, Req, Res, UseGuards } from "@nestjs/common";
 import { Request, Response } from "express";
 import { AuthService } from "./auth.service";
+import { LoginUserDTO } from "./dto/login-user.dto";
 import { RegisterUserDTO } from "./dto/register-user.dto";
 import { LocalAuthGuard } from "./guards/local-auth.guard";
 import { AuthenticatedRequest } from "./types/authenticated-request.type";
@@ -13,24 +14,45 @@ export class AuthController {
 	@UseGuards(LocalAuthGuard)
 	@Post("login")
 	public async login(
+		@Body() dto: LoginUserDTO,
 		@Req() req: AuthenticatedRequest,
 		@Res({ passthrough: true }) res: Response,
 	) {
-		const token = await this.authService.login(req.user);
+		const { accessToken, refreshSession } = await this.authService.login({
+			id: req.user.id,
+			email: req.user.email,
+			login: req.user.login,
+			deviceId: dto.deviceId,
+			ipAddress: dto.ipAddress,
+			userAgent: dto.userAgent,
+		});
+
+		res.cookie("refreshToken", refreshSession.refreshToken, {
+			httpOnly: true,
+			maxAge: refreshSession.expiresIn,
+			// sameSite: 'strict',
+			// secure:
+		});
+
 		return {
-			message: "User successfully logged in.",
-			jwt: token,
+			accessToken: accessToken,
 		};
 	}
 
 	@HttpCode(201)
 	@Post("register")
-	public async register(@Body() dto: RegisterUserDTO) {
-		const token = await this.authService.register(dto);
+	public async register(@Body() dto: RegisterUserDTO, @Res({ passthrough: true }) res: Response) {
+		const { accessToken, refreshSession } = await this.authService.register(dto);
+
+		res.cookie("refreshToken", refreshSession.refreshToken, {
+			httpOnly: true,
+			maxAge: refreshSession.expiresIn,
+			// sameSite: 'strict',
+			// secure:
+		});
 
 		return {
-			message: "User successfully created.",
-			jwt: token,
+			accessToken: accessToken,
 		};
 	}
 

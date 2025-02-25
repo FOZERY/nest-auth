@@ -1,4 +1,4 @@
-import { User as PrismaUser } from "@prisma/client";
+import { users as PrismaUser } from "@prisma/client";
 import { User } from "../../../user.entity";
 
 export class UserPrismaMapper {
@@ -10,9 +10,9 @@ export class UserPrismaMapper {
 			login: prismaUser.login,
 			password: prismaUser.password,
 			about: prismaUser.about,
-			createdAt: prismaUser.createdAt,
-			updatedAt: prismaUser.updatedAt,
-			deletedAt: prismaUser.deletedAt,
+			createdAt: prismaUser.created_at,
+			updatedAt: prismaUser.updated_at,
+			deletedAt: prismaUser.deleted_at,
 		});
 	}
 }

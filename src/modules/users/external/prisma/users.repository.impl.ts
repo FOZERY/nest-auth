@@ -9,7 +9,7 @@ export class UsersRepositoryImpl implements UsersRepository {
 	constructor(private readonly prisma: PrismaService) {}
 
 	public async findByLogin(login: string): Promise<User | null> {
-		const prismaUser = await this.prisma.user.findUnique({
+		const prismaUser = await this.prisma.users.findUnique({
 			where: {
 				login: login,
 			},
@@ -23,7 +23,7 @@ export class UsersRepositoryImpl implements UsersRepository {
 	}
 
 	public async findByEmail(email: string): Promise<User | null> {
-		const prismaUser = await this.prisma.user.findUnique({
+		const prismaUser = await this.prisma.users.findUnique({
 			where: {
 				email: email,
 			},
@@ -37,7 +37,7 @@ export class UsersRepositoryImpl implements UsersRepository {
 	}
 
 	public async create(user: User): Promise<void> {
-		await this.prisma.user.create({
+		await this.prisma.users.create({
 			data: {
 				id: user.id,
 				age: user.age,
