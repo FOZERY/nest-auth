@@ -70,6 +70,10 @@ export class User extends Entity<string> {
 		this._deletedAt = props.deletedAt ?? null;
 	}
 
+	public get id(): string {
+		return this._id!;
+	}
+
 	public get login(): string {
 		return this._login;
 	}
