@@ -1,4 +1,5 @@
-import { Body, Controller, HttpCode, Post, Request, UseGuards } from "@nestjs/common";
+import { Body, Controller, Get, HttpCode, Post, Req, Res, UseGuards } from "@nestjs/common";
+import { Request, Response } from "express";
 import { AuthService } from "./auth.service";
 import { RegisterUserDTO } from "./dto/register-user.dto";
 import { LocalAuthGuard } from "./guards/local-auth.guard";
@@ -11,7 +12,10 @@ export class AuthController {
 	@HttpCode(200)
 	@UseGuards(LocalAuthGuard)
 	@Post("login")
-	public async login(@Request() req: AuthenticatedRequest) {
+	public async login(
+		@Req() req: AuthenticatedRequest,
+		@Res({ passthrough: true }) res: Response,
+	) {
 		const token = await this.authService.login(req.user);
 		return {
 			message: "User successfully logged in.",
@@ -30,6 +34,8 @@ export class AuthController {
 		};
 	}
 
-	@Post("refresh-token")
-	public async refreshToken() {}
+	@Get("refresh-token")
+	public async refreshToken(@Req() req: Request) {
+		const refreshToken = req.cookies["refresh_token"];
+	}
 }

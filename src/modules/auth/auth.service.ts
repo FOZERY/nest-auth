@@ -1,4 +1,4 @@
-import { ConflictException, Injectable } from "@nestjs/common";
+import { ConflictException, Inject, Injectable } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
 import argon2 from "argon2";
 import { UsersService } from "../users/users.service";
@@ -8,8 +8,11 @@ import { AuthenticatedRequestUser } from "./types/authenticated-request.type";
 export class AuthService {
 	constructor(
 		private readonly usersService: UsersService,
-		private readonly jwtService: JwtService,
-	) {}
+		@Inject("AccessJwtService") private readonly accessJwtService: JwtService,
+		@Inject("RefreshJwtService") private readonly refreshJwtService: JwtService,
+	) {
+		console.log(accessJwtService);
+	}
 
 	public async validateUser(
 		loginOrEmail: string,
@@ -34,8 +37,8 @@ export class AuthService {
 		};
 	}
 
-	public async login(userPayload: AuthenticatedRequestUser): Promise<string> {
-		return await this.jwtService.signAsync(userPayload);
+	public async login(userPayload: AuthenticatedRequestUser) {
+		return await this.accessJwtService.signAsync(userPayload);
 	}
 
 	public async register(dto: RegisterUserDTO): Promise<string> {
@@ -53,12 +56,12 @@ export class AuthService {
 
 		const user = await this.usersService.create(dto);
 
-		return await this.jwtService.signAsync({
+		return await this.accessJwtService.signAsync({
 			id: user.id,
 			login: user.login,
 			email: user.email,
 		});
 	}
 
-	public async check() {}
+	public async refreshToken() {}
 }
