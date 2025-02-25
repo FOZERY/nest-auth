@@ -5,7 +5,7 @@ import { AuthService } from "../auth.service";
 import { AuthenticatedRequestUser } from "../types/authenticated-request.type";
 
 @Injectable()
-export class LocalStrategy extends PassportStrategy(Strategy) {
+export class LocalStrategy extends PassportStrategy(Strategy, "local") {
 	constructor(private readonly authService: AuthService) {
 		super({
 			usernameField: "loginOrEmail",

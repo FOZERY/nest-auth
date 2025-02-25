@@ -1,4 +1,5 @@
 import { ConflictException, Inject, Injectable } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
 import { JwtService } from "@nestjs/jwt";
 import argon2 from "argon2";
 import { randomUUID } from "node:crypto";
@@ -7,11 +8,13 @@ import { CreateRefreshSessionDTO } from "./dto/create-refresh-session.dto";
 import { LoginWithUserPayloadDTO } from "./dto/login-user.dto";
 import { RegisterUserDTO } from "./dto/register-user.dto";
 import { RefreshSessionsRepositoryImpl } from "./external/prisma/refreshSessions.repository.impl";
+import { parseTimeToMilliseconds } from "./helpers/helpers";
 import { RefreshSessionsRepository } from "./repositories/refreshSessions.repository";
 import { AuthenticatedRequestUser } from "./types/authenticated-request.type";
 @Injectable()
 export class AuthService {
 	constructor(
+		private readonly configService: ConfigService,
 		private readonly usersService: UsersService,
 		@Inject(RefreshSessionsRepositoryImpl)
 		private readonly refreshSessionRepository: RefreshSessionsRepository,
@@ -93,7 +96,9 @@ export class AuthService {
 
 	private async createRefreshSession(dto: CreateRefreshSessionDTO) {
 		const refreshToken = randomUUID();
-		const expiresIn = Date.now() + 7 * 24 * 60 * 60 * 1000;
+		const expiresIn =
+			Date.now() +
+			parseTimeToMilliseconds(this.configService.get<string>("REFRESH_EXPIRED_IN")!);
 		await this.refreshSessionRepository.createRefreshSession({
 			refreshToken: refreshToken,
 			userId: dto.userId,
