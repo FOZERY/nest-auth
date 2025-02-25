@@ -1,5 +1,6 @@
 import { Module } from "@nestjs/common";
 import { PassportModule } from "@nestjs/passport";
+import { PrismaModule } from "../../external/persistence/prisma/prisma.module";
 import { PrismaService } from "../../external/persistence/prisma/prisma.service";
 import { UsersModule } from "../users/users.module";
 import { AuthController } from "./auth.controller";
@@ -11,14 +12,8 @@ import { AccessTokenStrategy } from "./strategies/access-token.strategy";
 import { LocalStrategy } from "./strategies/local.strategy";
 
 @Module({
-	imports: [UsersModule, PassportModule, AccessJwtModule, RefreshJwtModule],
+	imports: [PrismaModule, UsersModule, PassportModule, AccessJwtModule, RefreshJwtModule],
 	controllers: [AuthController],
-	providers: [
-		AuthService,
-		RefreshSessionsRepositoryImpl,
-		LocalStrategy,
-		AccessTokenStrategy,
-		PrismaService,
-	],
+	providers: [AuthService, RefreshSessionsRepositoryImpl, LocalStrategy, AccessTokenStrategy],
 })
 export class AuthModule {}
