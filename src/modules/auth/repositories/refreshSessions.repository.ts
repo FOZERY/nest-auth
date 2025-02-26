@@ -1,4 +1,4 @@
-import { RefreshSession } from "../interfaces/RefreshSession";
+import { RefreshSession } from "../entities/RefreshSession";
 
 export interface RefreshSessionsRepository {
 	createRefreshSession(session: RefreshSession): Promise<void>;

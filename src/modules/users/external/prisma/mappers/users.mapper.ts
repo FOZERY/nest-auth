@@ -1,5 +1,5 @@
 import { users as PrismaUser } from "@prisma/client";
-import { User } from "../../../user.entity";
+import { User } from "../../../entities/User";
 
 export class UserPrismaMapper {
 	static async toEntity(prismaUser: PrismaUser): Promise<User> {

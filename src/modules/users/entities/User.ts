@@ -11,8 +11,9 @@ import {
 	Min,
 } from "class-validator";
 import { randomUUID } from "crypto";
-import { Entity } from "../../core/entity/Entity";
-import { Nullable } from "../../core/types/utility.types";
+import { Entity } from "../../../core/entity/Entity";
+import { Nullable } from "../../../core/types/utility.types";
+
 export interface UserProps {
 	id?: string;
 	login: string;

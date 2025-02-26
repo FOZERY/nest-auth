@@ -29,6 +29,5 @@ model refresh_sessions {
   ip_address    String
   user_agent    String?
   expires_in    BigInt
-  status        String   @default("active")
   created_at    DateTime @default(now())
 }

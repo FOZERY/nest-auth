@@ -1,6 +1,6 @@
 import { validate, ValidationError } from "class-validator";
 
-export abstract class Entity<TId extends number | string> {
+export abstract class Entity<TId extends number | string | bigint> {
 	protected _id?: TId;
 
 	constructor(id?: TId) {

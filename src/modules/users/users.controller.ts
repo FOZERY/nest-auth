@@ -12,6 +12,7 @@ import {
 	UseGuards,
 } from "@nestjs/common";
 import { AccessTokenGuard } from "../auth/guards/access-token-auth.guard";
+import { RequestWithUser } from "../auth/types/auth.types";
 import { UpdateMyProfileDTO } from "./dto/update-my-profile.dto";
 import { UsersService } from "./users.service";
 
@@ -22,7 +23,7 @@ export class UsersController {
 	@HttpCode(200)
 	@UseGuards(AccessTokenGuard)
 	@Get("my-profile")
-	public async getMyProfile(@Request() req) {
+	public async getMyProfile(@Request() req: RequestWithUser) {
 		const user = await this.usersService.findById(req.user.id);
 
 		if (!user) {
@@ -41,7 +42,7 @@ export class UsersController {
 
 	@UseGuards(AccessTokenGuard)
 	@Patch("my-profile")
-	public async updateMyProfile(@Req() req: any, @Body() dto: UpdateMyProfileDTO) {
+	public async updateMyProfile(@Req() req: RequestWithUser, @Body() dto: UpdateMyProfileDTO) {
 		await this.usersService.update({
 			id: req.user.id,
 			...dto,
@@ -51,7 +52,7 @@ export class UsersController {
 	@HttpCode(200)
 	@UseGuards(AccessTokenGuard)
 	@Delete("my-profile")
-	public async deleteMyProfile(@Req() req) {
+	public async deleteMyProfile(@Req() req: RequestWithUser) {
 		await this.usersService.deleteById(req.user.id);
 	}
 }

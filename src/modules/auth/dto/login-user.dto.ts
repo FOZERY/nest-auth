@@ -1,12 +1,4 @@
-import {
-	IsEmail,
-	IsIP,
-	IsNotEmpty,
-	IsOptional,
-	IsString,
-	IsUUID,
-	ValidateIf,
-} from "class-validator";
+import { IsEmail, IsIP, IsNotEmpty, IsOptional, IsString, ValidateIf } from "class-validator";
 
 export class LoginUserDTO {
 	@ValidateIf((o) => !o.email)

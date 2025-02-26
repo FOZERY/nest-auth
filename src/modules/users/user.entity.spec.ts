@@ -1,4 +1,4 @@
-import { User } from "./user.entity";
+import { User } from "./entities/User";
 
 describe("UserEntity", () => {
 	let user: User;

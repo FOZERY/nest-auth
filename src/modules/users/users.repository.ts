@@ -1,4 +1,4 @@
-import { User } from "./user.entity";
+import { User } from "./entities/User";
 
 export interface UsersRepository {
 	findById(id: string, withDeleted?: boolean): Promise<User | null>;

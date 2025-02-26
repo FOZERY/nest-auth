@@ -8,10 +8,11 @@ import { CreateRefreshSessionDTO } from "./dto/create-refresh-session.dto";
 import { LoginUserDTO } from "./dto/login-user.dto";
 import { RefreshTokenDTO } from "./dto/refresh-token.dto";
 import { RegisterUserDTO } from "./dto/register-user.dto";
+import { RefreshSession } from "./entities/RefreshSession";
 import { RefreshSessionsRepositoryImpl } from "./external/prisma/refreshSessions.repository.impl";
 import { parseTimeToMilliseconds } from "./helpers/parseTimeToMilliseconds";
 import { RefreshSessionsRepository } from "./repositories/refreshSessions.repository";
-import { Tokens } from "./types/tokens.type";
+import { AccessRefreshTokens } from "./types/auth.types";
 
 @Injectable()
 export class AuthService {
@@ -23,16 +24,16 @@ export class AuthService {
 		@Inject("AccessJwtService") private readonly accessJwtService: JwtService,
 	) {}
 
-	public async login(dto: LoginUserDTO): Promise<Tokens> {
+	public async login(dto: LoginUserDTO): Promise<AccessRefreshTokens> {
 		const user = dto.login
 			? await this.usersService.findByLogin(dto.login)
 			: await this.usersService.findByEmail(dto.email!);
 
 		if (!user || !(await argon2.verify(user.password, dto.password))) {
-			throw new UnauthorizedException();
+			throw new UnauthorizedException("Неправильно указан логин/email или пароль.");
 		}
 
-		const userSessions =
+		let userSessions =
 			await this.refreshSessionRepository.getRefreshSessionsByUserIdOrderedByCreatedAtAsc(
 				user.id,
 			);
@@ -45,7 +46,12 @@ export class AuthService {
 			await this.refreshSessionRepository.deleteRefreshSessionByToken(
 				sameFingerprintSession.refreshToken,
 			);
-		} else if (userSessions.length >= 5) {
+			userSessions = userSessions.filter(
+				(s) => s.refreshToken !== sameFingerprintSession.refreshToken,
+			);
+		}
+
+		if (userSessions.length >= 5) {
 			await this.refreshSessionRepository.deleteRefreshSessionByToken(
 				userSessions[0].refreshToken,
 			);
@@ -104,24 +110,27 @@ export class AuthService {
 		};
 	}
 
-	public async refreshToken(refreshToken: string, dto: RefreshTokenDTO): Promise<Tokens> {
-		const existingToken =
+	public async refreshToken(
+		refreshToken: string,
+		dto: RefreshTokenDTO,
+	): Promise<AccessRefreshTokens> {
+		const existingSession =
 			await this.refreshSessionRepository.getRefreshSessionByToken(refreshToken);
 
-		if (!existingToken || Date.now() > existingToken.expiresIn) {
+		if (!existingSession || Date.now() > existingSession.expiresIn) {
 			throw new UnauthorizedException();
 		}
 
 		await this.refreshSessionRepository.deleteRefreshSessionByToken(refreshToken);
 
-		const user = await this.usersService.findById(existingToken.userId);
+		const user = await this.usersService.findById(existingSession.userId);
 
 		if (!user) {
 			throw new UnauthorizedException();
 		}
 
 		const refreshSession = await this.createRefreshSession({
-			userId: existingToken.userId,
+			userId: existingSession.userId,
 			fingerprint: dto.fingerprint,
 			ipAddress: dto.ipAddress,
 			userAgent: dto.userAgent,
@@ -144,15 +153,16 @@ export class AuthService {
 				parseTimeToMilliseconds(this.configService.get<string>("REFRESH_EXPIRED_IN")!),
 		);
 
-		await this.refreshSessionRepository.createRefreshSession({
-			refreshToken: refreshToken,
-			userId: dto.userId,
-			userAgent: dto.userAgent,
-			fingerprint: dto.fingerprint,
-			expiresIn: expiresIn,
-			ipAddress: dto.ipAddress,
-			status: "active",
-		});
+		await this.refreshSessionRepository.createRefreshSession(
+			await RefreshSession.create({
+				refreshToken: refreshToken,
+				userId: dto.userId,
+				userAgent: dto.userAgent,
+				fingerprint: dto.fingerprint,
+				expiresIn: expiresIn,
+				ipAddress: dto.ipAddress,
+			}),
+		);
 
 		return {
 			refreshToken: refreshToken,

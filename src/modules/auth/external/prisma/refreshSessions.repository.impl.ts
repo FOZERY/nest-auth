@@ -1,7 +1,8 @@
 import { Injectable } from "@nestjs/common";
 import { PrismaService } from "../../../../external/persistence/prisma/prisma.service";
-import { RefreshSession } from "../../interfaces/RefreshSession";
+import { RefreshSession } from "../../entities/RefreshSession";
 import { RefreshSessionsRepository } from "../../repositories/refreshSessions.repository";
+import { RefreshSessionsMapper } from "./mappers/refreshSessions.mapper";
 
 @Injectable()
 export class RefreshSessionsRepositoryImpl implements RefreshSessionsRepository {
@@ -18,17 +19,7 @@ export class RefreshSessionsRepositoryImpl implements RefreshSessionsRepository 
 			return null;
 		}
 
-		return {
-			id: refreshSession.id,
-			userId: refreshSession.user_id,
-			refreshToken: refreshSession.refresh_token,
-			fingerprint: refreshSession.fingerprint,
-			expiresIn: refreshSession.expires_in,
-			ipAddress: refreshSession.ip_address,
-			userAgent: refreshSession.user_agent,
-			createdAt: refreshSession.created_at,
-			status: refreshSession.status,
-		};
+		return await RefreshSessionsMapper.toEntity(refreshSession);
 	}
 
 	public async getRefreshSessionsByUserIdOrderedByCreatedAtAsc(
@@ -43,17 +34,9 @@ export class RefreshSessionsRepositoryImpl implements RefreshSessionsRepository 
 			},
 		});
 
-		return refreshSessions.map((session) => ({
-			id: session.id,
-			userId: session.user_id,
-			refreshToken: session.refresh_token,
-			fingerprint: session.fingerprint,
-			expiresIn: session.expires_in,
-			ipAddress: session.ip_address,
-			userAgent: session.user_agent,
-			createdAt: session.created_at,
-			status: session.status,
-		}));
+		return await Promise.all(
+			refreshSessions.map(async (session) => await RefreshSessionsMapper.toEntity(session)),
+		);
 	}
 
 	public async deleteRefreshSessionByToken(refreshToken: string): Promise<void> {

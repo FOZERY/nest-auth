@@ -1,8 +1,8 @@
 import { Inject, Injectable, NotFoundException } from "@nestjs/common";
 import { CreateUserDTO } from "./dto/create-user.dto";
 import { UpdateUserDto } from "./dto/update-user.dto";
+import { User } from "./entities/User";
 import { UsersRepositoryImpl } from "./external/prisma/users.repository.impl";
-import { User } from "./user.entity";
 import { UsersRepository } from "./users.repository";
 
 @Injectable()
