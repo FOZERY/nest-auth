@@ -36,12 +36,3 @@ export class LoginUserDTO {
 	@IsString()
 	userAgent?: string;
 }
-
-export interface LoginWithUserPayloadDTO {
-	id: string;
-	email: string;
-	login: string;
-	deviceId: string;
-	ipAddress: string;
-	userAgent: string;
-}

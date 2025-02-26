@@ -1,17 +1,9 @@
-import {
-	BadRequestException,
-	Body,
-	Controller,
-	Get,
-	HttpCode,
-	Post,
-	Req,
-	Res,
-} from "@nestjs/common";
+import { BadRequestException, Body, Controller, HttpCode, Post, Req, Res } from "@nestjs/common";
 import { Request, Response } from "express";
 import { AuthService } from "./auth.service";
 import { LoginUserDTO } from "./dto/login-user.dto";
 import { LogoutUserDTO } from "./dto/logout-user.dto";
+import { RefreshTokenDTO } from "./dto/refresh-token.dto";
 import { RegisterUserDTO } from "./dto/register-user.dto";
 
 @Controller("auth")
@@ -78,6 +70,33 @@ export class AuthController {
 		res.clearCookie("refreshToken");
 	}
 
-	@Get("refresh-token")
-	public async refreshToken(@Req() req: Request) {}
+	@HttpCode(200)
+	@Post("refresh-token")
+	public async refreshToken(
+		@Req() req: Request,
+		@Res({ passthrough: true }) res: Response,
+		@Body() dto: RefreshTokenDTO,
+	) {
+		const refreshToken = req.cookies["refreshToken"];
+
+		if (!refreshToken) {
+			throw new BadRequestException("No refresh token provided");
+		}
+
+		const { accessToken, refreshSession } = await this.authService.refreshToken(
+			refreshToken,
+			dto,
+		);
+
+		res.cookie("refreshToken", refreshSession.refreshToken, {
+			httpOnly: true,
+			maxAge: Number(refreshSession.expiresIn),
+			// sameSite: 'strict',
+			// secure:
+		});
+
+		return {
+			accessToken: accessToken,
+		};
+	}
 }

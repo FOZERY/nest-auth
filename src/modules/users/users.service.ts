@@ -8,6 +8,10 @@ import { UsersRepository } from "./users.repository";
 export class UsersService {
 	constructor(@Inject(UsersRepositoryImpl) private readonly usersRepository: UsersRepository) {}
 
+	public async findById(id: string) {
+		return await this.usersRepository.findById(id);
+	}
+
 	public async create(dto: CreateUserDTO): Promise<User> {
 		const user = await User.create({
 			login: dto.login,

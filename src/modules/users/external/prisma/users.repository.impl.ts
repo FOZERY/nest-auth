@@ -8,6 +8,21 @@ import { UserPrismaMapper } from "./mappers/users.mapper";
 export class UsersRepositoryImpl implements UsersRepository {
 	constructor(private readonly prisma: PrismaService) {}
 
+	public async findById(id: string): Promise<User | null> {
+		const prismaUser = await this.prisma.users.findUnique({
+			where: {
+				id: id,
+				deleted_at: null,
+			},
+		});
+
+		if (!prismaUser) {
+			return null;
+		}
+
+		return await UserPrismaMapper.toEntity(prismaUser);
+	}
+
 	public async findByLogin(login: string): Promise<User | null> {
 		const prismaUser = await this.prisma.users.findUnique({
 			where: {
