@@ -16,14 +16,14 @@ export class AuthController {
 			login: dto.login,
 			email: dto.email,
 			password: dto.password,
-			deviceId: dto.deviceId,
+			fingerprint: dto.fingerprint,
 			ipAddress: dto.ipAddress,
 			userAgent: dto.userAgent,
 		});
 
 		res.cookie("refreshToken", refreshSession.refreshToken, {
 			httpOnly: true,
-			maxAge: Math.floor(refreshSession.expiresIn / 1000),
+			maxAge: Math.floor(Number(refreshSession.expiresIn) / 1000),
 
 			// sameSite: 'strict',
 			// secure:
@@ -41,7 +41,7 @@ export class AuthController {
 
 		res.cookie("refreshToken", refreshSession.refreshToken, {
 			httpOnly: true,
-			maxAge: refreshSession.expiresIn,
+			maxAge: Number(refreshSession.expiresIn),
 			// sameSite: 'strict',
 			// secure:
 		});

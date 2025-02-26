@@ -48,7 +48,7 @@ export class AuthService {
 		accessToken: string;
 		refreshSession: {
 			refreshToken: string;
-			expiresIn: number;
+			expiresIn: bigint;
 		};
 	}> {
 		const user = dto.login
@@ -59,11 +59,28 @@ export class AuthService {
 			throw new UnauthorizedException();
 		}
 
-		const refreshSessionx = await this.refreshSessionRepository.getRefreshSessionsByUserId;
+		const userSessions =
+			await this.refreshSessionRepository.getRefreshSessionsByUserIdOrderedByCreatedAtAsc(
+				user.id,
+			);
+
+		const sameFingerprintSession = userSessions.find(
+			(session) => session.fingerprint === dto.fingerprint,
+		);
+
+		if (sameFingerprintSession) {
+			await this.refreshSessionRepository.deleteRefreshSessionByToken(
+				sameFingerprintSession.refreshToken,
+			);
+		} else if (userSessions.length >= 5) {
+			await this.refreshSessionRepository.deleteRefreshSessionByToken(
+				userSessions[0].refreshToken,
+			);
+		}
 
 		const refreshSession = await this.createRefreshSession({
 			userId: user.id,
-			deviceId: dto.deviceId,
+			fingerprint: dto.fingerprint,
 			ipAddress: dto.ipAddress,
 			userAgent: dto.userAgent,
 		});
@@ -99,7 +116,7 @@ export class AuthService {
 
 		const refreshSession = await this.createRefreshSession({
 			userId: user.id,
-			deviceId: dto.deviceId,
+			fingerprint: dto.fingerprint,
 			ipAddress: dto.ipAddress,
 			userAgent: dto.userAgent,
 		});
@@ -116,15 +133,16 @@ export class AuthService {
 
 	private async createRefreshSession(dto: CreateRefreshSessionDTO) {
 		const refreshToken = randomUUID();
-		const expiresIn =
+		const expiresIn = BigInt(
 			Date.now() +
-			parseTimeToMilliseconds(this.configService.get<string>("REFRESH_EXPIRED_IN")!);
+				parseTimeToMilliseconds(this.configService.get<string>("REFRESH_EXPIRED_IN")!),
+		);
 
 		await this.refreshSessionRepository.createRefreshSession({
 			refreshToken: refreshToken,
 			userId: dto.userId,
 			userAgent: dto.userAgent,
-			deviceId: dto.deviceId,
+			fingerprint: dto.fingerprint,
 			expiresIn: expiresIn,
 			ipAddress: dto.ipAddress,
 			status: "active",

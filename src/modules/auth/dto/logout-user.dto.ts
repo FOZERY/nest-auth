@@ -1,15 +1,15 @@
 import { IsIP, IsNotEmpty, IsString, IsUUID } from "class-validator";
 
 export class LogoutUserDTO {
-	@IsIP()
 	@IsNotEmpty()
+	@IsIP()
 	ipAddress: string;
 
-	@IsUUID()
 	@IsNotEmpty()
+	@IsUUID()
 	deviceId: string;
 
-	@IsString()
 	@IsNotEmpty()
+	@IsString()
 	userAgent: string;
 }

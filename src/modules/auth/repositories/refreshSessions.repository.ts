@@ -5,7 +5,7 @@ export interface RefreshSessionsRepository {
 
 	deleteRefreshSessionByToken(refreshToken: string): Promise<void>;
 
-	getRefreshSessionById(id: string): Promise<RefreshSession>;
+	getRefreshSessionByToken(token: string): Promise<RefreshSession | null>;
 
-	getRefreshSessionsByUserId(userId: string): Promise<RefreshSession[]>;
+	getRefreshSessionsByUserIdOrderedByCreatedAtAsc(userId: string): Promise<RefreshSession[]>;
 }

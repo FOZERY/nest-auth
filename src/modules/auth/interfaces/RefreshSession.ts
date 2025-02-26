@@ -1,11 +1,13 @@
+import { Nullable } from "../../../core/types/utility.types";
+
 export interface RefreshSession {
-	id?: string;
+	id?: bigint;
 	refreshToken: string;
 	userId: string;
-	userAgent: string;
-	deviceId: string;
+	fingerprint: string;
 	ipAddress: string;
-	expiresIn: number;
-	status: "active" | "deactivated";
-	createdAt?: Date;
+	userAgent?: Nullable<string>;
+	expiresIn: bigint;
+	status: string;
+	createdAt?: Nullable<Date>;
 }

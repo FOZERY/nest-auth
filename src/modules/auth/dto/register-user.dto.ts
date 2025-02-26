@@ -12,41 +12,42 @@ import {
 } from "class-validator";
 
 export class RegisterUserDTO {
-	@IsString()
 	@IsNotEmpty()
+	@IsString()
 	@MaxLength(255)
 	login: string;
 
-	@IsEmail()
 	@IsNotEmpty()
+	@IsEmail()
 	@MaxLength(255)
 	email: string;
 
-	@IsString()
 	@IsNotEmpty()
+	@IsString()
 	password: string;
 
-	@IsNumber()
 	@IsNotEmpty()
+	@IsNumber()
 	@Min(0)
 	@Max(150)
 	age: number;
 
 	@IsOptional()
-	@IsString()
 	@IsNotEmpty()
+	@IsString()
 	@MaxLength(1000)
 	about?: string;
 
-	@IsIP()
 	@IsNotEmpty()
+	@IsIP()
 	ipAddress: string;
 
-	@IsUUID()
 	@IsNotEmpty()
-	deviceId: string;
-
 	@IsString()
+	fingerprint: string;
+
+	@IsOptional()
 	@IsNotEmpty()
+	@IsString()
 	userAgent: string;
 }

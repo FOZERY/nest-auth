@@ -1,31 +1,40 @@
-import { IsEmail, IsIP, IsNotEmpty, IsString, IsUUID, ValidateIf } from "class-validator";
+import {
+	IsEmail,
+	IsIP,
+	IsNotEmpty,
+	IsOptional,
+	IsString,
+	IsUUID,
+	ValidateIf,
+} from "class-validator";
 
 export class LoginUserDTO {
-	@IsString()
-	@IsNotEmpty()
 	@ValidateIf((o) => !o.email)
+	@IsNotEmpty()
+	@IsString()
 	login?: string;
 
-	@IsEmail()
-	@IsNotEmpty()
 	@ValidateIf((o) => !o.login)
+	@IsNotEmpty()
+	@IsEmail()
 	email?: string;
 
-	@IsString()
 	@IsNotEmpty()
+	@IsString()
 	password: string;
 
-	@IsIP()
 	@IsNotEmpty()
+	@IsIP()
 	ipAddress: string;
 
-	@IsUUID()
 	@IsNotEmpty()
-	deviceId: string;
-
 	@IsString()
+	fingerprint: string;
+
+	@IsOptional()
 	@IsNotEmpty()
-	userAgent: string;
+	@IsString()
+	userAgent?: string;
 }
 
 export interface LoginWithUserPayloadDTO {
