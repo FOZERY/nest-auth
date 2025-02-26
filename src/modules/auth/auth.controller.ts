@@ -1,27 +1,21 @@
-import { Body, Controller, Get, HttpCode, Post, Req, Res, UseGuards } from "@nestjs/common";
+import { Body, Controller, Get, HttpCode, Post, Req, Res } from "@nestjs/common";
 import { Request, Response } from "express";
 import { AuthService } from "./auth.service";
 import { LoginUserDTO } from "./dto/login-user.dto";
+import { LogoutUserDTO } from "./dto/logout-user.dto";
 import { RegisterUserDTO } from "./dto/register-user.dto";
-import { LocalAuthGuard } from "./guards/local-auth.guard";
-import { AuthenticatedRequest } from "./types/authenticated-request.type";
 
 @Controller("auth")
 export class AuthController {
 	constructor(private readonly authService: AuthService) {}
 
 	@HttpCode(200)
-	@UseGuards(LocalAuthGuard)
 	@Post("login")
-	public async login(
-		@Body() dto: LoginUserDTO,
-		@Req() req: AuthenticatedRequest,
-		@Res({ passthrough: true }) res: Response,
-	) {
+	public async login(@Body() dto: LoginUserDTO, @Res({ passthrough: true }) res: Response) {
 		const { accessToken, refreshSession } = await this.authService.login({
-			id: req.user.id,
-			email: req.user.email,
-			login: req.user.login,
+			login: dto.login,
+			email: dto.email,
+			password: dto.password,
 			deviceId: dto.deviceId,
 			ipAddress: dto.ipAddress,
 			userAgent: dto.userAgent,
@@ -29,7 +23,8 @@ export class AuthController {
 
 		res.cookie("refreshToken", refreshSession.refreshToken, {
 			httpOnly: true,
-			maxAge: refreshSession.expiresIn,
+			maxAge: Math.floor(refreshSession.expiresIn / 1000),
+
 			// sameSite: 'strict',
 			// secure:
 		});
@@ -56,8 +51,20 @@ export class AuthController {
 		};
 	}
 
-	@Get("refresh-token")
-	public async refreshToken(@Req() req: Request) {
-		const refreshToken = req.cookies["refresh_token"];
+	@HttpCode(200)
+	@Post("logout")
+	public async logout(
+		@Req() req: Request,
+		@Res({ passthrough: true }) res: Response,
+		@Body() dto: LogoutUserDTO, // for logging
+	) {
+		const refreshToken = req.cookies["refreshToken"];
+
+		await this.authService.logout(refreshToken);
+
+		res.clearCookie("refreshToken");
 	}
+
+	@Get("refresh-token")
+	public async refreshToken(@Req() req: Request) {}
 }

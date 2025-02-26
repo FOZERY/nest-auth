@@ -1,11 +1,11 @@
-import { ConflictException, Inject, Injectable } from "@nestjs/common";
+import { ConflictException, Inject, Injectable, UnauthorizedException } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { JwtService } from "@nestjs/jwt";
 import argon2 from "argon2";
 import { randomUUID } from "node:crypto";
 import { UsersService } from "../users/users.service";
 import { CreateRefreshSessionDTO } from "./dto/create-refresh-session.dto";
-import { LoginWithUserPayloadDTO } from "./dto/login-user.dto";
+import { LoginUserDTO } from "./dto/login-user.dto";
 import { RegisterUserDTO } from "./dto/register-user.dto";
 import { RefreshSessionsRepositoryImpl } from "./external/prisma/refreshSessions.repository.impl";
 import { parseTimeToMilliseconds } from "./helpers/helpers";
@@ -44,9 +44,25 @@ export class AuthService {
 		};
 	}
 
-	public async login(dto: LoginWithUserPayloadDTO) {
+	public async login(dto: LoginUserDTO): Promise<{
+		accessToken: string;
+		refreshSession: {
+			refreshToken: string;
+			expiresIn: number;
+		};
+	}> {
+		const user = dto.login
+			? await this.usersService.findByLogin(dto.login)
+			: await this.usersService.findByEmail(dto.email!);
+
+		if (!user || !(await argon2.verify(user.password, dto.password))) {
+			throw new UnauthorizedException();
+		}
+
+		const refreshSessionx = await this.refreshSessionRepository.getRefreshSessionsByUserId;
+
 		const refreshSession = await this.createRefreshSession({
-			userId: dto.id,
+			userId: user.id,
 			deviceId: dto.deviceId,
 			ipAddress: dto.ipAddress,
 			userAgent: dto.userAgent,
@@ -55,11 +71,15 @@ export class AuthService {
 		return {
 			refreshSession: refreshSession,
 			accessToken: await this.accessJwtService.signAsync({
-				id: dto.id,
-				login: dto.login,
-				email: dto.email,
+				id: user.id,
+				login: user.login,
+				email: user.email,
 			}),
 		};
+	}
+
+	public async logout(refreshToken: string) {
+		await this.refreshSessionRepository.deleteRefreshSessionByToken(refreshToken);
 	}
 
 	public async register(dto: RegisterUserDTO) {
@@ -99,6 +119,7 @@ export class AuthService {
 		const expiresIn =
 			Date.now() +
 			parseTimeToMilliseconds(this.configService.get<string>("REFRESH_EXPIRED_IN")!);
+
 		await this.refreshSessionRepository.createRefreshSession({
 			refreshToken: refreshToken,
 			userId: dto.userId,

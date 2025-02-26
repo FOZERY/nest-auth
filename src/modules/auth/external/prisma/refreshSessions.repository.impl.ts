@@ -6,6 +6,9 @@ import { RefreshSessionsRepository } from "../../repositories/refreshSessions.re
 @Injectable()
 export class RefreshSessionsRepositoryImpl implements RefreshSessionsRepository {
 	constructor(private readonly prisma: PrismaService) {}
+	deleteRefreshSessionByToken(refreshToken: string): Promise<void> {
+		throw new Error("Method not implemented.");
+	}
 
 	public async createRefreshSession(session: RefreshSession): Promise<void> {
 		await this.prisma.refresh_sessions.create({

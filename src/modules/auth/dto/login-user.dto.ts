@@ -1,9 +1,15 @@
-import { IsIP, IsNotEmpty, IsString, IsUUID } from "class-validator";
+import { IsEmail, IsIP, IsNotEmpty, IsString, IsUUID, ValidateIf } from "class-validator";
 
 export class LoginUserDTO {
 	@IsString()
 	@IsNotEmpty()
-	loginOrEmail?: string;
+	@ValidateIf((o) => !o.email)
+	login?: string;
+
+	@IsEmail()
+	@IsNotEmpty()
+	@ValidateIf((o) => !o.login)
+	email?: string;
 
 	@IsString()
 	@IsNotEmpty()
