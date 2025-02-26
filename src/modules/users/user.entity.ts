@@ -2,6 +2,7 @@ import argon, { argon2id } from "argon2";
 import {
 	IsDate,
 	IsEmail,
+	IsNotEmpty,
 	IsNumber,
 	IsOptional,
 	IsString,
@@ -25,36 +26,41 @@ export interface UserProps {
 }
 
 export class User extends Entity<string> {
+	@IsNotEmpty()
 	@IsString()
 	@MaxLength(255)
 	private _login: string;
 
+	@IsNotEmpty()
 	@IsEmail()
 	private _email: string;
 
+	@IsNotEmpty()
 	@IsString()
 	private _password: string;
 
+	@IsNotEmpty()
 	@IsNumber()
 	@Max(150)
 	@Min(0)
 	private _age: number;
 
-	@IsString()
 	@IsOptional()
+	@IsNotEmpty()
+	@IsString()
 	@MaxLength(1000)
 	private _about: Nullable<string>;
 
-	@IsDate()
 	@IsOptional()
+	@IsDate()
 	private _updatedAt: Nullable<Date>;
 
-	@IsDate()
 	@IsOptional()
+	@IsDate()
 	private _createdAt: Nullable<Date>;
 
-	@IsDate()
 	@IsOptional()
+	@IsDate()
 	private _deletedAt: Nullable<Date>;
 
 	private constructor(props: UserProps) {
@@ -78,20 +84,49 @@ export class User extends Entity<string> {
 		return this._login;
 	}
 
+	public async setLogin(login: string) {
+		this._login = login;
+		await this.validate();
+	}
+
 	public get email(): string {
 		return this._email;
+	}
+
+	public async setEmail(email: string) {
+		this._email = email;
+		await this.validate();
 	}
 
 	public get password(): string {
 		return this._password;
 	}
 
+	public async setPassword(password: string) {
+		this._password = password;
+		await this.validate();
+	}
+
 	public get age(): number {
 		return this._age;
 	}
 
+	public async setAge(age: number) {
+		this._age = age;
+		await this.validate();
+	}
+
 	public get about(): Nullable<string> {
 		return this._about;
+	}
+
+	public async setAbout(about: string) {
+		this._about = about;
+		await this.validate();
+	}
+
+	public get createdAt(): Nullable<Date> {
+		return this._createdAt;
 	}
 
 	public async hashPassword() {

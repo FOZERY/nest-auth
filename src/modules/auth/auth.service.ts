@@ -1,10 +1,4 @@
-import {
-	ConflictException,
-	Inject,
-	Injectable,
-	InternalServerErrorException,
-	UnauthorizedException,
-} from "@nestjs/common";
+import { ConflictException, Inject, Injectable, UnauthorizedException } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { JwtService } from "@nestjs/jwt";
 import argon2 from "argon2";
@@ -79,13 +73,13 @@ export class AuthService {
 	}
 
 	public async register(dto: RegisterUserDTO) {
-		const candidateByLogin = await this.usersService.findByLogin(dto.login);
+		const candidateByLogin = await this.usersService.findByLogin(dto.login, true);
 
 		if (candidateByLogin) {
 			throw new ConflictException("Пользователь с таким логином уже существует.");
 		}
 
-		const candidateByEmail = await this.usersService.findByEmail(dto.email);
+		const candidateByEmail = await this.usersService.findByEmail(dto.email, true);
 
 		if (candidateByEmail) {
 			throw new ConflictException("Пользователь с таким email уже существует.");

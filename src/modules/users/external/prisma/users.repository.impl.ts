@@ -8,11 +8,11 @@ import { UserPrismaMapper } from "./mappers/users.mapper";
 export class UsersRepositoryImpl implements UsersRepository {
 	constructor(private readonly prisma: PrismaService) {}
 
-	public async findById(id: string): Promise<User | null> {
+	public async findById(id: string, withDeleted: boolean = false): Promise<User | null> {
 		const prismaUser = await this.prisma.users.findUnique({
 			where: {
 				id: id,
-				deleted_at: null,
+				deleted_at: withDeleted ? undefined : null,
 			},
 		});
 
@@ -23,10 +23,11 @@ export class UsersRepositoryImpl implements UsersRepository {
 		return await UserPrismaMapper.toEntity(prismaUser);
 	}
 
-	public async findByLogin(login: string): Promise<User | null> {
+	public async findByLogin(login: string, withDeleted: boolean = false): Promise<User | null> {
 		const prismaUser = await this.prisma.users.findUnique({
 			where: {
 				login: login,
+				deleted_at: withDeleted ? undefined : null,
 			},
 		});
 
@@ -37,10 +38,11 @@ export class UsersRepositoryImpl implements UsersRepository {
 		return await UserPrismaMapper.toEntity(prismaUser);
 	}
 
-	public async findByEmail(email: string): Promise<User | null> {
+	public async findByEmail(email: string, withDeleted: boolean = false): Promise<User | null> {
 		const prismaUser = await this.prisma.users.findUnique({
 			where: {
 				email: email,
+				deleted_at: withDeleted ? undefined : null,
 			},
 		});
 
@@ -60,6 +62,34 @@ export class UsersRepositoryImpl implements UsersRepository {
 				login: user.login,
 				password: user.password,
 				about: user.about,
+			},
+		});
+	}
+
+	public async update(user: User): Promise<void> {
+		console.log(user);
+		await this.prisma.users.update({
+			data: {
+				id: user.id,
+				age: user.age,
+				email: user.email,
+				login: user.login,
+				password: user.password,
+				about: user.about,
+			},
+			where: {
+				id: user.id,
+			},
+		});
+	}
+
+	public async deleteById(id: string): Promise<void> {
+		await this.prisma.users.update({
+			data: {
+				deleted_at: new Date(),
+			},
+			where: {
+				id: id,
 			},
 		});
 	}
