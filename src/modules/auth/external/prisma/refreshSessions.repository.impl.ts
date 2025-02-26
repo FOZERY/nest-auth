@@ -57,10 +57,9 @@ export class RefreshSessionsRepositoryImpl implements RefreshSessionsRepository 
 	}
 
 	public async deleteRefreshSessionByToken(refreshToken: string): Promise<void> {
-		await this.prisma.refresh_sessions.delete({
-			where: {
-				refresh_token: refreshToken,
-			},
+		// deleteMany чтобы не падала ошибка, если сессии с таким токеном нет
+		await this.prisma.refresh_sessions.deleteMany({
+			where: { refresh_token: refreshToken },
 		});
 	}
 

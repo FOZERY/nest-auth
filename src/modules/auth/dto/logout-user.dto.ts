@@ -1,4 +1,4 @@
-import { IsIP, IsNotEmpty, IsString, IsUUID } from "class-validator";
+import { IsIP, IsNotEmpty, IsOptional, IsString, IsUUID } from "class-validator";
 
 export class LogoutUserDTO {
 	@IsNotEmpty()
@@ -6,10 +6,11 @@ export class LogoutUserDTO {
 	ipAddress: string;
 
 	@IsNotEmpty()
-	@IsUUID()
-	deviceId: string;
+	@IsString()
+	fingerprint: string;
 
+	@IsOptional()
 	@IsNotEmpty()
 	@IsString()
-	userAgent: string;
+	userAgent?: string;
 }

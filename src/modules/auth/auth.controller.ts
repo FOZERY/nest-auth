@@ -1,4 +1,13 @@
-import { Body, Controller, Get, HttpCode, Post, Req, Res } from "@nestjs/common";
+import {
+	BadRequestException,
+	Body,
+	Controller,
+	Get,
+	HttpCode,
+	Post,
+	Req,
+	Res,
+} from "@nestjs/common";
 import { Request, Response } from "express";
 import { AuthService } from "./auth.service";
 import { LoginUserDTO } from "./dto/login-user.dto";
@@ -59,6 +68,10 @@ export class AuthController {
 		@Body() dto: LogoutUserDTO, // for logging
 	) {
 		const refreshToken = req.cookies["refreshToken"];
+
+		if (!refreshToken) {
+			throw new BadRequestException("No refresh token provided");
+		}
 
 		await this.authService.logout(refreshToken);
 

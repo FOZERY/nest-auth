@@ -10,7 +10,6 @@ import { RegisterUserDTO } from "./dto/register-user.dto";
 import { RefreshSessionsRepositoryImpl } from "./external/prisma/refreshSessions.repository.impl";
 import { parseTimeToMilliseconds } from "./helpers/helpers";
 import { RefreshSessionsRepository } from "./repositories/refreshSessions.repository";
-import { AuthenticatedRequestUser } from "./types/authenticated-request.type";
 @Injectable()
 export class AuthService {
 	constructor(
@@ -20,29 +19,6 @@ export class AuthService {
 		private readonly refreshSessionRepository: RefreshSessionsRepository,
 		@Inject("AccessJwtService") private readonly accessJwtService: JwtService,
 	) {}
-
-	public async validateUser(
-		loginOrEmail: string,
-		password: string,
-	): Promise<AuthenticatedRequestUser | null> {
-		const user =
-			(await this.usersService.findByLogin(loginOrEmail)) ||
-			(await this.usersService.findByEmail(loginOrEmail));
-
-		if (!user) {
-			return null;
-		}
-
-		if (!(await argon2.verify(user.password, password))) {
-			return null;
-		}
-
-		return {
-			id: user.id,
-			login: user.login,
-			email: user.email,
-		};
-	}
 
 	public async login(dto: LoginUserDTO): Promise<{
 		accessToken: string;
