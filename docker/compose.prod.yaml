@@ -1,0 +1,48 @@
+services:
+    api:
+        build:
+            context: ../
+            dockerfile: docker/nestjs/Dockerfile
+        container_name: prod-nestjs_api
+        ports:
+            - "${APP_PORT}:3000"
+        environment:
+            NODE_ENV: production
+            POSTGRES_USER: ${POSTGRES_USER}
+            POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+            POSTGRES_DB: ${POSTGRES_DB}
+            JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET}
+            JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
+            REFRESH_EXPIRED_IN: ${REFRESH_EXPIRED_IN}
+            ACCESS_EXPIRED_IN: ${REFRESH_EXPIRED_IN}
+            DATABASE_URL: ${DATABASE_URL}
+            PRISMA_CLIENT_ENGINE_TYPE: ${PRISMA_CLIENT_ENGINE_TYPE}
+        depends_on:
+            - postgres
+        restart: unless-stopped
+        deploy:
+            resources:
+                limits:
+                    cpus: "1"
+                    memory: 1G
+
+    postgres:
+        container_name: prod-postgres
+        image: postgres:16
+        restart: unless-stopped
+        environment:
+            POSTGRES_USER: ${POSTGRES_USER}
+            POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+            POSTGRES_DB: ${POSTGRES_DB}
+        volumes:
+            - postgres-data-prod:/var/lib/postgresql/data
+        ports:
+            - "5432:5432"
+        deploy:
+            resources:
+                limits:
+                    cpus: "1"
+                    memory: 1G
+
+volumes:
+    postgres-data-prod:

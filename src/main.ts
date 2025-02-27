@@ -9,10 +9,11 @@ async function bootstrap() {
 	app.useGlobalPipes(
 		new ValidationPipe({
 			whitelist: true,
-		}),
+		})
 	);
 	app.setGlobalPrefix("/api");
 	app.use(cookieParser());
+	console.log("NODE_ENV", process.env.NODE_ENV);
 
 	const config = app.get(ConfigService);
 
