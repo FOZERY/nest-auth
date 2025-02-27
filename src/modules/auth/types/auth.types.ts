@@ -1,21 +1,19 @@
-import { Request } from "express";
-
-export type RequestWithUser = Request & {
-	user: {
-		id: string;
-		login: string;
-		email: string;
-	};
-};
-
 export type AccessRefreshTokens = {
 	accessToken: string;
 	refreshSession: {
 		refreshToken: string;
-		expiresIn: bigint;
+		expiresIn: number;
 	};
 };
 
 export type AccessTokenResponse = {
 	accessToken: string;
+};
+
+export type AccessJwtPayload = {
+	id: string;
+	login: string;
+	email: string;
+	iat: number;
+	exp: number;
 };

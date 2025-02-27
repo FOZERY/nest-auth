@@ -3,17 +3,17 @@ import { Entity } from "../../../core/entity/Entity";
 import { Nullable } from "../../../core/types/utility.types";
 
 export interface RefreshSessionProps {
-	id?: bigint;
+	id?: number;
 	userId: string;
 	refreshToken: string;
 	fingerprint: string;
 	ipAddress: string;
 	userAgent?: Nullable<string>;
-	expiresIn: bigint;
+	expiresIn: number;
 	createdAt?: Nullable<Date>;
 }
 
-export class RefreshSession extends Entity<bigint> {
+export class RefreshSession extends Entity<number> {
 	@IsUUID()
 	private _refreshToken: string;
 
@@ -33,7 +33,7 @@ export class RefreshSession extends Entity<bigint> {
 	private _userAgent: Nullable<string>;
 
 	@IsInt()
-	private _expiresIn: bigint;
+	private _expiresIn: number;
 
 	@IsOptional()
 	@IsDate()
@@ -49,6 +49,10 @@ export class RefreshSession extends Entity<bigint> {
 		this._userAgent = props.userAgent ?? null;
 		this._expiresIn = props.expiresIn;
 		this._createdAt = props.createdAt ?? null;
+	}
+
+	public get id() {
+		return this._id;
 	}
 
 	public get refreshToken(): string {
@@ -71,7 +75,7 @@ export class RefreshSession extends Entity<bigint> {
 		return this._userAgent;
 	}
 
-	public get expiresIn(): bigint {
+	public get expiresIn(): number {
 		return this._expiresIn;
 	}
 

@@ -5,14 +5,12 @@ import {
 	Get,
 	HttpCode,
 	NotFoundException,
-	Param,
 	Patch,
 	Req,
-	Request,
 	UseGuards,
 } from "@nestjs/common";
+import { RequestWithUser } from "../../common/types/common.types";
 import { AccessTokenGuard } from "../auth/guards/access-token-auth.guard";
-import { RequestWithUser } from "../auth/types/auth.types";
 import { UpdateMyProfileDTO } from "./dto/update-my-profile.dto";
 import { UsersService } from "./users.service";
 
@@ -23,7 +21,7 @@ export class UsersController {
 	@HttpCode(200)
 	@UseGuards(AccessTokenGuard)
 	@Get("my-profile")
-	public async getMyProfile(@Request() req: RequestWithUser) {
+	public async getMyProfile(@Req() req: RequestWithUser) {
 		const user = await this.usersService.findById(req.user.id);
 
 		if (!user) {

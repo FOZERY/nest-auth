@@ -2,6 +2,7 @@ import { MiddlewareConsumer, Module, NestModule } from "@nestjs/common";
 import { ConfigModule } from "@nestjs/config";
 import { LoggerMiddleware } from "./logger.middleware";
 import { AuthModule } from "./modules/auth/auth.module";
+import { TokenModule } from "./modules/token/token.module";
 import { UsersModule } from "./modules/users/users.module";
 
 @Module({
@@ -12,6 +13,7 @@ import { UsersModule } from "./modules/users/users.module";
 		}),
 		UsersModule,
 		AuthModule,
+		TokenModule,
 	],
 	providers: [],
 	controllers: [],

@@ -1,4 +1,5 @@
 import { Inject, Injectable, NotFoundException } from "@nestjs/common";
+import { TokenService } from "../token/token.service";
 import { CreateUserDTO } from "./dto/create-user.dto";
 import { UpdateUserDto } from "./dto/update-user.dto";
 import { User } from "./entities/User";
@@ -7,10 +8,14 @@ import { UsersRepository } from "./users.repository";
 
 @Injectable()
 export class UsersService {
-	constructor(@Inject(UsersRepositoryImpl) private readonly usersRepository: UsersRepository) {}
+	constructor(
+		@Inject(UsersRepositoryImpl) private readonly usersRepository: UsersRepository,
+		private readonly tokenService: TokenService
+	) {}
 
 	public async deleteById(id: string) {
-		return await this.usersRepository.deleteById(id);
+		await this.usersRepository.deleteById(id);
+		await this.tokenService.deleteAllRefreshSessionsByUserId(id);
 	}
 
 	public async findById(id: string, withDeleted: boolean = false) {

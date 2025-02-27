@@ -1,4 +1,4 @@
-import { IsIP, IsNotEmpty, IsOptional, IsString, IsUUID } from "class-validator";
+import { IsIP, IsNotEmpty, IsOptional, IsString } from "class-validator";
 
 export class LogoutUserDTO {
 	@IsNotEmpty()

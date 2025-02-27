@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { PrismaService } from "../../../../external/persistence/prisma/prisma.service";
-import { RefreshSession } from "../../entities/RefreshSession";
+import { RefreshSession } from "../../../token/entities/RefreshSession";
 import { RefreshSessionsRepository } from "../../repositories/refreshSessions.repository";
 import { RefreshSessionsMapper } from "./mappers/refreshSessions.mapper";
 
@@ -22,8 +22,8 @@ export class RefreshSessionsRepositoryImpl implements RefreshSessionsRepository 
 		return await RefreshSessionsMapper.toEntity(refreshSession);
 	}
 
-	public async getRefreshSessionsByUserIdOrderedByCreatedAtAsc(
-		userId: string,
+	public async getAllRefreshSessionsByUserIdOrderedByCreatedAtAsc(
+		userId: string
 	): Promise<RefreshSession[]> {
 		const refreshSessions = await this.prisma.refresh_sessions.findMany({
 			where: {
@@ -35,15 +35,8 @@ export class RefreshSessionsRepositoryImpl implements RefreshSessionsRepository 
 		});
 
 		return await Promise.all(
-			refreshSessions.map(async (session) => await RefreshSessionsMapper.toEntity(session)),
+			refreshSessions.map(async (session) => await RefreshSessionsMapper.toEntity(session))
 		);
-	}
-
-	public async deleteRefreshSessionByToken(refreshToken: string): Promise<void> {
-		// deleteMany чтобы не падала ошибка, если сессии с таким токеном нет
-		await this.prisma.refresh_sessions.deleteMany({
-			where: { refresh_token: refreshToken },
-		});
 	}
 
 	public async createRefreshSession(session: RefreshSession): Promise<void> {
@@ -55,6 +48,33 @@ export class RefreshSessionsRepositoryImpl implements RefreshSessionsRepository 
 				expires_in: session.expiresIn,
 				ip_address: session.ipAddress,
 				user_agent: session.userAgent,
+			},
+		});
+	}
+
+	public async deleteRefreshSessionByToken(refreshToken: string): Promise<void> {
+		// deleteMany чтобы не падала ошибка, если сессии с таким токеном нет
+		await this.prisma.refresh_sessions.deleteMany({
+			where: { refresh_token: refreshToken },
+		});
+	}
+
+	public async deleteAllRefreshSessionsByUserId(userId: string): Promise<void> {
+		await this.prisma.refresh_sessions.deleteMany({
+			where: { user_id: userId },
+		});
+	}
+
+	public async deleteAllRefreshSessionsByUserIdExceptToken(
+		userId: string,
+		refreshToken: string
+	): Promise<void> {
+		await this.prisma.refresh_sessions.deleteMany({
+			where: {
+				user_id: userId,
+				NOT: {
+					refresh_token: refreshToken,
+				},
 			},
 		});
 	}

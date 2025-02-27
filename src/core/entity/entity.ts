@@ -17,6 +17,10 @@ export abstract class Entity<TId extends number | string | bigint> {
 	}
 
 	private formatValidationErrors(errors: ValidationError[]): string {
-		return JSON.stringify(errors, undefined, 2);
+		return JSON.stringify(
+			errors,
+			(key, value) => (typeof value === "bigint" ? value.toString() : value),
+			2,
+		);
 	}
 }

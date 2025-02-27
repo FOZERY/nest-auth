@@ -1,5 +1,4 @@
 import {
-	BadRequestException,
 	Body,
 	Controller,
 	HttpCode,
@@ -7,13 +6,16 @@ import {
 	Req,
 	Res,
 	UnauthorizedException,
+	UseGuards,
 } from "@nestjs/common";
 import { Request, Response } from "express";
+import { RequestWithUser } from "../../common/types/common.types";
 import { AuthService } from "./auth.service";
 import { LoginUserDTO } from "./dto/login-user.dto";
 import { LogoutUserDTO } from "./dto/logout-user.dto";
 import { RefreshTokenDTO } from "./dto/refresh-token.dto";
 import { RegisterUserDTO } from "./dto/register-user.dto";
+import { AccessTokenGuard } from "./guards/access-token-auth.guard";
 import { AccessTokenResponse } from "./types/auth.types";
 
 @Controller("auth")
@@ -24,7 +26,7 @@ export class AuthController {
 	@Post("login")
 	public async login(
 		@Body() dto: LoginUserDTO,
-		@Res({ passthrough: true }) res: Response,
+		@Res({ passthrough: true }) res: Response
 	): Promise<AccessTokenResponse> {
 		const { accessToken, refreshSession } = await this.authService.login(dto);
 
@@ -45,7 +47,7 @@ export class AuthController {
 	@Post("register")
 	public async register(
 		@Body() dto: RegisterUserDTO,
-		@Res({ passthrough: true }) res: Response,
+		@Res({ passthrough: true }) res: Response
 	): Promise<AccessTokenResponse> {
 		const { accessToken, refreshSession } = await this.authService.register(dto);
 
@@ -62,16 +64,17 @@ export class AuthController {
 	}
 
 	@HttpCode(200)
+	@UseGuards(AccessTokenGuard)
 	@Post("logout")
 	public async logout(
-		@Req() req: Request,
+		@Req() req: RequestWithUser,
 		@Res({ passthrough: true }) res: Response,
-		@Body() dto: LogoutUserDTO, // for logging
+		@Body() dto: LogoutUserDTO // for logging
 	): Promise<void> {
 		const refreshToken: string = req.cookies["refreshToken"];
 
 		if (!refreshToken) {
-			throw new BadRequestException("No refresh token provided");
+			throw new UnauthorizedException("No refresh token provided");
 		}
 
 		await this.authService.logout(refreshToken);
@@ -80,11 +83,28 @@ export class AuthController {
 	}
 
 	@HttpCode(200)
+	@UseGuards(AccessTokenGuard)
+	@Post("logout-all-sessions-except-current")
+	public async logoutAllSessionsExceptCurrent(
+		@Req() req: RequestWithUser,
+		@Res({ passthrough: true }) res: Response,
+		@Body() dto: LogoutUserDTO
+	): Promise<void> {
+		const refreshToken: string = req.cookies["refreshToken"];
+
+		if (!refreshToken) {
+			throw new UnauthorizedException("No refresh token provided");
+		}
+
+		await this.authService.logoutAllSessionsExceptCurrent(req.user.id, refreshToken);
+	}
+
+	@HttpCode(200)
 	@Post("refresh-token")
 	public async refreshToken(
 		@Req() req: Request,
 		@Res({ passthrough: true }) res: Response,
-		@Body() dto: RefreshTokenDTO,
+		@Body() dto: RefreshTokenDTO
 	): Promise<AccessTokenResponse> {
 		const refreshToken: string = req.cookies["refreshToken"];
 
@@ -94,7 +114,7 @@ export class AuthController {
 
 		const { accessToken, refreshSession } = await this.authService.refreshToken(
 			refreshToken,
-			dto,
+			dto
 		);
 
 		res.cookie("refreshToken", refreshSession.refreshToken, {
