@@ -1,5 +1,4 @@
 import { ConflictException, Injectable, UnauthorizedException } from "@nestjs/common";
-import argon2 from "argon2";
 import { TokenService } from "../../token/services/token.service";
 import { UsersService } from "../../users/services/users.service";
 import { LoginUserRequestDTO } from "../dto/requests/login-user.request.dto";
@@ -20,7 +19,7 @@ export class AuthService {
 			? await this.usersService.findByLogin(dto.login)
 			: await this.usersService.findByEmail(dto.email!);
 
-		if (!user || !(await argon2.verify(user.password, dto.password))) {
+		if (!user || !(await user.comparePassword(dto.password))) {
 			throw new UnauthorizedException("Неправильно указан логин/email или пароль.");
 		}
 

@@ -72,7 +72,6 @@ export class PersonalProfileController {
 			await this.usersService.updatePersonalProfilePassword({
 				oldPassword: dto.oldPassword,
 				newPassword: dto.newPassword,
-				refreshToken: refreshToken,
 				userId: req.user.id,
 				fingerprint: dto.fingerprint,
 				ipAddress: dto.ipAddress,
