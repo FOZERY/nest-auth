@@ -1,6 +1,14 @@
+import {
+	FindAllUsersWithPaginationInputDTO,
+	FindAllUsersWithPaginationOutputDTO,
+} from "../dto/users/repositories/find-all-users-w-pagination.dto";
 import { User } from "../entities/User";
 
 export interface UsersRepository {
+	findAllWithPagination(
+		dto: FindAllUsersWithPaginationInputDTO,
+		withDeleted?: boolean
+	): Promise<FindAllUsersWithPaginationOutputDTO>;
 	findById(id: string, withDeleted?: boolean): Promise<User | null>;
 	findByLogin(login: string, withDeleted?: boolean): Promise<User | null>;
 	findByEmail(email: string, withDeleted?: boolean): Promise<User | null>;

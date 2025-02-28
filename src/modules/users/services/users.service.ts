@@ -1,9 +1,13 @@
 import { BadRequestException, Inject, Injectable, NotFoundException } from "@nestjs/common";
+import { Order } from "../../../common/dtos/pagination/page-options.request.dto";
 import { AccessRefreshTokens } from "../../auth/types/auth.types";
 import { TokenService } from "../../token/services/token.service";
 import { UpdatePersonalPasswordServiceDTO } from "../dto/profiles/services/update-profile-password.request.dto";
+import { FindAllUsersWithPaginationOutputDTO } from "../dto/users/repositories/find-all-users-w-pagination.dto";
 import { CreateUserRequestDTO } from "../dto/users/requests/create-user.request.dto";
+import { GetAllUsersRequestQueryDTO } from "../dto/users/requests/get-all-users.request.dto";
 import { UpdateUserRequestDTO } from "../dto/users/requests/update-user.request.dto";
+import { GetUserResponseDTO } from "../dto/users/responses/get-user.response.dto";
 import { User } from "../entities/User";
 import { UsersRepositoryImpl } from "../external/prisma/users.repository.impl";
 import { UsersRepository } from "../repositories/users.repository";
@@ -15,7 +19,19 @@ export class UsersService {
 		private readonly tokenService: TokenService
 	) {}
 
-	public async getAll(dto: any) {}
+	public async getAllUsersWithPagination(
+		dto: GetAllUsersRequestQueryDTO,
+		withDeleted: boolean = false
+	): Promise<FindAllUsersWithPaginationOutputDTO> {
+		return await this.usersRepository.findAllWithPagination(
+			{
+				take: dto.take!,
+				skip: dto.skip!,
+				orderBy: dto.order === Order.ASC ? "asc" : "desc",
+			},
+			withDeleted
+		);
+	}
 
 	public async deleteById(id: string) {
 		await this.usersRepository.deleteById(id);
