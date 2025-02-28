@@ -7,8 +7,8 @@ import { CreateAccessTokenServiceDTO } from "../dtos/services/create-access-toke
 import { CreateRefreshServiceDTO } from "../dtos/services/create-refresh-session.service.dto";
 import { RefreshSession } from "../entities/RefreshSession";
 import { RefreshSessionsRepositoryImpl } from "../external/prisma/refreshSessions.repository.impl";
+import { CreateRefreshSessionResult } from "../interfaces/create-refreshSession-result";
 import { RefreshSessionsRepository } from "../repositories/refreshSessions.repository";
-import { CreateRefreshTokenResponse } from "../types/token.types";
 
 export class TokenService {
 	constructor(
@@ -38,26 +38,26 @@ export class TokenService {
 
 	public async createRefreshSession(
 		dto: CreateRefreshServiceDTO
-	): Promise<CreateRefreshTokenResponse> {
+	): Promise<CreateRefreshSessionResult> {
 		const refreshToken = randomUUID();
 		const expiresIn =
 			Date.now() +
 			parseTimeToMilliseconds(this.configService.get<string>("REFRESH_EXPIRED_IN")!);
 
-		await this.refreshSessionRepository.createRefreshSession(
-			await RefreshSession.create({
-				refreshToken: refreshToken,
-				userId: dto.userId,
-				userAgent: dto.userAgent,
-				fingerprint: dto.fingerprint,
-				expiresIn: expiresIn,
-				ipAddress: dto.ipAddress,
-			})
-		);
+		const refreshSession = await RefreshSession.create({
+			refreshToken: refreshToken,
+			userId: dto.userId,
+			userAgent: dto.userAgent,
+			fingerprint: dto.fingerprint,
+			expiresIn: expiresIn,
+			ipAddress: dto.ipAddress,
+		});
+
+		await this.refreshSessionRepository.createRefreshSession(refreshSession);
 
 		return {
-			refreshToken: refreshToken,
-			expiresIn: expiresIn,
+			refreshToken: refreshSession.refreshToken,
+			expiresInSeconds: refreshSession.expiresInSeconds,
 		};
 	}
 

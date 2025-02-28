@@ -79,6 +79,10 @@ export class RefreshSession extends Entity<number> {
 		return this._expiresIn;
 	}
 
+	public get expiresInSeconds(): number {
+		return Math.floor(this._expiresIn / 1000);
+	}
+
 	public get createdAt(): Nullable<Date> {
 		return this._createdAt;
 	}

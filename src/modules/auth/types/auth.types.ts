@@ -2,7 +2,7 @@ export type AccessRefreshTokens = {
 	accessToken: string;
 	refreshSession: {
 		refreshToken: string;
-		expiresIn: number;
+		expiresInSeconds: number;
 	};
 };
 
