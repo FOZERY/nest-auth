@@ -1,12 +1,12 @@
 import { BadRequestException, Inject, Injectable, NotFoundException } from "@nestjs/common";
-import { AccessRefreshTokens } from "../auth/types/auth.types";
-import { TokenService } from "../token/token.service";
-import { CreateUserDTO } from "./dto/create-user.dto";
-import { UpdateUserPasswordDTO } from "./dto/update-user-password.dto";
-import { UpdateUserDto } from "./dto/update-user.dto";
-import { User } from "./entities/User";
-import { UsersRepositoryImpl } from "./external/prisma/users.repository.impl";
-import { UsersRepository } from "./users.repository";
+import { AccessRefreshTokens } from "../../auth/types/auth.types";
+import { TokenService } from "../../token/services/token.service";
+import { UpdatePersonalPasswordServiceDTO } from "../dto/profiles/services/update-profile-password.request.dto";
+import { CreateUserRequestDTO } from "../dto/users/requests/create-user.request.dto";
+import { UpdateUserRequestDTO } from "../dto/users/requests/update-user.request.dto";
+import { User } from "../entities/User";
+import { UsersRepositoryImpl } from "../external/prisma/users.repository.impl";
+import { UsersRepository } from "../repositories/users.repository";
 
 @Injectable()
 export class UsersService {
@@ -14,6 +14,8 @@ export class UsersService {
 		@Inject(UsersRepositoryImpl) private readonly usersRepository: UsersRepository,
 		private readonly tokenService: TokenService
 	) {}
+
+	public async getAll(dto: any) {}
 
 	public async deleteById(id: string) {
 		await this.usersRepository.deleteById(id);
@@ -32,7 +34,7 @@ export class UsersService {
 		return await this.usersRepository.findByLogin(login, withDeleted);
 	}
 
-	public async create(dto: CreateUserDTO): Promise<User> {
+	public async create(dto: CreateUserRequestDTO): Promise<User> {
 		const user = await User.create({
 			login: dto.login,
 			password: dto.password,
@@ -46,7 +48,7 @@ export class UsersService {
 		return user;
 	}
 
-	public async update(dto: UpdateUserDto): Promise<void> {
+	public async update(dto: UpdateUserRequestDTO): Promise<void> {
 		const user = await this.usersRepository.findById(dto.id);
 
 		if (!user) {
@@ -61,8 +63,8 @@ export class UsersService {
 		return await this.usersRepository.update(user);
 	}
 
-	public async updateProfilePasswordByUserId(
-		dto: UpdateUserPasswordDTO
+	public async updatePersonalProfilePassword(
+		dto: UpdatePersonalPasswordServiceDTO
 	): Promise<AccessRefreshTokens> {
 		const user = await this.usersRepository.findById(dto.userId);
 

@@ -1,6 +1,6 @@
 import { IsEmail, IsIP, IsNotEmpty, IsOptional, IsString, ValidateIf } from "class-validator";
 
-export class LoginUserDTO {
+export class LoginUserRequestDTO {
 	@ValidateIf((o) => !o.email)
 	@IsNotEmpty()
 	@IsString()

@@ -9,14 +9,13 @@ import {
 	UseGuards,
 } from "@nestjs/common";
 import { Request, Response } from "express";
-import { RequestWithUser } from "../../common/types/common.types";
-import { AuthService } from "./auth.service";
-import { LoginUserDTO } from "./dto/login-user.dto";
-import { LogoutUserDTO } from "./dto/logout-user.dto";
-import { RefreshTokenDTO } from "./dto/refresh-token.dto";
-import { RegisterUserDTO } from "./dto/register-user.dto";
-import { AccessTokenGuard } from "./guards/access-token-auth.guard";
-import { AccessTokenResponse } from "./types/auth.types";
+import { RequestWithUser } from "../../../common/types/common.types";
+import { LoginUserRequestDTO } from "../dto/requests/login-user.request.dto";
+import { RefreshTokenRequestDTO } from "../dto/requests/refresh-token.request.dto";
+import { RegisterUserRequestDTO } from "../dto/requests/register-user.request.dto";
+import { AccessTokenGuard } from "../guards/access-token-auth.guard";
+import { AuthService } from "../services/auth.service";
+import { AccessTokenResponse } from "../types/auth.types";
 
 @Controller("auth")
 export class AuthController {
@@ -25,7 +24,7 @@ export class AuthController {
 	@HttpCode(200)
 	@Post("login")
 	public async login(
-		@Body() dto: LoginUserDTO,
+		@Body() dto: LoginUserRequestDTO,
 		@Res({ passthrough: true }) res: Response
 	): Promise<AccessTokenResponse> {
 		const { accessToken, refreshSession } = await this.authService.login(dto);
@@ -46,7 +45,7 @@ export class AuthController {
 	@HttpCode(201)
 	@Post("register")
 	public async register(
-		@Body() dto: RegisterUserDTO,
+		@Body() dto: RegisterUserRequestDTO,
 		@Res({ passthrough: true }) res: Response
 	): Promise<AccessTokenResponse> {
 		const { accessToken, refreshSession } = await this.authService.register(dto);
@@ -68,8 +67,7 @@ export class AuthController {
 	@Post("logout")
 	public async logout(
 		@Req() req: RequestWithUser,
-		@Res({ passthrough: true }) res: Response,
-		@Body() dto: LogoutUserDTO // for logging
+		@Res({ passthrough: true }) res: Response
 	): Promise<void> {
 		const refreshToken: string = req.cookies["refreshToken"];
 
@@ -85,11 +83,7 @@ export class AuthController {
 	@HttpCode(200)
 	@UseGuards(AccessTokenGuard)
 	@Post("logout-all-sessions-except-current")
-	public async logoutAllSessionsExceptCurrent(
-		@Req() req: RequestWithUser,
-		@Res({ passthrough: true }) res: Response,
-		@Body() dto: LogoutUserDTO
-	): Promise<void> {
+	public async logoutAllSessionsExceptCurrent(@Req() req: RequestWithUser): Promise<void> {
 		const refreshToken: string = req.cookies["refreshToken"];
 
 		if (!refreshToken) {
@@ -104,7 +98,7 @@ export class AuthController {
 	public async refreshToken(
 		@Req() req: Request,
 		@Res({ passthrough: true }) res: Response,
-		@Body() dto: RefreshTokenDTO
+		@Body() dto: RefreshTokenRequestDTO
 	): Promise<AccessTokenResponse> {
 		const refreshToken: string = req.cookies["refreshToken"];
 
@@ -112,10 +106,12 @@ export class AuthController {
 			throw new UnauthorizedException("Refresh token is required");
 		}
 
-		const { accessToken, refreshSession } = await this.authService.refreshToken(
+		const { accessToken, refreshSession } = await this.authService.refreshToken({
 			refreshToken,
-			dto
-		);
+			fingerprint: dto.fingerprint,
+			ipAddress: dto.ipAddress,
+			userAgent: dto.userAgent,
+		});
 
 		res.cookie("refreshToken", refreshSession.refreshToken, {
 			httpOnly: true,

@@ -10,7 +10,7 @@ import {
 	Min,
 } from "class-validator";
 
-export class UpdateUserDto {
+export class UpdateUserRequestDTO {
 	@IsUUID()
 	id: string;
 

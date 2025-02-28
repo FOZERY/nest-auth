@@ -1,14 +1,6 @@
 import { IsIP, IsNotEmpty, IsOptional, IsString } from "class-validator";
 
-export class UpdateMyProfilePasswordDTO {
-	@IsNotEmpty()
-	@IsString()
-	oldPassword: string;
-
-	@IsNotEmpty()
-	@IsString()
-	newPassword: string;
-
+export class LogoutUserRequestDTO {
 	@IsNotEmpty()
 	@IsIP()
 	ipAddress: string;
@@ -18,6 +10,7 @@ export class UpdateMyProfilePasswordDTO {
 	fingerprint: string;
 
 	@IsOptional()
+	@IsNotEmpty()
 	@IsString()
 	userAgent?: string;
 }

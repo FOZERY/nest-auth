@@ -2,13 +2,13 @@ import { Inject } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { JwtService } from "@nestjs/jwt";
 import { randomUUID } from "crypto";
-import { parseTimeToMilliseconds } from "../auth/helpers/parseTimeToMilliseconds";
-import { CreateAccessTokenDTO } from "./dtos/create-access-token.dto";
-import { CreateRefreshSessionDTO } from "./dtos/create-refresh-session.dto";
-import { RefreshSession } from "./entities/RefreshSession";
-import { RefreshSessionsRepositoryImpl } from "./external/prisma/refreshSessions.repository.impl";
-import { RefreshSessionsRepository } from "./repositories/refreshSessions.repository";
-import { CreateRefreshTokenResponse } from "./types/token.types";
+import { parseTimeToMilliseconds } from "../../auth/helpers/parseTimeToMilliseconds";
+import { CreateAccessTokenServiceDTO } from "../dtos/services/create-access-token.service.dto";
+import { CreateRefreshServiceDTO } from "../dtos/services/create-refresh-session.service.dto";
+import { RefreshSession } from "../entities/RefreshSession";
+import { RefreshSessionsRepositoryImpl } from "../external/prisma/refreshSessions.repository.impl";
+import { RefreshSessionsRepository } from "../repositories/refreshSessions.repository";
+import { CreateRefreshTokenResponse } from "../types/token.types";
 
 export class TokenService {
 	constructor(
@@ -28,7 +28,7 @@ export class TokenService {
 		);
 	}
 
-	public async createAccessToken(dto: CreateAccessTokenDTO) {
+	public async createAccessToken(dto: CreateAccessTokenServiceDTO) {
 		return await this.accessJwtService.signAsync({
 			id: dto.userId,
 			login: dto.login,
@@ -37,7 +37,7 @@ export class TokenService {
 	}
 
 	public async createRefreshSession(
-		dto: CreateRefreshSessionDTO
+		dto: CreateRefreshServiceDTO
 	): Promise<CreateRefreshTokenResponse> {
 		const refreshToken = randomUUID();
 		const expiresIn =

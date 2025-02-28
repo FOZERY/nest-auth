@@ -1,4 +1,4 @@
-export interface UpdateUserPasswordDTO {
+export interface UpdatePersonalPasswordServiceDTO {
 	userId: string;
 	refreshToken: string;
 	oldPassword: string;

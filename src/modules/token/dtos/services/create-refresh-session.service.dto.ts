@@ -1,4 +1,4 @@
-export interface CreateRefreshSessionDTO {
+export interface CreateRefreshServiceDTO {
 	userId: string;
 	ipAddress: string;
 	fingerprint: string;

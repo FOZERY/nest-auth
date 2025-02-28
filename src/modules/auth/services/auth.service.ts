@@ -1,11 +1,12 @@
 import { ConflictException, Injectable, UnauthorizedException } from "@nestjs/common";
 import argon2 from "argon2";
-import { TokenService } from "../token/token.service";
-import { UsersService } from "../users/users.service";
-import { LoginUserDTO } from "./dto/login-user.dto";
-import { RefreshTokenDTO } from "./dto/refresh-token.dto";
-import { RegisterUserDTO } from "./dto/register-user.dto";
-import { AccessRefreshTokens } from "./types/auth.types";
+import { TokenService } from "../../token/services/token.service";
+import { UsersService } from "../../users/services/users.service";
+import { LoginUserRequestDTO } from "../dto/requests/login-user.request.dto";
+import { RegisterUserRequestDTO } from "../dto/requests/register-user.request.dto";
+import { CreateAccessRefreshTokensServiceDTO } from "../dto/services/create-access-refresh.service.dto";
+import { RefreshTokenServiceDTO } from "../dto/services/refresh-token.service.dto";
+import { AccessRefreshTokens } from "../types/auth.types";
 
 @Injectable()
 export class AuthService {
@@ -14,7 +15,7 @@ export class AuthService {
 		private readonly tokenService: TokenService
 	) {}
 
-	public async login(dto: LoginUserDTO): Promise<AccessRefreshTokens> {
+	public async login(dto: LoginUserRequestDTO): Promise<AccessRefreshTokens> {
 		const user = dto.login
 			? await this.usersService.findByLogin(dto.login)
 			: await this.usersService.findByEmail(dto.email!);
@@ -52,7 +53,7 @@ export class AuthService {
 		});
 	}
 
-	public async logout(refreshToken: string) {
+	public async logout(refreshToken: string): Promise<void> {
 		await this.tokenService.deleteRefreshSessionByToken(refreshToken);
 	}
 
@@ -63,7 +64,7 @@ export class AuthService {
 		await this.tokenService.deleteAllRefreshSessionsByUserIdExceptToken(userId, refreshToken);
 	}
 
-	public async register(dto: RegisterUserDTO): Promise<AccessRefreshTokens> {
+	public async register(dto: RegisterUserRequestDTO): Promise<AccessRefreshTokens> {
 		const candidateByLogin = await this.usersService.findByLogin(dto.login, true);
 
 		if (candidateByLogin) {
@@ -88,18 +89,15 @@ export class AuthService {
 		});
 	}
 
-	public async refreshToken(
-		refreshToken: string,
-		dto: RefreshTokenDTO
-	): Promise<AccessRefreshTokens> {
+	public async refreshToken(dto: RefreshTokenServiceDTO): Promise<AccessRefreshTokens> {
 		// проверяем что такая сессия вообще есть
-		const existingSession = await this.tokenService.getRefreshSessionByToken(refreshToken);
+		const existingSession = await this.tokenService.getRefreshSessionByToken(dto.refreshToken);
 
 		if (!existingSession || Date.now() > existingSession.expiresIn) {
 			throw new UnauthorizedException();
 		}
 
-		await this.tokenService.deleteRefreshSessionByToken(refreshToken);
+		await this.tokenService.deleteRefreshSessionByToken(dto.refreshToken);
 
 		// проверяем что пользователь с такой сессией существует/не удален + данные для access token
 		const user = await this.usersService.findById(existingSession.userId);
@@ -118,14 +116,9 @@ export class AuthService {
 		});
 	}
 
-	private async createAccessRefreshTokens(dto: {
-		userId: string;
-		login: string;
-		email: string;
-		fingerprint: string;
-		ipAddress: string;
-		userAgent?: string;
-	}): Promise<AccessRefreshTokens> {
+	private async createAccessRefreshTokens(
+		dto: CreateAccessRefreshTokensServiceDTO
+	): Promise<AccessRefreshTokens> {
 		const refreshSession = await this.tokenService.createRefreshSession({
 			userId: dto.userId,
 			fingerprint: dto.fingerprint,

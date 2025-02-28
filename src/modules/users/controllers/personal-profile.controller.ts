@@ -13,11 +13,11 @@ import {
 	UseGuards,
 } from "@nestjs/common";
 import { Response } from "express";
-import { RequestWithUser } from "../../common/types/common.types";
-import { AccessTokenGuard } from "../auth/guards/access-token-auth.guard";
-import { UpdateMyProfilePasswordDTO } from "./dto/update-my-profile-password.dto";
-import { UpdateMyProfileDTO } from "./dto/update-my-profile.dto";
-import { UsersService } from "./users.service";
+import { RequestWithUser } from "../../../common/types/common.types";
+import { AccessTokenGuard } from "../../auth/guards/access-token-auth.guard";
+import { UpdatePersonalProfilePasswordRequestDTO } from "../dto/profiles/requests/update-profile-password.request.dto";
+import { UpdatePersonalProfileRequestDTO } from "../dto/profiles/requests/update-profile.request.dto";
+import { UsersService } from "../services/users.service";
 
 @Controller("personalProfile")
 @UseGuards(AccessTokenGuard)
@@ -47,7 +47,7 @@ export class PersonalProfileController {
 	@Patch()
 	public async updatePersonalProfile(
 		@Req() req: RequestWithUser,
-		@Body() dto: UpdateMyProfileDTO
+		@Body() dto: UpdatePersonalProfileRequestDTO
 	) {
 		await this.usersService.update({
 			id: req.user.id,
@@ -60,7 +60,7 @@ export class PersonalProfileController {
 	public async updatePersonalProfilePassword(
 		@Req() req: RequestWithUser,
 		@Res({ passthrough: true }) res: Response,
-		@Body() dto: UpdateMyProfilePasswordDTO
+		@Body() dto: UpdatePersonalProfilePasswordRequestDTO
 	) {
 		const refreshToken: string = req.cookies["refreshToken"];
 
@@ -69,7 +69,7 @@ export class PersonalProfileController {
 		}
 
 		const { refreshSession, accessToken } =
-			await this.usersService.updateProfilePasswordByUserId({
+			await this.usersService.updatePersonalProfilePassword({
 				oldPassword: dto.oldPassword,
 				newPassword: dto.newPassword,
 				refreshToken: refreshToken,

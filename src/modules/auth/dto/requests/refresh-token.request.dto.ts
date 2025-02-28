@@ -1,6 +1,6 @@
 import { IsIP, IsNotEmpty, IsOptional, IsString } from "class-validator";
 
-export class LogoutUserDTO {
+export class RefreshTokenRequestDTO {
 	@IsNotEmpty()
 	@IsIP()
 	ipAddress: string;
