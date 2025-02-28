@@ -67,7 +67,6 @@ export class UsersRepositoryImpl implements UsersRepository {
 	}
 
 	public async update(user: User): Promise<void> {
-		console.log(user);
 		await this.prisma.users.update({
 			data: {
 				id: user.id,
