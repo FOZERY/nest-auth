@@ -106,6 +106,7 @@ export class User extends Entity<string> {
 	public async setPassword(password: string) {
 		this._password = password;
 		await this.validate();
+		await this.hashPassword();
 	}
 
 	public get age(): number {
@@ -138,6 +139,10 @@ export class User extends Entity<string> {
 		this._password = await argon.hash(this._password, {
 			type: argon2id,
 		});
+	}
+
+	public async comparePassword(nonhashedPassword: string) {
+		return await argon.verify(this._password, nonhashedPassword);
 	}
 
 	public static async create(props: UserProps): Promise<User> {
