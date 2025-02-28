@@ -63,13 +63,6 @@ export class AuthService {
 		await this.tokenService.deleteAllRefreshSessionsByUserIdExceptToken(userId, refreshToken);
 	}
 
-	// public async logoutAllSessions(refreshToken: string) {
-	// 	const session = await this.tokenService.getRefreshSessionByToken(refreshToken);
-
-	// 	await this.tokenService.deleteRefreshSessionByToken(refreshToken);
-	// 	await this.tokenService.deleteAllRefreshSessionsByUserId(session.userId);
-	// }
-
 	public async register(dto: RegisterUserDTO): Promise<AccessRefreshTokens> {
 		const candidateByLogin = await this.usersService.findByLogin(dto.login, true);
 

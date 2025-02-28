@@ -32,7 +32,7 @@ export class AuthController {
 
 		res.cookie("refreshToken", refreshSession.refreshToken, {
 			httpOnly: true,
-			maxAge: Math.floor(Number(refreshSession.expiresIn) / 1000),
+			maxAge: Math.floor(refreshSession.expiresIn / 1000),
 
 			// sameSite: 'strict',
 			// secure:
@@ -53,7 +53,7 @@ export class AuthController {
 
 		res.cookie("refreshToken", refreshSession.refreshToken, {
 			httpOnly: true,
-			maxAge: Number(refreshSession.expiresIn),
+			maxAge: Math.floor(refreshSession.expiresIn / 1000),
 			// sameSite: 'strict',
 			// secure:
 		});
@@ -109,7 +109,7 @@ export class AuthController {
 		const refreshToken: string = req.cookies["refreshToken"];
 
 		if (!refreshToken) {
-			throw new UnauthorizedException("No refresh token provided");
+			throw new UnauthorizedException("Refresh token is required");
 		}
 
 		const { accessToken, refreshSession } = await this.authService.refreshToken(
@@ -119,7 +119,7 @@ export class AuthController {
 
 		res.cookie("refreshToken", refreshSession.refreshToken, {
 			httpOnly: true,
-			maxAge: Number(refreshSession.expiresIn),
+			maxAge: Math.floor(refreshSession.expiresIn / 1000),
 			// sameSite: 'strict',
 			// secure:
 		});

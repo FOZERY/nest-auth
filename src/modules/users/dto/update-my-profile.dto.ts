@@ -23,11 +23,6 @@ export class UpdateMyProfileDTO {
 	email?: string;
 
 	@IsOptional()
-	@IsNotEmpty()
-	@IsString()
-	password?: string;
-
-	@IsOptional()
 	@IsNumber()
 	@Min(0)
 	@Max(150)
