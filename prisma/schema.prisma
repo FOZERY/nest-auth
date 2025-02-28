@@ -9,7 +9,7 @@ datasource db {
 }
 
 model users {
-  id               String             @id
+  id               String             @id @db.Uuid()
   login            String             @unique
   email            String             @unique
   password         String
@@ -23,8 +23,8 @@ model users {
 
 model refresh_sessions {
   id            BigInt   @id @default(autoincrement())
-  refresh_token String   @unique()
-  user          users    @relation(fields: [user_id], references: [id])
+  refresh_token String   @unique() @db.Uuid()
+  user          users    @relation(fields: [user_id], references: [id], onDelete: Cascade)
   user_id       String
   fingerprint   String
   ip_address    String
