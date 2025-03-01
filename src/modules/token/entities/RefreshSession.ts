@@ -1,15 +1,23 @@
-import { IsDate, IsInt, IsIP, IsNotEmpty, IsOptional, IsString, IsUUID } from "class-validator";
+import {
+	IsDate,
+	IsInt,
+	IsIP,
+	IsNotEmpty,
+	IsOptional,
+	IsString,
+	IsUUID,
+	MaxLength,
+} from "class-validator";
 import { Entity } from "../../../core/entity/Entity";
 import { Nullable } from "../../../core/types/utility.types";
 
 export interface RefreshSessionProps {
-	id?: number;
 	userId: string;
 	refreshToken: string;
 	fingerprint: string;
-	ipAddress: string;
+	ipAddress?: Nullable<string>;
 	userAgent?: Nullable<string>;
-	expiresIn: number;
+	expiresIn: bigint;
 	createdAt?: Nullable<Date>;
 }
 
@@ -22,37 +30,36 @@ export class RefreshSession extends Entity<number> {
 
 	@IsNotEmpty()
 	@IsString()
+	@MaxLength(255)
 	private _fingerprint: string;
 
+	@IsOptional()
 	@IsIP()
-	private _ipAddress: string;
+	private _ipAddress: Nullable<string>;
 
 	@IsOptional()
 	@IsNotEmpty()
 	@IsString()
+	@MaxLength(255)
 	private _userAgent: Nullable<string>;
 
 	@IsInt()
-	private _expiresIn: number;
+	private _expiresIn: bigint;
 
 	@IsOptional()
 	@IsDate()
 	private _createdAt: Nullable<Date>;
 
 	private constructor(props: RefreshSessionProps) {
-		super(props.id);
+		super();
 
 		this._refreshToken = props.refreshToken;
 		this._userId = props.userId;
 		this._fingerprint = props.fingerprint;
-		this._ipAddress = props.ipAddress;
+		this._ipAddress = props.ipAddress ?? null;
 		this._userAgent = props.userAgent ?? null;
 		this._expiresIn = props.expiresIn;
 		this._createdAt = props.createdAt ?? null;
-	}
-
-	public get id() {
-		return this._id;
 	}
 
 	public get refreshToken(): string {
@@ -67,7 +74,7 @@ export class RefreshSession extends Entity<number> {
 		return this._fingerprint;
 	}
 
-	public get ipAddress(): string {
+	public get ipAddress(): Nullable<string> {
 		return this._ipAddress;
 	}
 
@@ -75,12 +82,8 @@ export class RefreshSession extends Entity<number> {
 		return this._userAgent;
 	}
 
-	public get expiresIn(): number {
+	public get expiresIn(): bigint {
 		return this._expiresIn;
-	}
-
-	public get expiresInSeconds(): number {
-		return Math.floor(this._expiresIn / 1000);
 	}
 
 	public get createdAt(): Nullable<Date> {

@@ -22,12 +22,11 @@ model users {
 }
 
 model refresh_sessions {
-  id            BigInt   @id @default(autoincrement())
-  refresh_token String   @unique() @db.Uuid()
+  refresh_token String   @id @db.Uuid()
   user          users    @relation(fields: [user_id], references: [id], onDelete: Cascade)
-  user_id       String
+  user_id       String   @db.Uuid()
   fingerprint   String
-  ip_address    String
+  ip_address    String?
   user_agent    String?
   expires_in    BigInt
   created_at    DateTime @default(now())

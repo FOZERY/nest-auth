@@ -34,10 +34,12 @@ export class User extends Entity<string> {
 
 	@IsNotEmpty()
 	@IsEmail()
+	@MaxLength(255)
 	private _email: string;
 
 	@IsNotEmpty()
 	@IsString()
+	@MaxLength(255)
 	private _password: string;
 
 	@IsNotEmpty()

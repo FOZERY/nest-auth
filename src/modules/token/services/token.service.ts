@@ -40,16 +40,16 @@ export class TokenService {
 		dto: CreateRefreshServiceDTO
 	): Promise<CreateRefreshSessionResult> {
 		const refreshToken = randomUUID();
-		const expiresIn =
-			Date.now() +
-			parseTimeToMilliseconds(this.configService.get<string>("REFRESH_EXPIRED_IN")!);
+		const expiresIn = parseTimeToMilliseconds(
+			this.configService.get<string>("REFRESH_EXPIRED_IN")!
+		);
 
 		const refreshSession = await RefreshSession.create({
 			refreshToken: refreshToken,
 			userId: dto.userId,
 			userAgent: dto.userAgent,
 			fingerprint: dto.fingerprint,
-			expiresIn: expiresIn,
+			expiresIn: BigInt(expiresIn),
 			ipAddress: dto.ipAddress,
 		});
 
@@ -57,7 +57,7 @@ export class TokenService {
 
 		return {
 			refreshToken: refreshSession.refreshToken,
-			expiresInSeconds: refreshSession.expiresInSeconds,
+			expiresIn: refreshSession.expiresIn,
 		};
 	}
 

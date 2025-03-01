@@ -1,4 +1,4 @@
 export interface CreateRefreshSessionResult {
 	refreshToken: string;
-	expiresInSeconds: number;
+	expiresIn: bigint;
 }
