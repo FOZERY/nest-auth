@@ -1,13 +1,4 @@
-import {
-	IsDate,
-	IsInt,
-	IsIP,
-	IsNotEmpty,
-	IsOptional,
-	IsString,
-	IsUUID,
-	MaxLength,
-} from "class-validator";
+import { IsDate, IsIP, IsNotEmpty, IsOptional, IsString, IsUUID, MaxLength } from "class-validator";
 import { Entity } from "../../../core/entity/Entity";
 import { Nullable } from "../../../core/types/utility.types";
 
@@ -17,7 +8,7 @@ export interface RefreshSessionProps {
 	fingerprint: string;
 	ipAddress?: Nullable<string>;
 	userAgent?: Nullable<string>;
-	expiresIn: bigint;
+	expiresAt: Date;
 	createdAt?: Nullable<Date>;
 }
 
@@ -43,8 +34,8 @@ export class RefreshSession extends Entity<number> {
 	@MaxLength(255)
 	private _userAgent: Nullable<string>;
 
-	@IsInt()
-	private _expiresIn: bigint;
+	@IsDate()
+	private _expiresAt: Date;
 
 	@IsOptional()
 	@IsDate()
@@ -58,7 +49,7 @@ export class RefreshSession extends Entity<number> {
 		this._fingerprint = props.fingerprint;
 		this._ipAddress = props.ipAddress ?? null;
 		this._userAgent = props.userAgent ?? null;
-		this._expiresIn = props.expiresIn;
+		this._expiresAt = props.expiresAt;
 		this._createdAt = props.createdAt ?? null;
 	}
 
@@ -82,8 +73,12 @@ export class RefreshSession extends Entity<number> {
 		return this._userAgent;
 	}
 
-	public get expiresIn(): bigint {
-		return this._expiresIn;
+	public get expiresAt(): Date {
+		return this._expiresAt;
+	}
+
+	public get expiresInMs(): number {
+		return this._expiresAt.getTime() - Date.now();
 	}
 
 	public get createdAt(): Nullable<Date> {
@@ -94,5 +89,9 @@ export class RefreshSession extends Entity<number> {
 		const refreshSession = new RefreshSession(props);
 		await refreshSession.validate();
 		return refreshSession;
+	}
+
+	public isExpired(): boolean {
+		return Date.now() - this._expiresAt.getTime() >= 0;
 	}
 }

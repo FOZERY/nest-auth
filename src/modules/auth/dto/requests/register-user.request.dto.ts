@@ -37,9 +37,10 @@ export class RegisterUserRequestDTO {
 	@MaxLength(1000)
 	about?: string;
 
+	@IsOptional()
 	@IsNotEmpty()
 	@IsIP()
-	ipAddress: string;
+	ipAddress?: string;
 
 	@IsNotEmpty()
 	@IsString()

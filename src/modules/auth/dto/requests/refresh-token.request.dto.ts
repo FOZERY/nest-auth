@@ -1,9 +1,10 @@
 import { IsIP, IsNotEmpty, IsOptional, IsString } from "class-validator";
 
 export class RefreshTokenRequestDTO {
+	@IsOptional()
 	@IsNotEmpty()
 	@IsIP()
-	ipAddress: string;
+	ipAddress?: string;
 
 	@IsNotEmpty()
 	@IsString()

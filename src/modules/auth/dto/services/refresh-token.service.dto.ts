@@ -1,7 +1,7 @@
 export interface RefreshTokenServiceDTO {
 	refreshToken: string;
 
-	ipAddress: string;
+	ipAddress?: string;
 
 	fingerprint: string;
 

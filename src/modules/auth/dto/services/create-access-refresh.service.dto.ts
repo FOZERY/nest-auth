@@ -3,6 +3,6 @@ export interface CreateAccessRefreshTokensServiceDTO {
 	login: string;
 	email: string;
 	fingerprint: string;
-	ipAddress: string;
+	ipAddress?: string;
 	userAgent?: string;
 }

@@ -92,7 +92,7 @@ export class AuthService {
 		// проверяем что такая сессия вообще есть
 		const existingSession = await this.tokenService.getRefreshSessionByToken(dto.refreshToken);
 
-		if (!existingSession || Date.now() > existingSession.expiresIn) {
+		if (!existingSession || existingSession.isExpired()) {
 			throw new UnauthorizedException();
 		}
 
@@ -124,6 +124,7 @@ export class AuthService {
 			ipAddress: dto.ipAddress,
 			userAgent: dto.userAgent,
 		});
+
 		const accessToken = await this.tokenService.createAccessToken({
 			userId: dto.userId,
 			login: dto.login,

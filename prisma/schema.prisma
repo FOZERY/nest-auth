@@ -28,6 +28,6 @@ model refresh_sessions {
   fingerprint   String
   ip_address    String?
   user_agent    String?
-  expires_in    BigInt
+  expires_at    DateTime
   created_at    DateTime @default(now())
 }

@@ -38,6 +38,9 @@ importers:
       class-validator:
         specifier: ^0.14.1
         version: 0.14.1
+      class-validator-extended:
+        specifier: ^4.0.2
+        version: 4.0.2(class-validator@0.14.1)(validator@13.12.0)
       cookie-parser:
         specifier: ^1.4.7
         version: 1.4.7
@@ -1721,6 +1724,12 @@ packages:
   class-transformer@0.5.1:
     resolution: {integrity: sha512-SQa1Ws6hUbfC98vKGxZH3KFY0Y1lm5Zm0SY8XX9zbK7FJCyVEac3ATW0RIpwzW+oOfmHE5PMPufDG9hCfoEOMw==}
 
+  class-validator-extended@4.0.2:
+    resolution: {integrity: sha512-z7V/JK/6BDW6zRMvBr2Dfzrhx5y73LcYZrGrqGYcbLTsDEwfCCZyvu80iQl+P3RXdsmCWHeZsv9JIPtSyxCKSg==}
+    peerDependencies:
+      class-validator: ^0.14.1
+      validator: ^13.9.0
+
   class-validator@0.14.1:
     resolution: {integrity: sha512-2VEG9JICxIqTpoK1eMzZqaV+u/EiwEJkMGzTrZf6sU/fwsnOITVgYJ8yojSy6CaXtO9V0Cc6ZQZ8h8m4UBuLwQ==}
 
@@ -1863,6 +1872,9 @@ packages:
   cross-spawn@7.0.6:
     resolution: {integrity: sha512-uV2QOWP2nWzsy2aMp8aRibhi9dlzF5Hgh5SHaB9OiTGEyDTiJJyx0uy51QXdyWbtAHNua4XJzUKca3OzKUd3vA==}
     engines: {node: '>= 8'}
+
+  dayjs@1.11.13:
+    resolution: {integrity: sha512-oaMBel6gjolK862uaPQOVTA7q3TZhuSvuMQAAglQDOWYO9A91IrAOUJEyKVlqJlHE0vq5p5UXxzdPfMH/x6xNg==}
 
   debug@2.6.9:
     resolution: {integrity: sha512-bC7ElrdJaJnPbAP+1EotYvqZsb3ecl5wi6Bfi6BJTUcNowp6cvspg0jXznRTKDjm/E7AdgFBVeAPVMNcKGsHMA==}
@@ -5536,6 +5548,13 @@ snapshots:
 
   class-transformer@0.5.1: {}
 
+  class-validator-extended@4.0.2(class-validator@0.14.1)(validator@13.12.0):
+    dependencies:
+      class-validator: 0.14.1
+      validator: 13.12.0
+    optionalDependencies:
+      dayjs: 1.11.13
+
   class-validator@0.14.1:
     dependencies:
       '@types/validator': 13.12.2
@@ -5672,6 +5691,9 @@ snapshots:
       path-key: 3.1.1
       shebang-command: 2.0.0
       which: 2.0.2
+
+  dayjs@1.11.13:
+    optional: true
 
   debug@2.6.9:
     dependencies:

@@ -45,7 +45,7 @@ export class RefreshSessionsRepositoryImpl implements RefreshSessionsRepository 
 				user_id: session.userId,
 				refresh_token: session.refreshToken,
 				fingerprint: session.fingerprint,
-				expires_in: session.expiresIn,
+				expires_at: session.expiresAt,
 				ip_address: session.ipAddress,
 				user_agent: session.userAgent,
 			},

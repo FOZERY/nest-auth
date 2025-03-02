@@ -7,7 +7,7 @@ export class RefreshSessionsMapper {
 			userId: prismaRefreshSession.user_id,
 			refreshToken: prismaRefreshSession.refresh_token,
 			fingerprint: prismaRefreshSession.fingerprint,
-			expiresIn: prismaRefreshSession.expires_in,
+			expiresAt: prismaRefreshSession.expires_at,
 			ipAddress: prismaRefreshSession.ip_address,
 			userAgent: prismaRefreshSession.user_agent,
 			createdAt: prismaRefreshSession.created_at,

@@ -15,9 +15,10 @@ export class LoginUserRequestDTO {
 	@IsString()
 	password: string;
 
+	@IsOptional()
 	@IsNotEmpty()
 	@IsIP()
-	ipAddress: string;
+	ipAddress?: string;
 
 	@IsNotEmpty()
 	@IsString()

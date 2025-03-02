@@ -31,7 +31,7 @@ export class AuthController {
 
 		res.cookie("refreshToken", refreshSession.refreshToken, {
 			httpOnly: true,
-			maxAge: Number(refreshSession.expiresIn),
+			maxAge: refreshSession.expiresIn,
 
 			// sameSite: 'strict',
 			// secure:
@@ -52,7 +52,7 @@ export class AuthController {
 
 		res.cookie("refreshToken", refreshSession.refreshToken, {
 			httpOnly: true,
-			maxAge: Number(refreshSession.expiresIn),
+			maxAge: refreshSession.expiresIn,
 
 			// sameSite: 'strict',
 			// secure:
@@ -116,7 +116,7 @@ export class AuthController {
 
 		res.cookie("refreshToken", refreshSession.refreshToken, {
 			httpOnly: true,
-			maxAge: Number(refreshSession.expiresIn),
+			maxAge: refreshSession.expiresIn,
 			// sameSite: 'strict',
 			// secure:
 		});
