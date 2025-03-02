@@ -7,7 +7,7 @@ export abstract class Entity<TId extends number | string | bigint> {
 		this._id = id;
 	}
 
-	public async validate(): Promise<void> {
+	protected async validate(): Promise<void> {
 		const errors = await validate(this);
 		if (errors.length > 0) {
 			throw new Error("Domain entity validation error", {
@@ -20,7 +20,7 @@ export abstract class Entity<TId extends number | string | bigint> {
 		return JSON.stringify(
 			errors,
 			(key, value) => (typeof value === "bigint" ? value.toString() : value),
-			2,
+			2
 		);
 	}
 }

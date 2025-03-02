@@ -143,7 +143,7 @@ export class User extends Entity<string> {
 		});
 	}
 
-	public async comparePassword(nonhashedPassword: string) {
+	protected async comparePassword(nonhashedPassword: string) {
 		return await argon.verify(this._password, nonhashedPassword);
 	}
 
