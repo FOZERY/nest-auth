@@ -5,9 +5,12 @@ import {
 	IsNotEmpty,
 	IsOptional,
 	IsString,
+	Matches,
 	MaxLength,
+	MinLength,
 	ValidateIf,
 } from "class-validator";
+import { NoSpaces } from "../../../../common/class-validator/noSpaces.decorator";
 
 export class LoginUserRequestDTO {
 	@ApiProperty({
@@ -15,11 +18,17 @@ export class LoginUserRequestDTO {
 		required: false,
 		example: "johndoe",
 		type: String,
+		minLength: 3,
 		maxLength: 255,
 	})
 	@ValidateIf((o) => !o.email)
 	@IsNotEmpty()
 	@IsString()
+	@NoSpaces()
+	@Matches(/^[a-zA-Z0-9_-]*$/, {
+		message: "The string should not contain special characters",
+	})
+	@MinLength(3)
 	@MaxLength(255)
 	login?: string;
 

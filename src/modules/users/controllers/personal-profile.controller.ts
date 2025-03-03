@@ -23,7 +23,7 @@ import {
 import { Response } from "express";
 import { AccessTokenResponse } from "../../../common/dtos/tokens/access-token.response";
 import { RequestWithUser } from "../../../common/types/common.types";
-import { setCookieSwaggerHeader } from "../../../external/swagger/set-cookie-header";
+import { setCookieSwaggerHeader } from "../../../external/swagger/setCookieHeader.swagger";
 import { AccessTokenGuard } from "../../auth/guards/access-token-auth.guard";
 import { UpdatePersonalProfilePasswordRequestDTO } from "../dto/profiles/requests/update-profile-password.request.dto";
 import { UpdatePersonalProfileRequestDTO } from "../dto/profiles/requests/update-profile.request.dto";
@@ -40,6 +40,7 @@ export class PersonalProfileController {
 
 	@ApiOperation({
 		description: "Получение профиля пользователя",
+		summary: "Получение профиля пользователя",
 	})
 	@ApiOkResponse({
 		description: "Профиль пользователя был успешно получен",
@@ -71,6 +72,7 @@ export class PersonalProfileController {
 
 	@ApiOperation({
 		description: "Обновление профиля пользователя",
+		summary: "Обновление профиля пользователя",
 	})
 	@ApiOkResponse({
 		description: "Профиль пользователя был успешно обновлен",
@@ -93,6 +95,7 @@ export class PersonalProfileController {
 	@ApiOperation({
 		description:
 			"Обновление пароля пользователем. После обновления пароля, все предыдущие refreshToken'ы становятся недействительными",
+		summary: "Обновление пароля пользователя",
 	})
 	@ApiOkResponse({
 		description: "Пароль был успешно обновлен",
@@ -138,6 +141,7 @@ export class PersonalProfileController {
 
 	@ApiOperation({
 		description: "Удаление профиля пользователя (soft-delete)",
+		summary: "Удаление профиля пользователя",
 	})
 	@ApiOkResponse({
 		description: "Профиль пользователя был успешно удален",

@@ -5,21 +5,30 @@ import {
 	IsNumber,
 	IsOptional,
 	IsString,
+	Matches,
 	Max,
 	MaxLength,
 	Min,
+	MinLength,
 } from "class-validator";
+import { NoSpaces } from "../../../../../common/class-validator/noSpaces.decorator";
 
 export class UpdatePersonalProfileRequestDTO {
 	@ApiPropertyOptional({
 		description: "Login",
 		example: "johndoe",
+		minLength: 3,
 		maxLength: 255,
 		type: "string",
 	})
 	@IsOptional()
 	@IsNotEmpty()
 	@IsString()
+	@NoSpaces()
+	@Matches(/^[a-zA-Z0-9_-]*$/, {
+		message: "The string should not contain special characters",
+	})
+	@MinLength(3)
 	@MaxLength(255)
 	login?: string;
 

@@ -7,11 +7,14 @@ import {
 	IsOptional,
 	IsString,
 	IsUUID,
+	Matches,
 	Max,
 	MaxLength,
 	Min,
+	MinLength,
 } from "class-validator";
 import { randomUUID } from "crypto";
+import { NoSpaces } from "../../../common/class-validator/noSpaces.decorator";
 import { Entity } from "../../../core/entity/Entity";
 import { Nullable } from "../../../core/types/utility.types";
 
@@ -33,6 +36,11 @@ export class User extends Entity {
 
 	@IsNotEmpty()
 	@IsString()
+	@NoSpaces()
+	@Matches(/^[a-zA-Z0-9_-]*$/, {
+		message: "The string should not contain special characters",
+	})
+	@MinLength(3)
 	@MaxLength(255)
 	private _login: string;
 
@@ -53,7 +61,6 @@ export class User extends Entity {
 	private _age: number;
 
 	@IsOptional()
-	@IsNotEmpty()
 	@IsString()
 	@MaxLength(1000)
 	private _about: Nullable<string>;
@@ -135,6 +142,14 @@ export class User extends Entity {
 
 	public get createdAt(): Nullable<Date> {
 		return this._createdAt;
+	}
+
+	public get updatedAt(): Nullable<Date> {
+		return this._updatedAt;
+	}
+
+	public get deletedAt(): Nullable<Date> {
+		return this._deletedAt;
 	}
 
 	private async hashPassword() {

@@ -20,7 +20,7 @@ import {
 import { Request, Response } from "express";
 import { AccessTokenResponse } from "../../../common/dtos/tokens/access-token.response";
 import { RequestWithUser } from "../../../common/types/common.types";
-import { setCookieSwaggerHeader } from "../../../external/swagger/set-cookie-header";
+import { setCookieSwaggerHeader } from "../../../external/swagger/setCookieHeader.swagger";
 import { LoginUserRequestDTO } from "../dto/requests/login-user.request.dto";
 import { RefreshTokenRequestDTO } from "../dto/requests/refresh-token.request.dto";
 import { RegisterUserRequestDTO } from "../dto/requests/register-user.request.dto";
