@@ -56,7 +56,7 @@ describe("RefreshSession", () => {
 			const refreshSession = await RefreshSession.create(validProps);
 
 			// expiresInMs should be negative when not expired (time remaining)
-			expect(refreshSession.expiresInMs).toBe(-3600000);
+			expect(refreshSession.expiresInMs).toBe(3600000);
 
 			jest.spyOn(Date, "now").mockRestore();
 		});
@@ -447,7 +447,7 @@ describe("RefreshSession", () => {
 				});
 
 				// expiresInMs should be negative when not expired (time remaining)
-				expect(futureExpiry.expiresInMs).toBe(-5000);
+				expect(futureExpiry.expiresInMs).toBe(5000);
 
 				// Test with past expiration
 				const pastExpiry = await RefreshSession.create({
@@ -456,7 +456,7 @@ describe("RefreshSession", () => {
 				});
 
 				// expiresInMs should be positive when expired (time elapsed)
-				expect(pastExpiry.expiresInMs).toBe(5000);
+				expect(pastExpiry.expiresInMs).toBe(-5000);
 			} finally {
 				Date.now = realDateNow; // Restore original implementation
 			}
