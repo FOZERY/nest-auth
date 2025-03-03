@@ -54,7 +54,7 @@ export class PageMetaDTO {
 	}
 }
 
-export class WithPaginatioResponseDTO<T> {
+export class WithPaginationResponseDTO<T> {
 	@IsArray()
 	@ApiProperty({
 		description: "Данные для пагинации",

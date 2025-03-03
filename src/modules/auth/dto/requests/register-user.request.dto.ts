@@ -14,7 +14,7 @@ import {
 export class RegisterUserRequestDTO {
 	@ApiProperty({
 		description: "Login",
-		example: "user123",
+		example: "johndoe",
 		maxLength: 255,
 	})
 	@IsNotEmpty()
@@ -24,7 +24,7 @@ export class RegisterUserRequestDTO {
 
 	@ApiProperty({
 		description: "Email",
-		example: "user@example.com",
+		example: "john.doe@example.com",
 		maxLength: 255,
 	})
 	@IsNotEmpty()
@@ -34,7 +34,7 @@ export class RegisterUserRequestDTO {
 
 	@ApiProperty({
 		description: "Password",
-		example: "password123",
+		example: "Pass1234!",
 		maxLength: 255,
 	})
 	@IsNotEmpty()
@@ -44,9 +44,10 @@ export class RegisterUserRequestDTO {
 
 	@ApiProperty({
 		description: "Age",
-		example: 35,
+		example: 30,
 		minimum: 0,
 		maximum: 150,
+		type: "integer",
 	})
 	@IsNotEmpty()
 	@IsNumber()
@@ -56,8 +57,9 @@ export class RegisterUserRequestDTO {
 
 	@ApiProperty({
 		description: "Unique Fingerprint of user",
-		example: "a1b2c3d4e5f6",
+		example: "6fd4s86f1ds68f41ds8f4ds",
 		maxLength: 255,
+		type: "string",
 	})
 	@IsNotEmpty()
 	@IsString()
@@ -66,9 +68,10 @@ export class RegisterUserRequestDTO {
 
 	@ApiProperty({
 		description: "About user",
-		example: "About me",
+		example: "Software developer with 5 years of experience",
 		maxLength: 1000,
 		required: false,
+		type: "string",
 	})
 	@IsOptional()
 	@IsNotEmpty()
@@ -78,8 +81,9 @@ export class RegisterUserRequestDTO {
 
 	@ApiProperty({
 		description: "Ip address of user",
-		example: "192.168.1.1",
+		example: "192.168.1.100",
 		required: false,
+		type: "string",
 	})
 	@IsOptional()
 	@IsNotEmpty()
@@ -91,6 +95,7 @@ export class RegisterUserRequestDTO {
 		example: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
 		required: false,
 		maxLength: 255,
+		type: "string",
 	})
 	@IsOptional()
 	@IsNotEmpty()

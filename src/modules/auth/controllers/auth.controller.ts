@@ -11,6 +11,7 @@ import {
 import {
 	ApiBearerAuth,
 	ApiConflictResponse,
+	ApiCookieAuth,
 	ApiCreatedResponse,
 	ApiOkResponse,
 	ApiOperation,
@@ -114,6 +115,7 @@ export class AuthController {
 	@ApiUnauthorizedResponse({
 		description: "Refresh token не был предоставлен",
 	})
+	@ApiCookieAuth()
 	@ApiBearerAuth()
 	@HttpCode(200)
 	@UseGuards(AccessTokenGuard)
@@ -144,6 +146,7 @@ export class AuthController {
 		description: "Refresh token не был предоставлен",
 	})
 	@ApiBearerAuth()
+	@ApiCookieAuth()
 	@HttpCode(200)
 	@UseGuards(AccessTokenGuard)
 	@Post("logout-all-sessions-except-current")
@@ -174,6 +177,7 @@ export class AuthController {
 			"Refresh token не был предоставлен, либо истек, либо нет такой сессии, либо пользователь не найден/удален",
 	})
 	@HttpCode(200)
+	@ApiCookieAuth()
 	@Post("refresh-token")
 	public async refreshToken(
 		@Req() req: Request,

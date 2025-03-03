@@ -10,7 +10,7 @@ export class GetUserResponseDTO {
 
 	@ApiProperty({
 		description: "User login",
-		example: "login",
+		example: "johndoe",
 	})
 	login: string;
 
@@ -22,7 +22,8 @@ export class GetUserResponseDTO {
 
 	@ApiProperty({
 		description: "About user",
-		example: "About user",
+		example: "Software developer with 5 years of experience",
+		type: "string",
 		nullable: true,
 	})
 	about: Nullable<string>;

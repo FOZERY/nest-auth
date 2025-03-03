@@ -13,7 +13,7 @@ export class LoginUserRequestDTO {
 	@ApiProperty({
 		description: "User login",
 		required: false,
-		example: "user123",
+		example: "johndoe",
 		type: String,
 		maxLength: 255,
 	})
@@ -26,7 +26,7 @@ export class LoginUserRequestDTO {
 	@ApiProperty({
 		description: "User email",
 		required: false,
-		example: "user@example.com",
+		example: "john.doe@example.com",
 		type: String,
 		maxLength: 255,
 	})
@@ -39,7 +39,7 @@ export class LoginUserRequestDTO {
 	@ApiProperty({
 		description: "User password",
 		required: true,
-		example: "password123",
+		example: "Pass1234!",
 		type: String,
 		maxLength: 255,
 	})
@@ -51,7 +51,7 @@ export class LoginUserRequestDTO {
 	@ApiProperty({
 		description: "IP address",
 		required: false,
-		example: "192.168.1.1",
+		example: "192.168.1.100",
 		type: String,
 	})
 	@IsOptional()
@@ -62,7 +62,7 @@ export class LoginUserRequestDTO {
 	@ApiProperty({
 		description: "Browser fingerprint",
 		required: true,
-		example: "a1b2c3d4e5f6",
+		example: "6fd4s86f1ds68f41ds8f4ds",
 		type: String,
 		maxLength: 255,
 	})

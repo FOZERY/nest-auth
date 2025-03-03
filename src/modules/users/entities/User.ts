@@ -6,6 +6,7 @@ import {
 	IsNumber,
 	IsOptional,
 	IsString,
+	IsUUID,
 	Max,
 	MaxLength,
 	Min,
@@ -26,7 +27,10 @@ export interface UserProps {
 	deletedAt?: Nullable<Date>;
 }
 
-export class User extends Entity<string> {
+export class User extends Entity {
+	@IsUUID()
+	private _id: string;
+
 	@IsNotEmpty()
 	@IsString()
 	@MaxLength(255)
@@ -67,8 +71,8 @@ export class User extends Entity<string> {
 	private _deletedAt: Nullable<Date>;
 
 	private constructor(props: UserProps) {
-		super(props.id ?? randomUUID());
-
+		super();
+		this._id = props.id ?? randomUUID();
 		this._login = props.login;
 		this._email = props.email;
 		this._password = props.password;
@@ -80,7 +84,7 @@ export class User extends Entity<string> {
 	}
 
 	public get id(): string {
-		return this._id!;
+		return this._id;
 	}
 
 	public get login(): string {

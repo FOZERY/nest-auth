@@ -13,7 +13,9 @@ import {
 export class UpdatePersonalProfileRequestDTO {
 	@ApiPropertyOptional({
 		description: "Login",
-		example: "login",
+		example: "johndoe",
+		maxLength: 255,
+		type: "string",
 	})
 	@IsOptional()
 	@IsNotEmpty()
@@ -23,7 +25,9 @@ export class UpdatePersonalProfileRequestDTO {
 
 	@ApiPropertyOptional({
 		description: "Email",
-		example: "Email",
+		example: "john.doe@example.com",
+		type: "string",
+		maxLength: 255,
 	})
 	@IsOptional()
 	@IsNotEmpty()
@@ -33,7 +37,10 @@ export class UpdatePersonalProfileRequestDTO {
 
 	@ApiPropertyOptional({
 		description: "Age",
-		example: 20,
+		example: 30,
+		minimum: 0,
+		maximum: 150,
+		type: "integer",
 	})
 	@IsOptional()
 	@IsNumber()
@@ -43,7 +50,9 @@ export class UpdatePersonalProfileRequestDTO {
 
 	@ApiPropertyOptional({
 		description: "About",
-		example: "About",
+		example: "Software developer with 5 years of experience",
+		maxLength: 1000,
+		type: "string",
 	})
 	@IsOptional()
 	@IsNotEmpty()

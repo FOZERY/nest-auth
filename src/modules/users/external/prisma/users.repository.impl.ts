@@ -19,6 +19,10 @@ export class UsersRepositoryImpl implements UsersRepository {
 		const total = await this.prisma.users.count({
 			where: {
 				deleted_at: withDeleted ? undefined : null,
+				login: {
+					startsWith: dto.login,
+					mode: "insensitive",
+				},
 			},
 		});
 
@@ -36,6 +40,10 @@ export class UsersRepositoryImpl implements UsersRepository {
 			},
 			where: {
 				deleted_at: withDeleted ? undefined : null,
+				login: {
+					startsWith: dto.login,
+					mode: "insensitive",
+				},
 			},
 		});
 

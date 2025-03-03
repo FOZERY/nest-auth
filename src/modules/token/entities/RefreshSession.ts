@@ -12,7 +12,7 @@ export interface RefreshSessionProps {
 	createdAt?: Nullable<Date>;
 }
 
-export class RefreshSession extends Entity<number> {
+export class RefreshSession extends Entity {
 	@IsUUID()
 	private _refreshToken: string;
 

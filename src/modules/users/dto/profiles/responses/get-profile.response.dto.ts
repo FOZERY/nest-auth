@@ -3,34 +3,39 @@ import { Nullable } from "../../../../../core/types/utility.types";
 
 export class GetPersonalProfileResponseDTO {
 	@ApiProperty({
-		description: "User ID",
-		example: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
+		description: "User ID (uuid)",
+		example: "123e4567-e89b-12d3-a456-426614174000",
+		type: "string",
 	})
 	id: string;
 
 	@ApiProperty({
 		description: "Login",
-		example: "login",
+		example: "johndoe",
+		type: "string",
 	})
 	login: string;
 
 	@ApiProperty({
 		description: "Email",
-		example: "Email",
+		example: "john.doe@example.com",
+		type: "string",
 	})
 	email: string;
 
 	@ApiProperty({
 		description: "Age",
-		example: 20,
+		example: 30,
+		type: "integer",
 	})
 	age: number;
 
 	@ApiProperty({
 		description: "About",
-		example: "About",
+		example: "Software developer with 5 years of experience",
 		nullable: true,
 		maxLength: 1000,
+		type: "string",
 	})
 	about: Nullable<string>;
 

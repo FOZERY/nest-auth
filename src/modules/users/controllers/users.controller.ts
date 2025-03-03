@@ -19,7 +19,7 @@ import {
 } from "@nestjs/swagger";
 import {
 	PageMetaDTO,
-	WithPaginatioResponseDTO,
+	WithPaginationResponseDTO,
 } from "../../../common/dtos/pagination/with-pagination.response.dto";
 import { ApiPaginatedOkResponse } from "../../../external/swagger/decorators/withPaginated.response";
 import { GetAllUsersRequestQueryDTO } from "../dto/users/requests/get-all-users.request.dto";
@@ -42,11 +42,11 @@ export class UsersController {
 	@Get()
 	public async paginate(
 		@Query() queryDto: GetAllUsersRequestQueryDTO
-	): Promise<WithPaginatioResponseDTO<GetUserResponseDTO>> {
+	): Promise<WithPaginationResponseDTO<GetUserResponseDTO>> {
 		const users = await this.usersService.getAllUsersWithPagination(queryDto);
 		const pageMetaDto = new PageMetaDTO({ itemCount: users.total, pageOptionsDto: queryDto });
 
-		return new WithPaginatioResponseDTO(users.data, pageMetaDto);
+		return new WithPaginationResponseDTO(users.data, pageMetaDto);
 	}
 
 	@ApiOperation({

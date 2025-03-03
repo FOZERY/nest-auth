@@ -4,7 +4,7 @@ import { IsIP, IsNotEmpty, IsOptional, IsString, MaxLength } from "class-validat
 export class RefreshTokenRequestDTO {
 	@ApiProperty({
 		description: "Fingerprint",
-		example: "123e4567-e89b-12d3-a456-426614174000",
+		example: "6fd4s86f1ds68f41ds8f4ds",
 	})
 	@IsNotEmpty()
 	@IsString()
@@ -13,7 +13,7 @@ export class RefreshTokenRequestDTO {
 
 	@ApiProperty({
 		description: "Ip address",
-		example: "192.168.0.1",
+		example: "192.168.1.100",
 		required: false,
 	})
 	@IsOptional()
@@ -23,8 +23,7 @@ export class RefreshTokenRequestDTO {
 
 	@ApiProperty({
 		description: "User agent",
-		example:
-			"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3",
+		example: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
 		required: false,
 	})
 	@IsOptional()

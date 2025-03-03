@@ -21,6 +21,7 @@ async function bootstrap() {
 		.setTitle("Nest Auth API")
 		.setDescription("This is Nest Auth API with access/refresh tokens auth logic")
 		.setVersion("1.0")
+		.addCookieAuth("refreshToken")
 		.addBearerAuth()
 		.build();
 

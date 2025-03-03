@@ -1,13 +1,7 @@
 import { validate } from "class-validator";
 import { DomainValidationError, DomainValidationErrors } from "../errors/DomainValidationError";
 
-export abstract class Entity<TId extends number | string | bigint> {
-	protected _id?: TId;
-
-	constructor(id?: TId) {
-		this._id = id;
-	}
-
+export abstract class Entity {
 	protected async validate(): Promise<void> {
 		const domainErrors: DomainValidationErrors[] = [];
 		const errors = await validate(this);

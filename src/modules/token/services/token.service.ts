@@ -45,8 +45,6 @@ export class TokenService {
 				parseTimeToMilliseconds(this.configService.get<string>("REFRESH_EXPIRED_IN")!)
 		);
 
-		console.log(expiresAt);
-
 		const refreshSession = await RefreshSession.create({
 			refreshToken: refreshToken,
 			userId: dto.userId,

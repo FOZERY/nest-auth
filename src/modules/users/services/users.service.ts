@@ -25,6 +25,7 @@ export class UsersService {
 	): Promise<FindAllUsersWithPaginationOutputDTO> {
 		return await this.usersRepository.findAllWithPagination(
 			{
+				login: dto.login,
 				take: dto.take!,
 				skip: dto.skip!,
 				orderBy: dto.order === Order.ASC ? "asc" : "desc",
