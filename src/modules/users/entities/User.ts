@@ -133,7 +133,7 @@ export class User extends Entity<string> {
 		return this._createdAt;
 	}
 
-	public async hashPassword() {
+	private async hashPassword() {
 		if (this._password.startsWith("$argon2")) {
 			return;
 		}
@@ -143,7 +143,7 @@ export class User extends Entity<string> {
 		});
 	}
 
-	protected async comparePassword(nonhashedPassword: string) {
+	public async comparePassword(nonhashedPassword: string) {
 		return await argon.verify(this._password, nonhashedPassword);
 	}
 
