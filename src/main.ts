@@ -21,6 +21,11 @@ async function bootstrap() {
 		.setTitle("Nest Auth API")
 		.setDescription("This is Nest Auth API with access/refresh tokens auth logic")
 		.setVersion("1.0")
+		.addBearerAuth({
+			type: "http",
+			scheme: "bearer",
+			in: "header",
+		})
 		.build();
 
 	const documentFactory = () => SwaggerModule.createDocument(app, swaggerConfig);

@@ -9,24 +9,52 @@ import {
 	Post,
 	Req,
 	Res,
-	UnauthorizedException,
 	UseGuards,
 } from "@nestjs/common";
+import {
+	ApiBadRequestResponse,
+	ApiBearerAuth,
+	ApiCookieAuth,
+	ApiNotFoundResponse,
+	ApiOkResponse,
+	ApiOperation,
+	ApiTags,
+	ApiUnauthorizedResponse,
+} from "@nestjs/swagger";
 import { Response } from "express";
+import { type } from "os";
 import { RequestWithUser } from "../../../common/types/common.types";
+import { Nullable } from "../../../core/types/utility.types";
 import { AccessTokenGuard } from "../../auth/guards/access-token-auth.guard";
 import { UpdatePersonalProfilePasswordRequestDTO } from "../dto/profiles/requests/update-profile-password.request.dto";
 import { UpdatePersonalProfileRequestDTO } from "../dto/profiles/requests/update-profile.request.dto";
+import { GetPersonalProfileResponseDTO } from "../dto/profiles/responses/get-profile.response.dto";
+import { UpdatePersonalProfilePasswordResponseDTO } from "../dto/profiles/responses/update-profile-password.response.dto";
 import { UsersService } from "../services/users.service";
 
+@ApiBearerAuth("accessToken")
+@ApiUnauthorizedResponse({ description: "Пользователь не авторизован" })
+@ApiTags("PersonalProfile as owner of profile")
 @Controller("personalProfile")
 @UseGuards(AccessTokenGuard)
 export class PersonalProfileController {
 	constructor(private readonly usersService: UsersService) {}
 
+	@ApiOperation({
+		description: "Получение профиля пользователя",
+	})
+	@ApiOkResponse({
+		description: "Профиль пользователя был успешно получен",
+		type: GetPersonalProfileResponseDTO,
+	})
+	@ApiNotFoundResponse({
+		description: "Пользователь не найден",
+	})
 	@HttpCode(200)
 	@Get()
-	public async getPersonalProfile(@Req() req: RequestWithUser) {
+	public async getPersonalProfile(
+		@Req() req: RequestWithUser
+	): Promise<GetPersonalProfileResponseDTO> {
 		const user = await this.usersService.findById(req.user.id);
 
 		if (!user) {
@@ -39,10 +67,19 @@ export class PersonalProfileController {
 			email: user.email,
 			age: user.age,
 			about: user.about,
-			createdAt: user.createdAt,
+			createdAt: user.createdAt!, // TODO: check later
 		};
 	}
 
+	@ApiOperation({
+		description: "Обновление профиля пользователя",
+	})
+	@ApiOkResponse({
+		description: "Профиль пользователя был успешно обновлен",
+	})
+	@ApiNotFoundResponse({
+		description: "Пользователь не найден",
+	})
 	@HttpCode(200)
 	@Patch()
 	public async updatePersonalProfile(
@@ -55,19 +92,36 @@ export class PersonalProfileController {
 		});
 	}
 
+	@ApiOperation({
+		description:
+			"Обновление пароля пользователем. После обновления пароля, все предыдущие refreshToken'ы становятся недействительными",
+	})
+	@ApiOkResponse({
+		description: "Пароль был успешно обновлен",
+		headers: {
+			"Set-Cookie": {
+				description: "Установка нового refresh token",
+				schema: {
+					type: "string",
+					example: "refreshToken=your_refresh_token; HttpOnly; Path=/; Max-Age=3600",
+				},
+			},
+		},
+		type: UpdatePersonalProfilePasswordResponseDTO,
+	})
+	@ApiBadRequestResponse({
+		description: "Неправильный старый пароль",
+	})
+	@ApiNotFoundResponse({
+		description: "Пользователь не найден",
+	})
 	@HttpCode(200)
 	@Post()
 	public async updatePersonalProfilePassword(
 		@Req() req: RequestWithUser,
 		@Res({ passthrough: true }) res: Response,
 		@Body() dto: UpdatePersonalProfilePasswordRequestDTO
-	) {
-		const refreshToken: string = req.cookies["refreshToken"];
-
-		if (!refreshToken) {
-			throw new UnauthorizedException("Refresh token is required");
-		}
-
+	): Promise<UpdatePersonalProfilePasswordResponseDTO> {
 		const { refreshSession, accessToken } =
 			await this.usersService.updatePersonalProfilePassword({
 				oldPassword: dto.oldPassword,
@@ -90,6 +144,12 @@ export class PersonalProfileController {
 		};
 	}
 
+	@ApiOperation({
+		description: "Удаление профиля пользователя (soft-delete)",
+	})
+	@ApiOkResponse({
+		description: "Профиль пользователя был успешно удален",
+	})
 	@HttpCode(200)
 	@Delete()
 	public async deletePersonalProfile(@Req() req: RequestWithUser) {
