@@ -8,19 +8,42 @@ import {
 	UnauthorizedException,
 	UseGuards,
 } from "@nestjs/common";
+import {
+	ApiBearerAuth,
+	ApiConflictResponse,
+	ApiCreatedResponse,
+	ApiOkResponse,
+	ApiOperation,
+	ApiUnauthorizedResponse,
+} from "@nestjs/swagger";
 import { Request, Response } from "express";
+import { AccessTokenResponse } from "../../../common/dtos/tokens/access-token.response";
 import { RequestWithUser } from "../../../common/types/common.types";
+import { setCookieSwaggerHeader } from "../../../swagger/set-cookie-header";
 import { LoginUserRequestDTO } from "../dto/requests/login-user.request.dto";
 import { RefreshTokenRequestDTO } from "../dto/requests/refresh-token.request.dto";
 import { RegisterUserRequestDTO } from "../dto/requests/register-user.request.dto";
 import { AccessTokenGuard } from "../guards/access-token-auth.guard";
 import { AuthService } from "../services/auth.service";
-import { AccessTokenResponse } from "../types/auth.types";
 
 @Controller("auth")
 export class AuthController {
 	constructor(private readonly authService: AuthService) {}
 
+	@ApiOperation({
+		summary: "Аутентификация пользователя",
+		description: "Аутентификация пользователя",
+	})
+	@ApiOkResponse({
+		description: "Пользователь успешно аутентифицирован",
+		type: AccessTokenResponse,
+		headers: {
+			...setCookieSwaggerHeader,
+		},
+	})
+	@ApiUnauthorizedResponse({
+		description: "Неправильно указан логин/email или пароль",
+	})
 	@HttpCode(200)
 	@Post("login")
 	public async login(
@@ -42,6 +65,20 @@ export class AuthController {
 		};
 	}
 
+	@ApiOperation({
+		summary: "Регистрация пользователя",
+		description: "Регистрация пользователя",
+	})
+	@ApiCreatedResponse({
+		description: "Пользователь успешно зарегистрирован",
+		type: AccessTokenResponse,
+		headers: {
+			...setCookieSwaggerHeader,
+		},
+	})
+	@ApiConflictResponse({
+		description: "Пользователь с таким логином или email уже существует",
+	})
 	@HttpCode(201)
 	@Post("register")
 	public async register(
@@ -63,6 +100,21 @@ export class AuthController {
 		};
 	}
 
+	@ApiOperation({
+		summary: "Выход из системы",
+		description:
+			"Выход из системы. Удаляет refresh token из базы данных и удаляет куку из браузера. Нужно удалить access на фронте",
+	})
+	@ApiOkResponse({
+		description: "Пользователь успешно разлогинен",
+		headers: {
+			...setCookieSwaggerHeader,
+		},
+	})
+	@ApiUnauthorizedResponse({
+		description: "Refresh token не был предоставлен",
+	})
+	@ApiBearerAuth()
 	@HttpCode(200)
 	@UseGuards(AccessTokenGuard)
 	@Post("logout")
@@ -81,6 +133,17 @@ export class AuthController {
 		res.clearCookie("refreshToken");
 	}
 
+	@ApiOperation({
+		description: "Выход из всех сессий кроме текущей",
+		summary: "Выход из всех сессий кроме текущей",
+	})
+	@ApiOkResponse({
+		description: "Успешный выход из сессией",
+	})
+	@ApiUnauthorizedResponse({
+		description: "Refresh token не был предоставлен",
+	})
+	@ApiBearerAuth()
 	@HttpCode(200)
 	@UseGuards(AccessTokenGuard)
 	@Post("logout-all-sessions-except-current")
@@ -94,6 +157,22 @@ export class AuthController {
 		await this.authService.logoutAllSessionsExceptCurrent(req.user.id, refreshToken);
 	}
 
+	@ApiOperation({
+		summary: "Обновление access token",
+		description:
+			"Обновление access token. При обновлении access token также обновляется refresh token",
+	})
+	@ApiOkResponse({
+		description: "Access token успешно обновлен",
+		type: AccessTokenResponse,
+		headers: {
+			...setCookieSwaggerHeader,
+		},
+	})
+	@ApiUnauthorizedResponse({
+		description:
+			"Refresh token не был предоставлен, либо истек, либо нет такой сессии, либо пользователь не найден/удален",
+	})
 	@HttpCode(200)
 	@Post("refresh-token")
 	public async refreshToken(

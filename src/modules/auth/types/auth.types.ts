@@ -6,10 +6,6 @@ export type AccessRefreshTokens = {
 	};
 };
 
-export type AccessTokenResponse = {
-	accessToken: string;
-};
-
 export type AccessJwtPayload = {
 	id: string;
 	login: string;

@@ -14,7 +14,6 @@ import {
 import {
 	ApiBadRequestResponse,
 	ApiBearerAuth,
-	ApiCookieAuth,
 	ApiNotFoundResponse,
 	ApiOkResponse,
 	ApiOperation,
@@ -22,17 +21,16 @@ import {
 	ApiUnauthorizedResponse,
 } from "@nestjs/swagger";
 import { Response } from "express";
-import { type } from "os";
+import { AccessTokenResponse } from "../../../common/dtos/tokens/access-token.response";
 import { RequestWithUser } from "../../../common/types/common.types";
-import { Nullable } from "../../../core/types/utility.types";
+import { setCookieSwaggerHeader } from "../../../swagger/set-cookie-header";
 import { AccessTokenGuard } from "../../auth/guards/access-token-auth.guard";
 import { UpdatePersonalProfilePasswordRequestDTO } from "../dto/profiles/requests/update-profile-password.request.dto";
 import { UpdatePersonalProfileRequestDTO } from "../dto/profiles/requests/update-profile.request.dto";
 import { GetPersonalProfileResponseDTO } from "../dto/profiles/responses/get-profile.response.dto";
-import { UpdatePersonalProfilePasswordResponseDTO } from "../dto/profiles/responses/update-profile-password.response.dto";
 import { UsersService } from "../services/users.service";
 
-@ApiBearerAuth("accessToken")
+@ApiBearerAuth()
 @ApiUnauthorizedResponse({ description: "Пользователь не авторизован" })
 @ApiTags("PersonalProfile as owner of profile")
 @Controller("personalProfile")
@@ -99,15 +97,9 @@ export class PersonalProfileController {
 	@ApiOkResponse({
 		description: "Пароль был успешно обновлен",
 		headers: {
-			"Set-Cookie": {
-				description: "Установка нового refresh token",
-				schema: {
-					type: "string",
-					example: "refreshToken=your_refresh_token; HttpOnly; Path=/; Max-Age=3600",
-				},
-			},
+			...setCookieSwaggerHeader,
 		},
-		type: UpdatePersonalProfilePasswordResponseDTO,
+		type: AccessTokenResponse,
 	})
 	@ApiBadRequestResponse({
 		description: "Неправильный старый пароль",
@@ -121,7 +113,7 @@ export class PersonalProfileController {
 		@Req() req: RequestWithUser,
 		@Res({ passthrough: true }) res: Response,
 		@Body() dto: UpdatePersonalProfilePasswordRequestDTO
-	): Promise<UpdatePersonalProfilePasswordResponseDTO> {
+	): Promise<AccessTokenResponse> {
 		const { refreshSession, accessToken } =
 			await this.usersService.updatePersonalProfilePassword({
 				oldPassword: dto.oldPassword,
