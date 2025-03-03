@@ -3,5 +3,6 @@ node_modules
 .gitignore
 *.md
 dist
-*.env*
-env/
+**/.env*
+.DS_Store
+logs
