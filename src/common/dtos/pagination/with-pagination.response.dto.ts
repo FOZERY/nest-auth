@@ -1,3 +1,5 @@
+import { ApiProperty } from "@nestjs/swagger";
+import { IsArray } from "class-validator";
 import { PageOptionsRequestDTO } from "./page-options.request.dto";
 
 export interface PageMetaDTOParams {
@@ -6,16 +8,40 @@ export interface PageMetaDTOParams {
 }
 
 export class PageMetaDTO {
+	@ApiProperty({
+		description: "Текущая страница",
+		example: 1,
+	})
 	readonly page: number;
 
+	@ApiProperty({
+		description: "Количество элементов на странице",
+		example: 10,
+	})
 	readonly take: number;
 
+	@ApiProperty({
+		description: "Общее количество элементов",
+		example: 100,
+	})
 	readonly itemCount: number;
 
+	@ApiProperty({
+		description: "Общее количество страниц",
+		example: 10,
+	})
 	readonly pageCount: number;
 
+	@ApiProperty({
+		description: "Есть ли предыдущая страница",
+		example: false,
+	})
 	readonly hasPreviousPage: boolean;
 
+	@ApiProperty({
+		description: "Есть ли следующая страница",
+		example: true,
+	})
 	readonly hasNextPage: boolean;
 
 	constructor({ pageOptionsDto, itemCount }: PageMetaDTOParams) {
@@ -29,8 +55,15 @@ export class PageMetaDTO {
 }
 
 export class WithPaginatioResponseDTO<T> {
-	readonly data: T[];
-	readonly meta: PageMetaDTO;
+	@IsArray()
+	@ApiProperty({
+		description: "Данные для пагинации",
+		isArray: true,
+	})
+	data: T[];
+
+	@ApiProperty({ type: () => PageMetaDTO })
+	meta: PageMetaDTO;
 
 	constructor(data: T[], meta: PageMetaDTO) {
 		this.data = data;

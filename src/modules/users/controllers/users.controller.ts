@@ -10,9 +10,18 @@ import {
 import { AccessTokenGuard } from "../../auth/guards/access-token-auth.guard";
 
 import {
+	ApiBearerAuth,
+	ApiExtraModels,
+	ApiNotFoundResponse,
+	ApiOkResponse,
+	ApiOperation,
+	ApiQuery,
+} from "@nestjs/swagger";
+import {
 	PageMetaDTO,
 	WithPaginatioResponseDTO,
 } from "../../../common/dtos/pagination/with-pagination.response.dto";
+import { ApiPaginatedOkResponse } from "../../../external/swagger/decorators/withPaginated.response";
 import { GetAllUsersRequestQueryDTO } from "../dto/users/requests/get-all-users.request.dto";
 import { GetUserByIdRequestDTO } from "../dto/users/requests/get-user-profile.request.dto";
 import { GetUserResponseDTO } from "../dto/users/responses/get-user.response.dto";
@@ -22,10 +31,16 @@ import { UsersService } from "../services/users.service";
 export class UsersController {
 	constructor(private readonly usersService: UsersService) {}
 
+	@ApiOperation({
+		summary: "Получить всех пользователей с пагинацией",
+		description: "Получить всех пользователей с пагинацией",
+	})
+	@ApiPaginatedOkResponse(GetUserResponseDTO)
+	@ApiBearerAuth()
 	@HttpCode(200)
 	@UseGuards(AccessTokenGuard)
 	@Get()
-	public async getAllUsers(
+	public async paginate(
 		@Query() queryDto: GetAllUsersRequestQueryDTO
 	): Promise<WithPaginatioResponseDTO<GetUserResponseDTO>> {
 		const users = await this.usersService.getAllUsersWithPagination(queryDto);
@@ -34,6 +49,15 @@ export class UsersController {
 		return new WithPaginatioResponseDTO(users.data, pageMetaDto);
 	}
 
+	@ApiOperation({
+		summary: "Получить профиль пользователя",
+		description: "Получить профиль пользователя",
+	})
+	@ApiOkResponse({
+		type: GetUserResponseDTO,
+		description: "Успешно получен профиль пользователя",
+	})
+	@ApiNotFoundResponse({ description: "Пользователь не найден" })
 	@HttpCode(200)
 	@UseGuards(AccessTokenGuard)
 	@Get(":id")
