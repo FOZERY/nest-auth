@@ -58,6 +58,7 @@ export class UsersController {
 		description: "Успешно получен профиль пользователя",
 	})
 	@ApiNotFoundResponse({ description: "Пользователь не найден" })
+	@ApiBearerAuth()
 	@HttpCode(200)
 	@UseGuards(AccessTokenGuard)
 	@Get(":id")
