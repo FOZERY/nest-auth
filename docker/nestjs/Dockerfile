@@ -27,4 +27,4 @@ COPY --from=build /app/prisma /app/prisma
 COPY --from=deps /app/node_modules /app/node_modules
 COPY --from=build /app/dist /app/dist
 ENV NODE_ENV production
-CMD pnpm migrate:prod && pnpm start:prod
+CMD pnpm migration:prod && pnpm start:prod

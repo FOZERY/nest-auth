@@ -1,83 +1,113 @@
 # Nest-auth
 
+## Перед запуском
+
+1. Иметь pnpm для dev и test (prod можно запустить просто в контейнерах)
+
+2. Ставим зависимости
+
+```
+pnpm i
+```
+
 ## Для запуска
 
-### production
+### prod
 
-1. В /docker создать .env.prod
+1. Заходим в /env/, смотрим .env.example
+2. Создаем .env.prod с наполнением как в .env.example
+
+По формату - s - секунды, m - минуты, и т.д. h, d, w
 
 ```
-COMPOSE_PROJECT_NAME=prod_homework1
-NODE_ENV=production
-APP_PORT=3000
-POSTGRES_USER=postgres
-POSTGRES_PASSWORD=postgres
-POSTGRES_DB=homework1
-JWT_ACCESS_SECRET=yoursecret
-JWT_REFRESH_SECRET=yoursecret
 REFRESH_EXPIRED_IN=7d
-ACCESS_EXPIRED_IN=10s
-DATABASE_URL=postgresql://postgres:postgres@postgres:5432/homework1?schema=public
+ACCESS_EXPIRED_IN=1h
 ```
 
-2. Запустить docker build - `docker:prod:build`
-3. Запустить docker compose - `pnpm docker:prod:run`
+3. Запускаем
 
-localhost:${APP_PORT}/api - равзернутое приложение
-
-localhost:${APP_PORT}/swagger - Swagger Documentation
-
-### development
-
-Нужен pnpm - перед запуском `pnpm i`
-
-1. В /docker создать .env.dev
+Если есть pnpm
 
 ```
-POSTGRES_USER=postgres
-POSTGRES_PASSWORD=postgres
-POSTGRES_DB=homework1
+pnpm docker:prod:build
+pnpm docker:prod:run
 ```
 
-2. В /prisma создать .env
+Если pnpm нет  
+Из корня проекта:
 
 ```
-DATABASE_URL="postgresql://postgres:postgres@localhost:5431/homework1?schema=public"
+docker compose -f ./docker/compose.prod.yaml build
+docker compose -f ./docker/compose.prod.yaml --env-file ./env/.env.prod up -d
 ```
 
-3. В /env создать .env.development
+Запустится docker compose приложуха на указанных в env портах
 
 ```
-NODE_ENV=development
-APP_PORT=4000
-POSTGRES_USER=postgres
-POSTGRES_PASSWORD=postgres
-POSTGRES_DB=homework1
-JWT_ACCESS_SECRET=
-JWT_REFRESH_SECRET=
-REFRESH_EXPIRED_IN=7d
-ACCESS_EXPIRED_IN=10s
+http://localhost:${APP_PORT}/api
+http://localhost:${APP_PORT}/swagger - Swagger
 ```
 
-4. Сгенерировать prisma client
+### dev
+
+1. В /env/ создаем .env.dev по примеру .env.example
+2. Собираем докер образ Postgres'а
 
 ```
-prisma generate
+pnpm:dev:build
+pnpm:dev:run
 ```
 
-5. Запускаем docker compose -
+3. Генерируем prisma-client
 
 ```
-pnpm docker:dev:build
-pnpm docker:dev:run
+pnpm prisma generate
 ```
 
-6. Запускаем миграции
+4. Применяем миграции
 
 ```
-pnpm migrate:dev
+pnpm migration:dev
 ```
 
-localhost:${APP_PORT}/api - запущенное приложение
+5. Запускаем приложение в watch-режиме
 
-localhost:${APP_PORT}/swagger - Swagger Documentation
+```
+pnpm start:dev
+```
+
+Endpoints:
+
+```
+http://localhost:${APP_PORT}/api
+http://localhost:${APP_PORT}/swagger - Swagger
+```
+
+### test
+
+1. В /env/ создаем .env.test по примеру .env.example
+2. Собираем докер образ Postgres'а
+
+```
+pnpm:test:build
+pnpm:test:run
+```
+
+3. Генерируем prisma-client
+
+```
+pnpm prisma generate
+```
+
+4. Применяем миграции
+
+```
+pnpm migration:test
+```
+
+5. Запускаем тесты
+
+```
+pnpm test - module tests
+pnpm test:e2e - end-to-end tests
+```
