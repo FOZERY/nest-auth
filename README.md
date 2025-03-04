@@ -29,6 +29,8 @@ localhost:${APP_PORT}/swagger - Swagger Documentation
 
 ### development
 
+Нужен pnpm - перед запуском `pnpm i`
+
 1. В /docker создать .env.dev
 
 ```
@@ -58,7 +60,10 @@ ACCESS_EXPIRED_IN=10s
 ```
 
 4. Сгенерировать prisma client
-   `prisma generate`
+
+```
+prisma generate
+```
 
 5. Запускаем docker compose -
 
