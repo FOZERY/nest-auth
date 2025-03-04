@@ -1,7 +1,6 @@
 import { INestApplication } from "@nestjs/common";
 import { Test, TestingModule } from "@nestjs/testing";
 import { Prisma, PrismaClient } from "@prisma/client";
-import { randomUUID } from "crypto";
 import request from "supertest";
 import { AppModule } from "../../src/app.module";
 import { WithPaginationResponseDTO } from "../../src/common/dtos/pagination/with-pagination.response.dto";
@@ -11,7 +10,7 @@ import { GetUserResponseDTO } from "../../src/modules/users/dto/users/responses/
 
 describe("Users (e2e)", () => {
 	let app: INestApplication;
-	let tokenService: TokenService;
+
 	let prisma: PrismaClient;
 	let token: string;
 
@@ -30,9 +29,7 @@ describe("Users (e2e)", () => {
 
 		app = moduleFixture.createNestApplication();
 		mainConfig(app);
-		tokenService = moduleFixture.get(TokenService);
 		prisma = new PrismaClient();
-
 		await prisma.$connect();
 		await app.init();
 	});
@@ -41,15 +38,6 @@ describe("Users (e2e)", () => {
 		await refreshDatabase();
 		await prisma.$disconnect();
 		await app.close();
-	});
-
-	beforeEach(async () => {
-		token = await tokenService.createAccessToken({
-			userId: randomUUID(),
-			login: "login",
-			email: "email@mail.com",
-		});
-		await refreshDatabase();
 	});
 
 	describe("GET /api/users", () => {
@@ -106,10 +94,22 @@ describe("Users (e2e)", () => {
 			about: user.about,
 		}));
 
-		beforeEach(async () => {
+		beforeAll(async () => {
 			await prisma.users.createMany({
 				data: usersSortedByUuid,
 			});
+			token = await request(app.getHttpServer())
+				.post("/api/auth/login")
+				.send({
+					login: usersSortedByUuid[0].login,
+					password: usersSortedByUuid[0].password,
+					fingerprint: "random",
+				})
+				.then((res) => res.body.accessToken);
+		});
+
+		afterAll(async () => {
+			await refreshDatabase();
 		});
 
 		it("should return all users without any filters with 200", async () => {
@@ -276,10 +276,22 @@ describe("Users (e2e)", () => {
 			},
 		];
 
-		beforeEach(async () => {
+		beforeAll(async () => {
 			await prisma.users.createMany({
 				data: users,
 			});
+			token = await request(app.getHttpServer())
+				.post("/api/auth/login")
+				.send({
+					login: users[0].login,
+					password: users[0].password,
+					fingerprint: "random",
+				})
+				.then((res) => res.body.accessToken);
+		});
+
+		afterAll(async () => {
+			await refreshDatabase();
 		});
 
 		it("should return user with 200", async () => {

@@ -21,10 +21,10 @@ export class AccessTokenStrategy extends PassportStrategy(Strategy, "access-toke
 	async validate(payload: AccessJwtPayload) {
 		// сомнительно, но окэй?? а как еще это сделать? через блэклист + рэдис? хм...
 		// удалили пользователя но access остался у него на руках, поэтому + проверка
-		// const user = await this.usersService.findById(payload.id);
-		// if (!user) {
-		// 	return null;
-		// }
+		const user = await this.usersService.findById(payload.id);
+		if (!user) {
+			return null;
+		}
 		return payload;
 	}
 }
