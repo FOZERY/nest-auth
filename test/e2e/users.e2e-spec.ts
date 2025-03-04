@@ -5,7 +5,6 @@ import request from "supertest";
 import { AppModule } from "../../src/app.module";
 import { WithPaginationResponseDTO } from "../../src/common/dtos/pagination/with-pagination.response.dto";
 import { mainConfig } from "../../src/main.config";
-import { TokenService } from "../../src/modules/token/services/token.service";
 import { GetUserResponseDTO } from "../../src/modules/users/dto/users/responses/get-user.response.dto";
 
 describe("Users (e2e)", () => {
