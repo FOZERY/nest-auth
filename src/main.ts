@@ -1,24 +1,15 @@
-import { ValidationPipe } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
 
 import { NestFactory } from "@nestjs/core";
-import cookieParser from "cookie-parser";
 import { AppModule } from "./app.module";
+import { mainConfig } from "./main.config";
 
 async function bootstrap() {
 	const app = await NestFactory.create(AppModule);
-	app.useGlobalPipes(
-		new ValidationPipe({
-			whitelist: true,
-			transform: true,
-		})
-	);
-	app.setGlobalPrefix("/api");
-	app.use(cookieParser());
+	mainConfig(app);
 
 	const config = app.get(ConfigService);
-
 	if (config.get<string>("NODE_ENV") !== "production") {
 		const swaggerConfig = new DocumentBuilder()
 			.setTitle("Nest Auth API")
