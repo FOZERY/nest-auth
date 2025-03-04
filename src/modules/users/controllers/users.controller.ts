@@ -9,14 +9,7 @@ import {
 } from "@nestjs/common";
 import { AccessTokenGuard } from "../../auth/guards/access-token-auth.guard";
 
-import {
-	ApiBearerAuth,
-	ApiExtraModels,
-	ApiNotFoundResponse,
-	ApiOkResponse,
-	ApiOperation,
-	ApiQuery,
-} from "@nestjs/swagger";
+import { ApiBearerAuth, ApiNotFoundResponse, ApiOkResponse, ApiOperation } from "@nestjs/swagger";
 import {
 	PageMetaDTO,
 	WithPaginationResponseDTO,
