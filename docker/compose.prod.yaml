@@ -3,7 +3,7 @@ services:
         build:
             context: ../
             dockerfile: docker/nestjs/Dockerfile
-        container_name: prod-nestjs_api
+        container_name: nestjs-api-prod
         ports:
             - "${APP_PORT}:3000"
         environment:
@@ -16,7 +16,6 @@ services:
             REFRESH_EXPIRED_IN: ${REFRESH_EXPIRED_IN}
             ACCESS_EXPIRED_IN: ${REFRESH_EXPIRED_IN}
             DATABASE_URL: ${DATABASE_URL}
-            PRISMA_CLIENT_ENGINE_TYPE: ${PRISMA_CLIENT_ENGINE_TYPE}
         depends_on:
             - postgres
         restart: unless-stopped
@@ -27,7 +26,7 @@ services:
                     memory: 1G
 
     postgres:
-        container_name: prod-postgres
+        container_name: postgres-prod
         image: postgres:16
         restart: unless-stopped
         environment:
@@ -37,7 +36,7 @@ services:
         volumes:
             - postgres-data-prod:/var/lib/postgresql/data
         ports:
-            - "5432:5432"
+            - "${POSTGRES_PORT}:5432"
         deploy:
             resources:
                 limits:

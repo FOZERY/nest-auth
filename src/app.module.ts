@@ -8,7 +8,7 @@ import { UsersModule } from "./modules/users/users.module";
 		ConfigModule.forRoot({
 			isGlobal: true,
 			ignoreEnvFile: process.env.NODE_ENV === "production",
-			envFilePath: `./env/.env.development`,
+			envFilePath: `./env/.env.${process.env.NODE_ENV === "test" ? "test" : "dev"}`,
 		}),
 		UsersModule,
 		AuthModule,

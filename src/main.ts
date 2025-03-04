@@ -10,6 +10,7 @@ async function bootstrap() {
 	mainConfig(app);
 
 	const config = app.get(ConfigService);
+
 	if (config.get<string>("NODE_ENV") !== "production") {
 		const swaggerConfig = new DocumentBuilder()
 			.setTitle("Nest Auth API")
