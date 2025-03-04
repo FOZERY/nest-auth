@@ -108,6 +108,6 @@ pnpm migration:test
 5. Запускаем тесты
 
 ```
-pnpm test - module tests
-pnpm test:e2e - end-to-end tests
+pnpm test # module tests
+pnpm test:e2e # end-to-end tests
 ```
