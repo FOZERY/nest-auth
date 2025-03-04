@@ -13,6 +13,8 @@ RUN pnpm prisma generate
 FROM base AS build
 WORKDIR /app
 COPY package.json pnpm-lock.yaml ./
+COPY --from=base /app/tsconfig.json ./
+COPY --from=base /app/tsconfig.build.json ./
 RUN --mount=type=cache,id=pnpm,target=/root/.local/share/pnpm/store pnpm fetch --frozen-lockfile
 RUN --mount=type=cache,id=pnpm,target=/root/.local/share/pnpm/store pnpm install --frozen-lockfile
 COPY . .
