@@ -17,18 +17,20 @@ async function bootstrap() {
 	app.setGlobalPrefix("/api");
 	app.use(cookieParser());
 
-	const swaggerConfig = new DocumentBuilder()
-		.setTitle("Nest Auth API")
-		.setDescription("This is Nest Auth API with access/refresh tokens auth logic")
-		.setVersion("1.0")
-		.addCookieAuth("refreshToken")
-		.addBearerAuth()
-		.build();
-
-	const documentFactory = () => SwaggerModule.createDocument(app, swaggerConfig);
-	SwaggerModule.setup("swagger", app, documentFactory);
-
 	const config = app.get(ConfigService);
+
+	if (config.get<string>("NODE_ENV") !== "production") {
+		const swaggerConfig = new DocumentBuilder()
+			.setTitle("Nest Auth API")
+			.setDescription("This is Nest Auth API with access/refresh tokens auth logic")
+			.setVersion("1.0")
+			.addCookieAuth("refreshToken")
+			.addBearerAuth()
+			.build();
+		const documentFactory = () => SwaggerModule.createDocument(app, swaggerConfig);
+		SwaggerModule.setup("swagger", app, documentFactory);
+	}
+
 	const port = config.get<number>("APP_PORT");
 	await app.listen(port ?? 3000);
 }
