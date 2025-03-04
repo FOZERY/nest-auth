@@ -24,4 +24,9 @@ describe("parseTimeToMilliseconds", () => {
 	it("should return correct time with input in second", () => {
 		expect(parseTimeToMilliseconds("10w")).toBe(10 * 1000 * 60 * 60 * 24 * 7);
 	});
+
+	it("should return correct value if have spaces", () => {
+		expect(parseTimeToMilliseconds("10w   ")).toBe(10 * 1000 * 60 * 60 * 24 * 7);
+		expect(parseTimeToMilliseconds("   10w")).toBe(10 * 1000 * 60 * 60 * 24 * 7);
+	});
 });

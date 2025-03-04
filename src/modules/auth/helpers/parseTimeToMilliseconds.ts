@@ -1,5 +1,5 @@
 export function parseTimeToMilliseconds(timeString: string): number {
-	const timeUnit = timeString.slice(-1);
+	const timeUnit = timeString.trim().slice(-1);
 	const timeValue = parseInt(timeString.slice(0, -1), 10);
 
 	switch (timeUnit) {
