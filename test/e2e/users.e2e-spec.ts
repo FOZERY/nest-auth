@@ -319,6 +319,11 @@ describe("Users (e2e)", () => {
 				.get("/api/users/notuuid")
 				.set("Authorization", "Bearer " + token)
 				.expect(400);
+
+			await request(app.getHttpServer())
+				.get("/api/users/10032")
+				.set("Authorization", "Bearer " + token)
+				.expect(400);
 		});
 
 		it("should return 401 if not authorized", async () => {

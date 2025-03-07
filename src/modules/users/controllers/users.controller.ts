@@ -4,6 +4,7 @@ import {
 	HttpCode,
 	NotFoundException,
 	Param,
+	ParseUUIDPipe,
 	Query,
 	UseGuards,
 } from "@nestjs/common";
@@ -55,8 +56,8 @@ export class UsersController {
 	@HttpCode(200)
 	@UseGuards(AccessTokenGuard)
 	@Get(":id")
-	public async getUserById(@Param() dto: GetUserByIdRequestDTO): Promise<GetUserResponseDTO> {
-		const user = await this.usersService.findById(dto.id);
+	public async getUserById(@Param("id", ParseUUIDPipe) id: string): Promise<GetUserResponseDTO> {
+		const user = await this.usersService.findById(id);
 
 		if (!user) {
 			throw new NotFoundException("User not found");
