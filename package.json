@@ -110,7 +110,7 @@
 		"src/**/*.{js,ts,jsx,tsx,json,html}": [
 			"pnpm format",
 			"pnpm lint",
-			"pnpm test"
+			"jest --bail --findRelatedTests --passWithNoTests"
 		]
 	}
 }
