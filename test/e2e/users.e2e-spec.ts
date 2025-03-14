@@ -6,6 +6,7 @@ import { AppModule } from "../../src/app.module";
 import { WithPaginationResponseDTO } from "../../src/common/dtos/pagination/with-pagination.response.dto";
 import { mainConfig } from "../../src/main.config";
 import { GetUserResponseDTO } from "../../src/modules/users/dto/users/responses/get-user.response.dto";
+import assert from "node:assert";
 
 describe("Users (e2e)", () => {
 	let app: INestApplication;
@@ -40,7 +41,7 @@ describe("Users (e2e)", () => {
 	});
 
 	describe("GET /api/users", () => {
-		let usersSortedByUuid = [
+		const usersSortedByUuid = [
 			{
 				id: "d1c6b93a-6c92-4a84-a56d-e636c968f4c9",
 				login: "johndoe",
@@ -86,7 +87,7 @@ describe("Users (e2e)", () => {
 			if (user1.id > user2.id) return 1;
 			return 0;
 		});
-		let responseUsersSortedByUuid = usersSortedByUuid.map((user) => ({
+		const responseUsersSortedByUuid = usersSortedByUuid.map((user) => ({
 			id: user.id,
 			login: user.login,
 			age: user.age,
@@ -232,7 +233,7 @@ describe("Users (e2e)", () => {
 	});
 
 	describe("GET /api/users/:id", () => {
-		let users = [
+		const users = [
 			{
 				id: "d1c6b93a-6c92-4a84-a56d-e636c968f4c9",
 				login: "johndoe",
@@ -286,7 +287,10 @@ describe("Users (e2e)", () => {
 					password: users[0].password,
 					fingerprint: "random",
 				})
-				.then((res) => res.body.accessToken);
+				.then((res) => {
+					assert(typeof res.body.accessToken === "string");
+					return res.body.accessToken;
+				});
 		});
 
 		afterAll(async () => {

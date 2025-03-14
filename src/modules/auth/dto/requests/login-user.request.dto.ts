@@ -21,7 +21,7 @@ export class LoginUserRequestDTO {
 		minLength: 3,
 		maxLength: 255,
 	})
-	@ValidateIf((o) => !o.email)
+	@ValidateIf((o: LoginUserRequestDTO) => !o.email)
 	@IsNotEmpty()
 	@IsString()
 	@NoSpaces()
@@ -39,7 +39,7 @@ export class LoginUserRequestDTO {
 		type: String,
 		maxLength: 255,
 	})
-	@ValidateIf((o) => !o.login)
+	@ValidateIf((o: LoginUserRequestDTO) => !o.login)
 	@IsNotEmpty()
 	@IsEmail()
 	@MaxLength(255)

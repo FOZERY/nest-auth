@@ -17,7 +17,6 @@ import {
 } from "../../../common/dtos/pagination/with-pagination.response.dto";
 import { ApiPaginatedOkResponse } from "../../../external/swagger/decorators/apiPaginatedOkResponse.swagger";
 import { GetAllUsersRequestQueryDTO } from "../dto/users/requests/get-all-users.request.dto";
-import { GetUserByIdRequestDTO } from "../dto/users/requests/get-user-profile.request.dto";
 import { GetUserResponseDTO } from "../dto/users/responses/get-user.response.dto";
 import { UsersService } from "../services/users.service";
 

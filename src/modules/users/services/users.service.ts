@@ -7,7 +7,6 @@ import { FindAllUsersWithPaginationOutputDTO } from "../dto/users/repositories/f
 import { CreateUserRequestDTO } from "../dto/users/requests/create-user.request.dto";
 import { GetAllUsersRequestQueryDTO } from "../dto/users/requests/get-all-users.request.dto";
 import { UpdateUserRequestDTO } from "../dto/users/requests/update-user.request.dto";
-import { GetUserResponseDTO } from "../dto/users/responses/get-user.response.dto";
 import { User } from "../entities/User";
 import { UsersRepositoryImpl } from "../external/prisma/users.repository.impl";
 import { UsersRepository } from "../repositories/users.repository";
@@ -27,7 +26,7 @@ export class UsersService {
 			{
 				login: dto.login,
 				take: dto.take!,
-				skip: dto.skip!,
+				skip: dto.skip,
 				orderBy: dto.order === Order.ASC ? "asc" : "desc",
 			},
 			withDeleted
