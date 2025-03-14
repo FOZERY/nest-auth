@@ -2,7 +2,6 @@ import { INestApplication, ValidationPipe } from "@nestjs/common";
 import cookieParser from "cookie-parser";
 
 export function mainConfig(app: INestApplication) {
-	console.log(process.env.NODE_ENV);
 	app.useGlobalPipes(
 		new ValidationPipe({
 			whitelist: true,
