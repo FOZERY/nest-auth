@@ -1,12 +1,12 @@
 import { INestApplication } from "@nestjs/common";
 import { Test, TestingModule } from "@nestjs/testing";
 import { Prisma, PrismaClient } from "@prisma/client";
+import assert from "node:assert";
 import request from "supertest";
 import { AppModule } from "../../src/app.module";
 import { WithPaginationResponseDTO } from "../../src/common/dtos/pagination/with-pagination.response.dto";
-import { mainConfig } from "../../src/main.config";
 import { GetUserResponseDTO } from "../../src/modules/users/dto/users/responses/get-user.response.dto";
-import assert from "node:assert";
+import { initMainConfig } from "../../src/main.config";
 
 describe("Users (e2e)", () => {
 	let app: INestApplication;
@@ -28,7 +28,8 @@ describe("Users (e2e)", () => {
 		}).compile();
 
 		app = moduleFixture.createNestApplication();
-		mainConfig(app);
+		initMainConfig(app);
+
 		prisma = new PrismaClient();
 		await prisma.$connect();
 		await app.init();

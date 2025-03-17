@@ -1,7 +1,9 @@
-import { Module } from "@nestjs/common";
+import { MiddlewareConsumer, Module, NestModule, ValidationPipe } from "@nestjs/common";
 import { ConfigModule } from "@nestjs/config";
 import { AuthModule } from "./modules/auth/auth.module";
 import { UsersModule } from "./modules/users/users.module";
+import cookieParser from "cookie-parser";
+import { APP_PIPE } from "@nestjs/core";
 
 @Module({
 	imports: [
@@ -13,7 +15,23 @@ import { UsersModule } from "./modules/users/users.module";
 		UsersModule,
 		AuthModule,
 	],
-	providers: [],
+	providers: [
+		{
+			provide: APP_PIPE,
+			useValue: new ValidationPipe({
+				whitelist: true,
+				transform: true,
+				transformOptions: {
+					exposeDefaultValues: true,
+					exposeUnsetFields: true,
+				},
+			}),
+		},
+	],
 	controllers: [],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+	configure(consumer: MiddlewareConsumer) {
+		consumer.apply(cookieParser()).forRoutes("*");
+	}
+}

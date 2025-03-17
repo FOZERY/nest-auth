@@ -3,11 +3,11 @@ import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
 
 import { NestFactory } from "@nestjs/core";
 import { AppModule } from "./app.module";
-import { mainConfig } from "./main.config";
+import { initMainConfig } from "./main.config";
 
 async function bootstrap() {
 	const app = await NestFactory.create(AppModule);
-	mainConfig(app);
+	initMainConfig(app);
 
 	const config = app.get(ConfigService);
 
