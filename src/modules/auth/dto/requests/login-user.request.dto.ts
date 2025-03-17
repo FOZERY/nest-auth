@@ -26,7 +26,7 @@ export class LoginUserRequestDTO {
 	@IsString()
 	@NoSpaces()
 	@Matches(/^[a-zA-Z0-9_-]*$/, {
-		message: "The string should not contain special characters",
+		message: "The login should not contain special characters",
 	})
 	@MinLength(3)
 	@MaxLength(255)

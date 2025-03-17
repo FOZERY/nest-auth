@@ -9,6 +9,8 @@ import { RefreshSession } from "../entities/RefreshSession";
 import { RefreshSessionsRepositoryImpl } from "../external/prisma/refreshSessions.repository.impl";
 import { CreateRefreshSessionResult } from "../interfaces/create-refreshSession-result";
 import { RefreshSessionsRepository } from "../repositories/refreshSessions.repository";
+import { CreateAccessRefreshTokensServiceDTO } from "../dtos/services/create-access-refresh.service.dto";
+import { AccessRefreshTokens } from "../../auth/types/auth.types";
 
 export class TokenService {
 	constructor(
@@ -26,6 +28,28 @@ export class TokenService {
 		return await this.refreshSessionRepository.getAllRefreshSessionsByUserIdOrderedByCreatedAtAsc(
 			userId
 		);
+	}
+
+	public async createAccessRefreshTokens(
+		dto: CreateAccessRefreshTokensServiceDTO
+	): Promise<AccessRefreshTokens> {
+		const refreshSession = await this.createRefreshSession({
+			userId: dto.userId,
+			fingerprint: dto.fingerprint,
+			ipAddress: dto.ipAddress,
+			userAgent: dto.userAgent,
+		});
+
+		const accessToken = await this.createAccessToken({
+			userId: dto.userId,
+			login: dto.login,
+			email: dto.email,
+		});
+
+		return {
+			accessToken,
+			refreshSession,
+		};
 	}
 
 	public async createAccessToken(dto: CreateAccessTokenServiceDTO) {

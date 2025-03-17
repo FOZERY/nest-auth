@@ -96,7 +96,7 @@ export class UsersService {
 		await this.usersRepository.update(user);
 		await this.tokenService.deleteAllRefreshSessionsByUserId(dto.userId);
 
-		const accessToken = await this.tokenService.createAccessToken({
+		return await this.tokenService.createAccessRefreshTokens({
 			userId: user.id,
 			email: user.email,
 			login: user.login,

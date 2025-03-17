@@ -3,7 +3,6 @@ import { TokenService } from "../../token/services/token.service";
 import { UsersService } from "../../users/services/users.service";
 import { LoginUserRequestDTO } from "../dto/requests/login-user.request.dto";
 import { RegisterUserRequestDTO } from "../dto/requests/register-user.request.dto";
-import { CreateAccessRefreshTokensServiceDTO } from "../dto/services/create-access-refresh.service.dto";
 import { RefreshTokenServiceDTO } from "../dto/services/refresh-token.service.dto";
 import { AccessRefreshTokens } from "../types/auth.types";
 
@@ -42,7 +41,7 @@ export class AuthService {
 			await this.tokenService.deleteRefreshSessionByToken(userSessions[0].refreshToken);
 		}
 
-		return await this.createAccessRefreshTokens({
+		return await this.tokenService.createAccessRefreshTokens({
 			userId: user.id,
 			login: user.login,
 			email: user.email,
@@ -78,7 +77,7 @@ export class AuthService {
 
 		const user = await this.usersService.create(dto);
 
-		return await this.createAccessRefreshTokens({
+		return await this.tokenService.createAccessRefreshTokens({
 			userId: user.id,
 			login: user.login,
 			email: user.email,
@@ -105,7 +104,7 @@ export class AuthService {
 			throw new UnauthorizedException();
 		}
 
-		return await this.createAccessRefreshTokens({
+		return await this.tokenService.createAccessRefreshTokens({
 			userId: user.id,
 			login: user.login,
 			email: user.email,
@@ -113,27 +112,5 @@ export class AuthService {
 			ipAddress: dto.ipAddress,
 			userAgent: dto.userAgent,
 		});
-	}
-
-	private async createAccessRefreshTokens(
-		dto: CreateAccessRefreshTokensServiceDTO
-	): Promise<AccessRefreshTokens> {
-		const refreshSession = await this.tokenService.createRefreshSession({
-			userId: dto.userId,
-			fingerprint: dto.fingerprint,
-			ipAddress: dto.ipAddress,
-			userAgent: dto.userAgent,
-		});
-
-		const accessToken = await this.tokenService.createAccessToken({
-			userId: dto.userId,
-			login: dto.login,
-			email: dto.email,
-		});
-
-		return {
-			accessToken,
-			refreshSession,
-		};
 	}
 }
