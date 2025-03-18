@@ -6,6 +6,7 @@ export interface UserAvatarProps {
 	id?: string;
 	userId: string;
 	path: string;
+	active: boolean;
 	createdAt?: Nullable<Date>;
 	updatedAt?: Nullable<Date>;
 	deletedAt?: Nullable<Date>;
@@ -15,6 +16,7 @@ export class UserAvatar extends Entity {
 	private _id: string;
 	private _userId: string;
 	private _path: string;
+	private _active: boolean;
 	private _createdAt: Nullable<Date>;
 	private _updatedAt: Nullable<Date>;
 	private _deletedAt: Nullable<Date>;
@@ -24,6 +26,7 @@ export class UserAvatar extends Entity {
 		this._id = props.id ?? randomUUID();
 		this._userId = props.userId;
 		this._path = props.path;
+		this._active = props.active;
 		this._createdAt = props.createdAt ?? null;
 		this._updatedAt = props.updatedAt ?? null;
 		this._deletedAt = props.deletedAt ?? null;
@@ -39,6 +42,10 @@ export class UserAvatar extends Entity {
 
 	public get path(): string {
 		return this._path;
+	}
+
+	public get active(): boolean {
+		return this._active;
 	}
 
 	public get createdAt(): Nullable<Date> {

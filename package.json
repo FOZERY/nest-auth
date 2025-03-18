@@ -34,6 +34,8 @@
 	"dependencies": {
 		"@aws-sdk/client-s3": "^3.758.0",
 		"@aws-sdk/s3-request-presigner": "^3.758.0",
+		"@nestjs-cls/transactional": "^2.5.0",
+		"@nestjs-cls/transactional-adapter-prisma": "^1.2.16",
 		"@nestjs/common": "^11.0.1",
 		"@nestjs/config": "^4.0.0",
 		"@nestjs/core": "^11.0.1",
@@ -47,6 +49,7 @@
 		"class-validator": "^0.14.1",
 		"class-validator-extended": "^4.0.2",
 		"cookie-parser": "^1.4.7",
+		"nestjs-cls": "^5.4.0",
 		"passport": "^0.7.0",
 		"passport-jwt": "^4.0.1",
 		"passport-local": "^1.0.0",

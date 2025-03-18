@@ -31,6 +31,7 @@ import { AccessTokenResponse } from "../../../common/dtos/tokens/access-token.re
 import { RequestWithUser } from "../../../common/types/common.types";
 import { setCookieSwaggerHeader } from "../../../external/swagger/setCookieHeader.swagger";
 import { AccessTokenGuard } from "../../auth/guards/access-token-auth.guard";
+import { RemoveAvatarRequestDTO } from "../dto/profiles/requests/remove-avatar.request.dto";
 import { UpdatePersonalProfilePasswordRequestDTO } from "../dto/profiles/requests/update-profile-password.request.dto";
 import { UpdatePersonalProfileRequestDTO } from "../dto/profiles/requests/update-profile.request.dto";
 import { GetPersonalProfileResponseDTO } from "../dto/profiles/responses/get-profile.response.dto";
@@ -159,9 +160,6 @@ export class PersonalProfileController {
 		await this.usersService.deleteById(req.user.id);
 	}
 
-	@Get("avatar")
-	public async getAvatar() {}
-
 	@Post("upload-avatar")
 	@UseInterceptors(FileInterceptor("avatar"))
 	public async uploadAvatar(
@@ -183,5 +181,10 @@ export class PersonalProfileController {
 	}
 
 	@Delete("avatar")
-	public async deleteAvatar() {}
+	public async deleteAvatar(@Req() req: RequestWithUser, @Body() dto: RemoveAvatarRequestDTO) {
+		await this.usersService.removePersonalProfileAvatar({
+			userId: req.user.id,
+			avatarId: dto.avatarId,
+		});
+	}
 }

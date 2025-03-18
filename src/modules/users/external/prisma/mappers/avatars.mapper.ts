@@ -7,6 +7,7 @@ export class UserAvatarPrismaMapper {
 			id: avatar.id,
 			userId: avatar.user_id,
 			path: avatar.path,
+			active: avatar.active,
 			createdAt: avatar.created_at,
 			updatedAt: avatar.updated_at,
 			deletedAt: avatar.deleted_at,

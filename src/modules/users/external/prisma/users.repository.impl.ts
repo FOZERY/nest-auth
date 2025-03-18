@@ -1,5 +1,6 @@
+import { TransactionHost } from "@nestjs-cls/transactional";
+import { TransactionalAdapterPrisma } from "@nestjs-cls/transactional-adapter-prisma";
 import { Injectable } from "@nestjs/common";
-import { PrismaService } from "../../../../external/persistence/prisma/prisma.service";
 import {
 	FindAllUsersWithPaginationInputDTO,
 	FindAllUsersWithPaginationOutputDTO,
@@ -7,17 +8,28 @@ import {
 import { User } from "../../entities/User";
 import { UserAvatar } from "../../entities/UserAvatar";
 import { UsersRepository } from "../../repositories/users.repository";
+import { UserAvatarPrismaMapper } from "./mappers/avatars.mapper";
 import { UserPrismaMapper } from "./mappers/users.mapper";
 
 @Injectable()
 export class UsersRepositoryImpl implements UsersRepository {
-	constructor(private readonly prisma: PrismaService) {}
+	constructor(private readonly txHost: TransactionHost<TransactionalAdapterPrisma>) {}
+
+	public async isExists(id: string): Promise<boolean> {
+		const user = await this.txHost.tx.users.findUnique({
+			where: {
+				id: id,
+				deleted_at: null,
+			},
+		});
+		return !!user;
+	}
 
 	public async findAllWithPagination(
 		dto: FindAllUsersWithPaginationInputDTO,
 		withDeleted: boolean = false
 	): Promise<FindAllUsersWithPaginationOutputDTO> {
-		const total = await this.prisma.users.count({
+		const total = await this.txHost.tx.users.count({
 			where: {
 				deleted_at: withDeleted ? undefined : null,
 				login: {
@@ -27,7 +39,7 @@ export class UsersRepositoryImpl implements UsersRepository {
 			},
 		});
 
-		const prismaUsers = await this.prisma.users.findMany({
+		const prismaUsers = await this.txHost.tx.users.findMany({
 			skip: dto.skip,
 			take: dto.take,
 			orderBy: {
@@ -55,7 +67,7 @@ export class UsersRepositoryImpl implements UsersRepository {
 	}
 
 	public async findById(id: string, withDeleted: boolean = false): Promise<User | null> {
-		const prismaUser = await this.prisma.users.findUnique({
+		const prismaUser = await this.txHost.tx.users.findUnique({
 			where: {
 				id: id,
 				deleted_at: withDeleted ? undefined : null,
@@ -74,7 +86,7 @@ export class UsersRepositoryImpl implements UsersRepository {
 	}
 
 	public async findByLogin(login: string, withDeleted: boolean = false): Promise<User | null> {
-		const prismaUser = await this.prisma.users.findUnique({
+		const prismaUser = await this.txHost.tx.users.findUnique({
 			where: {
 				login: login,
 				deleted_at: withDeleted ? undefined : null,
@@ -93,7 +105,7 @@ export class UsersRepositoryImpl implements UsersRepository {
 	}
 
 	public async findByEmail(email: string, withDeleted: boolean = false): Promise<User | null> {
-		const prismaUser = await this.prisma.users.findUnique({
+		const prismaUser = await this.txHost.tx.users.findUnique({
 			where: {
 				email: email,
 				deleted_at: withDeleted ? undefined : null,
@@ -112,7 +124,7 @@ export class UsersRepositoryImpl implements UsersRepository {
 	}
 
 	public async create(user: User): Promise<void> {
-		await this.prisma.users.create({
+		await this.txHost.tx.users.create({
 			data: {
 				id: user.id,
 				age: user.age,
@@ -125,7 +137,7 @@ export class UsersRepositoryImpl implements UsersRepository {
 	}
 
 	public async update(user: User): Promise<void> {
-		await this.prisma.users.update({
+		await this.txHost.tx.users.update({
 			data: {
 				id: user.id,
 				age: user.age,
@@ -140,18 +152,89 @@ export class UsersRepositoryImpl implements UsersRepository {
 		});
 	}
 
+	public async findAvatarById(id: string): Promise<UserAvatar | null> {
+		const prismaAvatar = await this.txHost.tx.avatars.findUnique({
+			where: {
+				id: id,
+				deleted_at: null,
+			},
+		});
+
+		if (!prismaAvatar) {
+			return null;
+		}
+
+		return await UserAvatarPrismaMapper.toEntity(prismaAvatar);
+	}
+
+	public async findNonDeletedUserAvatars(userId: string): Promise<UserAvatar[]> {
+		const prismaAvatars = await this.txHost.tx.avatars.findMany({
+			where: {
+				user_id: userId,
+				deleted_at: null,
+			},
+		});
+
+		return await Promise.all(
+			prismaAvatars.map(
+				async (prismaAvatar) => await UserAvatarPrismaMapper.toEntity(prismaAvatar)
+			)
+		);
+	}
+
+	public async findActiveUserAvatar(userId: string): Promise<UserAvatar | null> {
+		const prismaAvatar = await this.txHost.tx.avatars.findFirst({
+			where: {
+				user_id: userId,
+				active: true,
+				deleted_at: null,
+			},
+		});
+
+		if (!prismaAvatar) {
+			return null;
+		}
+
+		return await UserAvatarPrismaMapper.toEntity(prismaAvatar);
+	}
+
 	public async createAvatar(avatar: UserAvatar): Promise<void> {
-		await this.prisma.avatars.create({
+		await this.txHost.tx.avatars.create({
 			data: {
 				id: avatar.id,
 				user_id: avatar.userId,
 				path: avatar.path,
+				active: avatar.active,
 			},
 		});
 	}
 
-	public async deleteById(id: string): Promise<void> {
-		await this.prisma.users.update({
+	public async softRemoveAvatarById(id: string): Promise<void> {
+		await this.txHost.tx.avatars.update({
+			where: {
+				id: id,
+			},
+			data: {
+				active: false,
+				deleted_at: new Date(),
+			},
+		});
+	}
+
+	public async updateAvatarActiveStatusById(avatarId: string, isActive: boolean): Promise<void> {
+		await this.txHost.tx.avatars.update({
+			where: {
+				id: avatarId,
+				deleted_at: null,
+			},
+			data: {
+				active: isActive,
+			},
+		});
+	}
+
+	public async softDeleteById(id: string): Promise<void> {
+		await this.txHost.tx.users.update({
 			data: {
 				deleted_at: new Date(),
 			},

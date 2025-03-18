@@ -69,4 +69,28 @@ export class UsersController {
 			about: user.about,
 		};
 	}
+
+	@HttpCode(200)
+	@UseGuards(AccessTokenGuard)
+	@Get(":id/active-avatar")
+	public async getUserActiveAvatarUrl(@Param("id", ParseUUIDPipe) id: string) {
+		const avatarUrl = await this.usersService.getActiveUserAvatarUrl(id);
+
+		if (!avatarUrl) {
+			throw new NotFoundException("Avatar not found");
+		}
+
+		return {
+			avatarUrl,
+		};
+	}
+
+	@HttpCode(200)
+	@UseGuards(AccessTokenGuard)
+	@Get(":id/avatars")
+	public async getAllUserAvatarsUrl(@Param("id", ParseUUIDPipe) id: string) {
+		const avatars = await this.usersService.getAllUserAvatarsUrl(id);
+
+		return avatars;
+	}
 }

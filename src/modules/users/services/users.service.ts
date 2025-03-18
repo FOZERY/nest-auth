@@ -2,10 +2,14 @@ import { BadRequestException, Inject, Injectable, NotFoundException } from "@nes
 import { randomUUID } from "node:crypto";
 import { Order } from "../../../common/dtos/pagination/page-options.request.dto";
 import { AccessRefreshTokens } from "../../auth/types/auth.types";
-import { S3FileService } from "../../file/external/s3/s3-file.service";
-import { FileService } from "../../file/services/file.service";
+
+import { Transactional } from "@nestjs-cls/transactional";
+import { ConfigService } from "@nestjs/config";
+import { FileUploadStrategy } from "../../file/strategies/file.strategy";
+import { S3FileUploadStrategy } from "../../file/strategies/impl/s3-file.strategy";
 import { TokenService } from "../../token/services/token.service";
 import { UploadAvatarResponseDTO } from "../dto/profiles/responses/upload-avatar.response.dto";
+import { RemoveAvatarDTO } from "../dto/profiles/services/remove-avatar.dto";
 import { UpdatePersonalPasswordServiceDTO } from "../dto/profiles/services/update-profile-password.request.dto";
 import { UploadAvatarDTO } from "../dto/profiles/services/upload-avatar.dto";
 import { FindAllUsersWithPaginationOutputDTO } from "../dto/users/repositories/find-all-users-w-pagination.dto";
@@ -19,11 +23,14 @@ import { UsersRepository } from "../repositories/users.repository";
 
 @Injectable()
 export class UsersService {
+	private readonly S3_AVATARS_BUCKET: string = "users-avatars";
+
 	constructor(
 		@Inject(UsersRepositoryImpl) private readonly usersRepository: UsersRepository,
 		private readonly tokenService: TokenService,
-		@Inject(S3FileService)
-		private readonly fileService: FileService
+		@Inject(S3FileUploadStrategy)
+		private readonly fileUploadStrategy: FileUploadStrategy,
+		private readonly configService: ConfigService
 	) {}
 
 	public async getAllUsersWithPagination(
@@ -42,8 +49,12 @@ export class UsersService {
 	}
 
 	public async deleteById(id: string) {
-		await this.usersRepository.deleteById(id);
+		await this.usersRepository.softDeleteById(id);
 		await this.tokenService.deleteAllRefreshSessionsByUserId(id);
+	}
+
+	public async checkIsExists(id: string) {
+		return await this.usersRepository.isExists(id);
 	}
 
 	public async findById(id: string, withDeleted: boolean = false) {
@@ -115,27 +126,41 @@ export class UsersService {
 		});
 	}
 
-	public async getAllAvatars() {}
+	public async getAllUserAvatarsUrl(userId: string): Promise<string[]> {
+		const avatars = await this.usersRepository.findNonDeletedUserAvatars(userId);
 
-	public async getAvatar() {}
+		return avatars.map(
+			(avatar) =>
+				`${this.configService.get<string>("S3_URL")}/${this.S3_AVATARS_BUCKET}/${avatar.path}`
+		);
+	}
 
-	// in transaction
+	public async getActiveUserAvatarUrl(userId: string): Promise<string | null> {
+		const avatar = await this.usersRepository.findActiveUserAvatar(userId);
+
+		if (!avatar) {
+			return null;
+		}
+
+		return `${this.configService.get<string>("S3_URL")}/${this.S3_AVATARS_BUCKET}/${avatar?.path}`;
+	}
+
+	@Transactional()
 	public async uploadPersonalProfileAvatar(
 		dto: UploadAvatarDTO
 	): Promise<UploadAvatarResponseDTO> {
-		const user = await this.usersRepository.findById(dto.userId);
+		const avatars = await this.usersRepository.findNonDeletedUserAvatars(dto.userId);
 
-		if (!user) {
-			throw new NotFoundException("User not found");
-		}
-
-		if (user.nonDeletedAvatars.length >= 5) {
+		if (avatars.length >= 5) {
 			throw new BadRequestException("You can't upload more than 5 avatars");
 		}
 
 		const id = randomUUID();
-		const { path, url } = await this.fileService.uploadPublicFile({
-			bucket: "users-avatars",
+		const uploadPath = `${dto.userId}/${id}`;
+		// TODO: BullMQ
+		const { path, url } = await this.fileUploadStrategy.uploadPublicFile({
+			bucket: this.S3_AVATARS_BUCKET,
+			path: uploadPath,
 			file: {
 				buffer: dto.file.buffer,
 				fieldname: dto.file.fieldname,
@@ -143,25 +168,50 @@ export class UsersService {
 				originalname: dto.file.originalname,
 				size: dto.file.size,
 			},
-			folder: dto.userId,
-			name: id,
 		});
 
-		if (!url) {
-			throw new Error("Avatar upload failed");
+		try {
+			if (!url) {
+				throw new Error("Avatar upload failed. URL is undefined");
+			}
+
+			const currentActiveAvatar = avatars.find((avatar) => avatar.active);
+			if (currentActiveAvatar) {
+				await this.usersRepository.updateAvatarActiveStatusById(
+					currentActiveAvatar.id,
+					false
+				);
+			}
+
+			const avatar = await UserAvatar.create({
+				id: id,
+				path: path,
+				userId: dto.userId,
+				active: true,
+			});
+
+			await this.usersRepository.createAvatar(avatar);
+
+			return {
+				avatarUrl: url,
+			};
+		} catch (error) {
+			// TODO: BullMQ
+			await this.fileUploadStrategy.removeFile({
+				path: path,
+				bucket: this.S3_AVATARS_BUCKET,
+			});
+			throw error;
 		}
-
-		const createdAvatar = await UserAvatar.create({
-			path: path,
-			userId: dto.userId,
-		});
-
-		await this.usersRepository.createAvatar(createdAvatar);
-
-		return {
-			avatarUrl: url,
-		};
 	}
 
-	public async removePersonalProfileAvatar() {}
+	public async removePersonalProfileAvatar(dto: RemoveAvatarDTO) {
+		const avatar = await this.usersRepository.findAvatarById(dto.avatarId);
+
+		if (!avatar) {
+			throw new NotFoundException("Avatar not found");
+		}
+
+		await this.usersRepository.softRemoveAvatarById(avatar.id);
+	}
 }

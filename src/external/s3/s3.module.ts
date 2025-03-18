@@ -1,9 +1,7 @@
 import { S3Client } from "@aws-sdk/client-s3";
 import { Module } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
-
-// Token for dependency injection
-export const S3_CLIENT = "S3_CLIENT";
+import { S3_CLIENT } from "./constants/s3.constants";
 
 @Module({
 	imports: [],

@@ -8,12 +8,12 @@ export interface FilePayload {
 
 export interface UploadedFileDTO {
 	file: FilePayload;
-	folder: string;
-	name: string;
+	path: string;
 	bucket?: string;
 }
 
 export interface FileUploadResult {
 	path: string;
-	bucket: string;
+	bucket?: string;
+	url?: string;
 }
