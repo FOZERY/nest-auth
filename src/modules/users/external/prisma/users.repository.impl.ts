@@ -5,6 +5,7 @@ import {
 	FindAllUsersWithPaginationOutputDTO,
 } from "../../dto/users/repositories/find-all-users-w-pagination.dto";
 import { User } from "../../entities/User";
+import { UserAvatar } from "../../entities/UserAvatar";
 import { UsersRepository } from "../../repositories/users.repository";
 import { UserPrismaMapper } from "./mappers/users.mapper";
 
@@ -59,13 +60,17 @@ export class UsersRepositoryImpl implements UsersRepository {
 				id: id,
 				deleted_at: withDeleted ? undefined : null,
 			},
+			include: {
+				avatars: true,
+			},
 		});
 
 		if (!prismaUser) {
 			return null;
 		}
 
-		return await UserPrismaMapper.toEntity(prismaUser);
+		const { avatars, ...user } = prismaUser;
+		return await UserPrismaMapper.toEntity(user, avatars);
 	}
 
 	public async findByLogin(login: string, withDeleted: boolean = false): Promise<User | null> {
@@ -74,13 +79,17 @@ export class UsersRepositoryImpl implements UsersRepository {
 				login: login,
 				deleted_at: withDeleted ? undefined : null,
 			},
+			include: {
+				avatars: true,
+			},
 		});
 
 		if (!prismaUser) {
 			return null;
 		}
 
-		return await UserPrismaMapper.toEntity(prismaUser);
+		const { avatars, ...user } = prismaUser;
+		return await UserPrismaMapper.toEntity(user, avatars);
 	}
 
 	public async findByEmail(email: string, withDeleted: boolean = false): Promise<User | null> {
@@ -89,13 +98,17 @@ export class UsersRepositoryImpl implements UsersRepository {
 				email: email,
 				deleted_at: withDeleted ? undefined : null,
 			},
+			include: {
+				avatars: true,
+			},
 		});
 
 		if (!prismaUser) {
 			return null;
 		}
 
-		return await UserPrismaMapper.toEntity(prismaUser);
+		const { avatars, ...user } = prismaUser;
+		return await UserPrismaMapper.toEntity(user, avatars);
 	}
 
 	public async create(user: User): Promise<void> {
@@ -123,6 +136,16 @@ export class UsersRepositoryImpl implements UsersRepository {
 			},
 			where: {
 				id: user.id,
+			},
+		});
+	}
+
+	public async createAvatar(avatar: UserAvatar): Promise<void> {
+		await this.prisma.avatars.create({
+			data: {
+				id: avatar.id,
+				user_id: avatar.userId,
+				path: avatar.path,
 			},
 		});
 	}

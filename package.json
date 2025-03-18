@@ -2,6 +2,7 @@
 	"name": "nestjs-auth",
 	"version": "0.0.1",
 	"description": "",
+	"type": "commonjs",
 	"author": "",
 	"private": true,
 	"license": "UNLICENSED",
@@ -31,6 +32,8 @@
 		"prepare": "husky"
 	},
 	"dependencies": {
+		"@aws-sdk/client-s3": "^3.758.0",
+		"@aws-sdk/s3-request-presigner": "^3.758.0",
 		"@nestjs/common": "^11.0.1",
 		"@nestjs/config": "^4.0.0",
 		"@nestjs/core": "^11.0.1",
@@ -62,6 +65,7 @@
 		"@types/cookie-parser": "^1.4.8",
 		"@types/express": "^5.0.0",
 		"@types/jest": "^29.5.14",
+		"@types/multer": "^1.4.12",
 		"@types/node": "^22.10.7",
 		"@types/passport-jwt": "^4.0.1",
 		"@types/passport-local": "^1.0.38",
@@ -108,8 +112,8 @@
 	},
 	"lint-staged": {
 		"{src,test}/**/*.{js,ts,jsx,tsx,json,html}": [
-			"pnpm format",
-			"pnpm lint",
+			"prettier --write --ignore-unknown",
+			"eslint --fix",
 			"jest --bail --findRelatedTests --passWithNoTests"
 		]
 	}

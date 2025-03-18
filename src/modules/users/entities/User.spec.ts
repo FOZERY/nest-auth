@@ -1,3 +1,4 @@
+import "reflect-metadata";
 import argon2 from "argon2";
 import { randomUUID } from "crypto";
 import { User, UserProps } from "./User";
@@ -10,6 +11,7 @@ describe("User", () => {
 		email: "email@test.com",
 		password: "password",
 		age: 30,
+		avatars: [],
 	});
 
 	describe("Creating valid user", () => {

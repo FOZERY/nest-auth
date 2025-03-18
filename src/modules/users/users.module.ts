@@ -5,9 +5,10 @@ import { PersonalProfileController } from "./controllers/personal-profile.contro
 import { UsersController } from "./controllers/users.controller";
 import { UsersRepositoryImpl } from "./external/prisma/users.repository.impl";
 import { UsersService } from "./services/users.service";
+import { FilesModule } from "../file/file.module";
 
 @Module({
-	imports: [PrismaModule, TokenModule],
+	imports: [PrismaModule, TokenModule, FilesModule],
 	providers: [UsersRepositoryImpl, UsersService],
 	controllers: [UsersController, PersonalProfileController],
 	exports: [UsersService],

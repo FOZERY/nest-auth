@@ -2,15 +2,21 @@ import {
 	Body,
 	Controller,
 	Delete,
+	FileTypeValidator,
 	Get,
 	HttpCode,
+	MaxFileSizeValidator,
 	NotFoundException,
+	ParseFilePipe,
 	Patch,
 	Post,
 	Req,
 	Res,
+	UploadedFile,
 	UseGuards,
+	UseInterceptors,
 } from "@nestjs/common";
+import { FileInterceptor } from "@nestjs/platform-express";
 import {
 	ApiBadRequestResponse,
 	ApiBearerAuth,
@@ -28,6 +34,7 @@ import { AccessTokenGuard } from "../../auth/guards/access-token-auth.guard";
 import { UpdatePersonalProfilePasswordRequestDTO } from "../dto/profiles/requests/update-profile-password.request.dto";
 import { UpdatePersonalProfileRequestDTO } from "../dto/profiles/requests/update-profile.request.dto";
 import { GetPersonalProfileResponseDTO } from "../dto/profiles/responses/get-profile.response.dto";
+import { UploadAvatarResponseDTO } from "../dto/profiles/responses/upload-avatar.response.dto";
 import { UsersService } from "../services/users.service";
 
 @ApiBearerAuth()
@@ -151,4 +158,30 @@ export class PersonalProfileController {
 	public async deletePersonalProfile(@Req() req: RequestWithUser) {
 		await this.usersService.deleteById(req.user.id);
 	}
+
+	@Get("avatar")
+	public async getAvatar() {}
+
+	@Post("upload-avatar")
+	@UseInterceptors(FileInterceptor("avatar"))
+	public async uploadAvatar(
+		@Req() req: RequestWithUser,
+		@UploadedFile(
+			new ParseFilePipe({
+				validators: [
+					new MaxFileSizeValidator({ maxSize: 1024 * 1024 * 10 }),
+					new FileTypeValidator({ fileType: /(jpg|jpeg|png)$/ }),
+				],
+			})
+		)
+		file: Express.Multer.File
+	): Promise<UploadAvatarResponseDTO> {
+		return await this.usersService.uploadPersonalProfileAvatar({
+			userId: req.user.id,
+			file: file,
+		});
+	}
+
+	@Delete("avatar")
+	public async deleteAvatar() {}
 }

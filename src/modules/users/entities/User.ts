@@ -1,5 +1,7 @@
 import argon, { argon2id } from "argon2";
+import { Type } from "class-transformer";
 import {
+	IsArray,
 	IsDate,
 	IsEmail,
 	IsNotEmpty,
@@ -12,11 +14,14 @@ import {
 	MaxLength,
 	Min,
 	MinLength,
+	ValidateNested,
 } from "class-validator";
 import { randomUUID } from "crypto";
 import { NoSpaces } from "../../../common/class-validator/noSpaces.decorator";
 import { Entity } from "../../../core/entity/Entity";
 import { Nullable } from "../../../core/types/utility.types";
+import { UserAvatar } from "./UserAvatar";
+import { AvatarLengthConflict } from "../errors/errors";
 
 export interface UserProps {
 	id?: string;
@@ -24,6 +29,7 @@ export interface UserProps {
 	email: string;
 	password: string;
 	age: number;
+	avatars: UserAvatar[];
 	about?: Nullable<string>;
 	createdAt?: Nullable<Date>;
 	updatedAt?: Nullable<Date>;
@@ -65,6 +71,11 @@ export class User extends Entity {
 	@MaxLength(1000)
 	private _about: Nullable<string>;
 
+	@IsArray()
+	@ValidateNested({ each: true })
+	@Type(() => UserAvatar)
+	private _avatars: UserAvatar[];
+
 	@IsOptional()
 	@IsDate()
 	private _updatedAt: Nullable<Date>;
@@ -84,6 +95,7 @@ export class User extends Entity {
 		this._email = props.email;
 		this._password = props.password;
 		this._age = props.age;
+		this._avatars = props.avatars;
 		this._about = props.about ?? null;
 		this._createdAt = props.createdAt ?? null;
 		this._updatedAt = props.updatedAt ?? null;
@@ -138,6 +150,35 @@ export class User extends Entity {
 	public async setAbout(about: string) {
 		this._about = about;
 		await this.validate();
+	}
+
+	public get avatars(): UserAvatar[] {
+		return this._avatars;
+	}
+
+	public get nonDeletedAvatars(): UserAvatar[] {
+		return this._avatars.filter((avatar) => avatar.deletedAt === null);
+	}
+
+	public get deletedAvatars(): UserAvatar[] {
+		return this._avatars.filter((avatar) => avatar.deletedAt !== null);
+	}
+
+	public addAvatar(avatar: UserAvatar) {
+		if (this.nonDeletedAvatars.length >= 5) {
+			throw new AvatarLengthConflict();
+		}
+
+		this._avatars.push(avatar);
+	}
+
+	public removeAvatar(id: string) {
+		const avatar = this._avatars.find((avatar) => avatar.id === id);
+		if (!avatar) {
+			throw new Error("Avatar not found");
+		}
+
+		avatar.deletedAt = new Date();
 	}
 
 	public get createdAt(): Nullable<Date> {

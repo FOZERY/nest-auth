@@ -19,6 +19,17 @@ model users {
   updated_at       DateTime           @updatedAt
   deleted_at       DateTime?
   refresh_sessions refresh_sessions[]
+  avatars          avatars[]
+}
+
+model avatars {
+  id         String    @id @db.Uuid()
+  user       users     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  user_id    String    @db.Uuid()
+  path       String
+  deleted_at DateTime?
+  created_at DateTime  @default(now())
+  updated_at DateTime  @updatedAt
 }
 
 model refresh_sessions {

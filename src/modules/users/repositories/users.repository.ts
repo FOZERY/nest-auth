@@ -3,6 +3,7 @@ import {
 	FindAllUsersWithPaginationOutputDTO,
 } from "../dto/users/repositories/find-all-users-w-pagination.dto";
 import { User } from "../entities/User";
+import { UserAvatar } from "../entities/UserAvatar";
 
 export interface UsersRepository {
 	findAllWithPagination(
@@ -15,4 +16,5 @@ export interface UsersRepository {
 	create(user: User): Promise<void>;
 	update(user: User): Promise<void>;
 	deleteById(id: string): Promise<void>;
+	createAvatar(avatar: UserAvatar): Promise<void>;
 }
