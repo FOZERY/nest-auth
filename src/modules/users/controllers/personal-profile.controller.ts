@@ -181,8 +181,11 @@ export class PersonalProfileController {
 	}
 
 	@Delete("avatar")
-	public async deleteAvatar(@Req() req: RequestWithUser, @Body() dto: RemoveAvatarRequestDTO) {
-		await this.usersService.removePersonalProfileAvatar({
+	public async softDeleteAvatar(
+		@Req() req: RequestWithUser,
+		@Body() dto: RemoveAvatarRequestDTO
+	) {
+		await this.usersService.softDeletePersonalProfileAvatar({
 			userId: req.user.id,
 			avatarId: dto.avatarId,
 		});

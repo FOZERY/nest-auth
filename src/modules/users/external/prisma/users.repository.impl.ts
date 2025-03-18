@@ -15,7 +15,7 @@ import { UserPrismaMapper } from "./mappers/users.mapper";
 export class UsersRepositoryImpl implements UsersRepository {
 	constructor(private readonly txHost: TransactionHost<TransactionalAdapterPrisma>) {}
 
-	public async isExists(id: string): Promise<boolean> {
+	public async ifExists(id: string): Promise<boolean> {
 		const user = await this.txHost.tx.users.findUnique({
 			where: {
 				id: id,
@@ -66,7 +66,7 @@ export class UsersRepositoryImpl implements UsersRepository {
 		};
 	}
 
-	public async findById(id: string, withDeleted: boolean = false): Promise<User | null> {
+	public async findByUserId(id: string, withDeleted: boolean = false): Promise<User | null> {
 		const prismaUser = await this.txHost.tx.users.findUnique({
 			where: {
 				id: id,
@@ -152,7 +152,7 @@ export class UsersRepositoryImpl implements UsersRepository {
 		});
 	}
 
-	public async findAvatarById(id: string): Promise<UserAvatar | null> {
+	public async findAvatarByUserId(id: string): Promise<UserAvatar | null> {
 		const prismaAvatar = await this.txHost.tx.avatars.findUnique({
 			where: {
 				id: id,
@@ -167,7 +167,7 @@ export class UsersRepositoryImpl implements UsersRepository {
 		return await UserAvatarPrismaMapper.toEntity(prismaAvatar);
 	}
 
-	public async findNonDeletedUserAvatars(userId: string): Promise<UserAvatar[]> {
+	public async findNonDeletedUserAvatarsByUserId(userId: string): Promise<UserAvatar[]> {
 		const prismaAvatars = await this.txHost.tx.avatars.findMany({
 			where: {
 				user_id: userId,
@@ -182,7 +182,7 @@ export class UsersRepositoryImpl implements UsersRepository {
 		);
 	}
 
-	public async findActiveUserAvatar(userId: string): Promise<UserAvatar | null> {
+	public async findActiveUserAvatarByUserId(userId: string): Promise<UserAvatar | null> {
 		const prismaAvatar = await this.txHost.tx.avatars.findFirst({
 			where: {
 				user_id: userId,
@@ -198,7 +198,7 @@ export class UsersRepositoryImpl implements UsersRepository {
 		return await UserAvatarPrismaMapper.toEntity(prismaAvatar);
 	}
 
-	public async createAvatar(avatar: UserAvatar): Promise<void> {
+	public async createUserAvatar(avatar: UserAvatar): Promise<void> {
 		await this.txHost.tx.avatars.create({
 			data: {
 				id: avatar.id,
@@ -209,7 +209,7 @@ export class UsersRepositoryImpl implements UsersRepository {
 		});
 	}
 
-	public async softRemoveAvatarById(id: string): Promise<void> {
+	public async softRemoveAvatarByAvatarId(id: string): Promise<void> {
 		await this.txHost.tx.avatars.update({
 			where: {
 				id: id,
@@ -221,7 +221,10 @@ export class UsersRepositoryImpl implements UsersRepository {
 		});
 	}
 
-	public async updateAvatarActiveStatusById(avatarId: string, isActive: boolean): Promise<void> {
+	public async updateAvatarActiveStatusByAvatarId(
+		avatarId: string,
+		isActive: boolean
+	): Promise<void> {
 		await this.txHost.tx.avatars.update({
 			where: {
 				id: avatarId,
@@ -233,7 +236,7 @@ export class UsersRepositoryImpl implements UsersRepository {
 		});
 	}
 
-	public async softDeleteById(id: string): Promise<void> {
+	public async softDeleteByUserId(id: string): Promise<void> {
 		await this.txHost.tx.users.update({
 			data: {
 				deleted_at: new Date(),

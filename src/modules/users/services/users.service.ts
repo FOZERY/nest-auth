@@ -23,7 +23,8 @@ import { UsersRepository } from "../repositories/users.repository";
 
 @Injectable()
 export class UsersService {
-	private readonly S3_AVATARS_BUCKET: string = "users-avatars";
+	private readonly S3_AVATARS_BUCKET: string;
+	private readonly S3_URL: string;
 
 	constructor(
 		@Inject(UsersRepositoryImpl) private readonly usersRepository: UsersRepository,
@@ -31,7 +32,10 @@ export class UsersService {
 		@Inject(S3FileUploadStrategy)
 		private readonly fileUploadStrategy: FileUploadStrategy,
 		private readonly configService: ConfigService
-	) {}
+	) {
+		this.S3_AVATARS_BUCKET = "users-avatars";
+		this.S3_URL = this.configService.get<string>("S3_URL")!;
+	}
 
 	public async getAllUsersWithPagination(
 		dto: GetAllUsersRequestQueryDTO,
@@ -49,16 +53,16 @@ export class UsersService {
 	}
 
 	public async deleteById(id: string) {
-		await this.usersRepository.softDeleteById(id);
+		await this.usersRepository.softDeleteByUserId(id);
 		await this.tokenService.deleteAllRefreshSessionsByUserId(id);
 	}
 
-	public async checkIsExists(id: string) {
-		return await this.usersRepository.isExists(id);
+	public async checkIfExists(userId: string) {
+		return await this.usersRepository.ifExists(userId);
 	}
 
 	public async findById(id: string, withDeleted: boolean = false) {
-		return await this.usersRepository.findById(id, withDeleted);
+		return await this.usersRepository.findByUserId(id, withDeleted);
 	}
 
 	public async findByEmail(email: string, withDeleted: boolean = false) {
@@ -85,7 +89,7 @@ export class UsersService {
 	}
 
 	public async update(dto: UpdateUserRequestDTO): Promise<void> {
-		const user = await this.usersRepository.findById(dto.id);
+		const user = await this.usersRepository.findByUserId(dto.id);
 
 		if (!user) {
 			throw new NotFoundException("User not found");
@@ -102,7 +106,7 @@ export class UsersService {
 	public async updatePersonalProfilePassword(
 		dto: UpdatePersonalPasswordServiceDTO
 	): Promise<AccessRefreshTokens> {
-		const user = await this.usersRepository.findById(dto.userId);
+		const user = await this.usersRepository.findByUserId(dto.userId);
 
 		if (!user) {
 			throw new NotFoundException("User not found");
@@ -127,29 +131,26 @@ export class UsersService {
 	}
 
 	public async getAllUserAvatarsUrl(userId: string): Promise<string[]> {
-		const avatars = await this.usersRepository.findNonDeletedUserAvatars(userId);
+		const avatars = await this.usersRepository.findNonDeletedUserAvatarsByUserId(userId);
 
-		return avatars.map(
-			(avatar) =>
-				`${this.configService.get<string>("S3_URL")}/${this.S3_AVATARS_BUCKET}/${avatar.path}`
-		);
+		return avatars.map((avatar) => `${this.S3_URL}/${this.S3_AVATARS_BUCKET}/${avatar.path}`);
 	}
 
 	public async getActiveUserAvatarUrl(userId: string): Promise<string | null> {
-		const avatar = await this.usersRepository.findActiveUserAvatar(userId);
+		const avatar = await this.usersRepository.findActiveUserAvatarByUserId(userId);
 
 		if (!avatar) {
 			return null;
 		}
 
-		return `${this.configService.get<string>("S3_URL")}/${this.S3_AVATARS_BUCKET}/${avatar?.path}`;
+		return `${this.S3_URL}/${this.S3_AVATARS_BUCKET}/${avatar?.path}`;
 	}
 
 	@Transactional()
 	public async uploadPersonalProfileAvatar(
 		dto: UploadAvatarDTO
 	): Promise<UploadAvatarResponseDTO> {
-		const avatars = await this.usersRepository.findNonDeletedUserAvatars(dto.userId);
+		const avatars = await this.usersRepository.findNonDeletedUserAvatarsByUserId(dto.userId);
 
 		if (avatars.length >= 5) {
 			throw new BadRequestException("You can't upload more than 5 avatars");
@@ -177,7 +178,7 @@ export class UsersService {
 
 			const currentActiveAvatar = avatars.find((avatar) => avatar.active);
 			if (currentActiveAvatar) {
-				await this.usersRepository.updateAvatarActiveStatusById(
+				await this.usersRepository.updateAvatarActiveStatusByAvatarId(
 					currentActiveAvatar.id,
 					false
 				);
@@ -190,7 +191,7 @@ export class UsersService {
 				active: true,
 			});
 
-			await this.usersRepository.createAvatar(avatar);
+			await this.usersRepository.createUserAvatar(avatar);
 
 			return {
 				avatarUrl: url,
@@ -205,13 +206,13 @@ export class UsersService {
 		}
 	}
 
-	public async removePersonalProfileAvatar(dto: RemoveAvatarDTO) {
-		const avatar = await this.usersRepository.findAvatarById(dto.avatarId);
+	public async softDeletePersonalProfileAvatar(dto: RemoveAvatarDTO) {
+		const avatar = await this.usersRepository.findAvatarByUserId(dto.avatarId);
 
 		if (!avatar) {
 			throw new NotFoundException("Avatar not found");
 		}
 
-		await this.usersRepository.softRemoveAvatarById(avatar.id);
+		await this.usersRepository.softRemoveAvatarByAvatarId(avatar.id);
 	}
 }

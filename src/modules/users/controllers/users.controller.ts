@@ -8,14 +8,13 @@ import {
 	Query,
 	UseGuards,
 } from "@nestjs/common";
-import { AccessTokenGuard } from "../../auth/guards/access-token-auth.guard";
-
 import { ApiBearerAuth, ApiNotFoundResponse, ApiOkResponse, ApiOperation } from "@nestjs/swagger";
 import {
 	PageMetaDTO,
 	WithPaginationResponseDTO,
 } from "../../../common/dtos/pagination/with-pagination.response.dto";
 import { ApiPaginatedOkResponse } from "../../../external/swagger/decorators/apiPaginatedOkResponse.swagger";
+import { AccessTokenGuard } from "../../auth/guards/access-token-auth.guard";
 import { GetAllUsersRequestQueryDTO } from "../dto/users/requests/get-all-users.request.dto";
 import { GetUserResponseDTO } from "../dto/users/responses/get-user.response.dto";
 import { UsersService } from "../services/users.service";
@@ -55,8 +54,8 @@ export class UsersController {
 	@HttpCode(200)
 	@UseGuards(AccessTokenGuard)
 	@Get(":id")
-	public async getUserById(@Param("id", ParseUUIDPipe) id: string): Promise<GetUserResponseDTO> {
-		const user = await this.usersService.findById(id);
+	public async getUser(@Param("id", ParseUUIDPipe) userId: string): Promise<GetUserResponseDTO> {
+		const user = await this.usersService.findById(userId);
 
 		if (!user) {
 			throw new NotFoundException("User not found");
@@ -73,8 +72,8 @@ export class UsersController {
 	@HttpCode(200)
 	@UseGuards(AccessTokenGuard)
 	@Get(":id/active-avatar")
-	public async getUserActiveAvatarUrl(@Param("id", ParseUUIDPipe) id: string) {
-		const avatarUrl = await this.usersService.getActiveUserAvatarUrl(id);
+	public async getUserActiveAvatarUrl(@Param("id", ParseUUIDPipe) userId: string) {
+		const avatarUrl = await this.usersService.getActiveUserAvatarUrl(userId);
 
 		if (!avatarUrl) {
 			throw new NotFoundException("Avatar not found");
@@ -88,8 +87,8 @@ export class UsersController {
 	@HttpCode(200)
 	@UseGuards(AccessTokenGuard)
 	@Get(":id/avatars")
-	public async getAllUserAvatarsUrl(@Param("id", ParseUUIDPipe) id: string) {
-		const avatars = await this.usersService.getAllUserAvatarsUrl(id);
+	public async getAllUserAvatarsUrl(@Param("id", ParseUUIDPipe) userId: string) {
+		const avatars = await this.usersService.getAllUserAvatarsUrl(userId);
 
 		return avatars;
 	}

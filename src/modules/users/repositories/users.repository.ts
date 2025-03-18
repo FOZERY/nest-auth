@@ -6,21 +6,21 @@ import { User } from "../entities/User";
 import { UserAvatar } from "../entities/UserAvatar";
 
 export interface UsersRepository {
-	isExists(id: string): Promise<boolean>;
+	ifExists(userId: string): Promise<boolean>;
 	findAllWithPagination(
 		dto: FindAllUsersWithPaginationInputDTO,
 		withDeleted?: boolean
 	): Promise<FindAllUsersWithPaginationOutputDTO>;
-	findById(id: string, withDeleted?: boolean): Promise<User | null>;
+	findByUserId(userId: string, withDeleted?: boolean): Promise<User | null>;
 	findByLogin(login: string, withDeleted?: boolean): Promise<User | null>;
 	findByEmail(email: string, withDeleted?: boolean): Promise<User | null>;
 	create(user: User): Promise<void>;
 	update(user: User): Promise<void>;
-	softDeleteById(id: string): Promise<void>;
-	findAvatarById(id: string): Promise<UserAvatar | null>;
-	findActiveUserAvatar(userId: string): Promise<UserAvatar | null>;
-	findNonDeletedUserAvatars(userId: string): Promise<UserAvatar[]>;
-	createAvatar(avatar: UserAvatar): Promise<void>;
-	softRemoveAvatarById(id: string): Promise<void>;
-	updateAvatarActiveStatusById(avatarId: string, isActive: boolean): Promise<void>;
+	softDeleteByUserId(userId: string): Promise<void>;
+	findAvatarByUserId(userId: string): Promise<UserAvatar | null>;
+	findActiveUserAvatarByUserId(userId: string): Promise<UserAvatar | null>;
+	findNonDeletedUserAvatarsByUserId(userId: string): Promise<UserAvatar[]>;
+	createUserAvatar(avatar: UserAvatar): Promise<void>;
+	softRemoveAvatarByAvatarId(avatarId: string): Promise<void>;
+	updateAvatarActiveStatusByAvatarId(avatarId: string, isActive: boolean): Promise<void>;
 }
