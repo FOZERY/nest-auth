@@ -2,6 +2,7 @@ import {
 	Controller,
 	Get,
 	HttpCode,
+	Logger,
 	NotFoundException,
 	Param,
 	ParseUUIDPipe,
@@ -21,6 +22,8 @@ import { UsersService } from "../services/users.service";
 
 @Controller("users")
 export class UsersController {
+	private LOGGER = new Logger(UsersController.name);
+
 	constructor(private readonly usersService: UsersService) {}
 
 	@ApiOperation({

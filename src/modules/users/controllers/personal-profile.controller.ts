@@ -5,6 +5,7 @@ import {
 	FileTypeValidator,
 	Get,
 	HttpCode,
+	Logger,
 	MaxFileSizeValidator,
 	NotFoundException,
 	ParseFilePipe,
@@ -44,6 +45,8 @@ import { UsersService } from "../services/users.service";
 @Controller("personalProfile")
 @UseGuards(AccessTokenGuard)
 export class PersonalProfileController {
+	private LOGGER = new Logger(PersonalProfileController.name);
+
 	constructor(private readonly usersService: UsersService) {}
 
 	@ApiOperation({
@@ -189,6 +192,7 @@ export class PersonalProfileController {
 		@Req() req: RequestWithUser,
 		@Body() dto: RemoveAvatarRequestDTO
 	) {
+		this.LOGGER.log("softDeleteAvatar");
 		await this.usersService.softDeletePersonalProfileAvatar({
 			userId: req.user.id,
 			avatarId: dto.avatarId,
