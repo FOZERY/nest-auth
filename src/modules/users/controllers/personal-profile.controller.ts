@@ -62,7 +62,10 @@ export class PersonalProfileController {
 	public async getPersonalProfile(
 		@Req() req: RequestWithUser
 	): Promise<GetPersonalProfileResponseDTO> {
-		const user = await this.usersService.findById(req.user.id);
+		const user = await this.usersService.findById(req.user.id, {
+			withAvatars: false,
+			withDeleted: false,
+		});
 
 		if (!user) {
 			throw new NotFoundException("User not found");
@@ -100,6 +103,7 @@ export class PersonalProfileController {
 		});
 	}
 
+	// TODO: POST или PUT + название роута??
 	@ApiOperation({
 		description:
 			"Обновление пароля пользователем. После обновления пароля, все предыдущие refreshToken'ы становятся недействительными",
@@ -119,7 +123,7 @@ export class PersonalProfileController {
 		description: "Пользователь не найден",
 	})
 	@HttpCode(200)
-	@Post()
+	@Post("update-password")
 	public async updatePersonalProfilePassword(
 		@Req() req: RequestWithUser,
 		@Res({ passthrough: true }) res: Response,

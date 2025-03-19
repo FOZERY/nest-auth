@@ -4,22 +4,23 @@ import {
 } from "../dto/users/repositories/find-all-users-w-pagination.dto";
 import { User } from "../entities/User";
 import { UserAvatar } from "../entities/UserAvatar";
+import { FindUserOptions } from "../interfaces/find-user-options";
 
 export interface UsersRepository {
-	ifExists(userId: string): Promise<boolean>;
+	exists(userId: string): Promise<boolean>;
 	findAllWithPagination(
 		dto: FindAllUsersWithPaginationInputDTO,
-		withDeleted?: boolean
+		options: FindUserOptions
 	): Promise<FindAllUsersWithPaginationOutputDTO>;
-	findByUserId(userId: string, withDeleted?: boolean): Promise<User | null>;
-	findByLogin(login: string, withDeleted?: boolean): Promise<User | null>;
-	findByEmail(email: string, withDeleted?: boolean): Promise<User | null>;
+	findByUserId(userId: string, options: FindUserOptions): Promise<User | null>;
+	findByLogin(login: string, options: FindUserOptions): Promise<User | null>;
+	findByEmail(email: string, options: FindUserOptions): Promise<User | null>;
 	create(user: User): Promise<void>;
 	update(user: User): Promise<void>;
 	softDeleteByUserId(userId: string): Promise<void>;
 	findAvatarByUserId(userId: string): Promise<UserAvatar | null>;
 	findActiveUserAvatarByUserId(userId: string): Promise<UserAvatar | null>;
-	findNonDeletedUserAvatarsByUserId(userId: string): Promise<UserAvatar[]>;
+	findUserAvatarsByUserId(userId: string): Promise<UserAvatar[]>;
 	createUserAvatar(avatar: UserAvatar): Promise<void>;
 	softRemoveAvatarByAvatarId(avatarId: string): Promise<void>;
 	updateAvatarActiveStatusByAvatarId(avatarId: string, isActive: boolean): Promise<void>;

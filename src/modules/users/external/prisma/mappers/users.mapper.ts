@@ -3,7 +3,7 @@ import { User } from "../../../entities/User";
 import { UserAvatarPrismaMapper } from "./avatars.mapper";
 
 export class UserPrismaMapper {
-	static async toEntity(prismaUser: PrismaUser, avatars: PrismaAvatar[]): Promise<User> {
+	static async toEntity(prismaUser: PrismaUser, avatars: PrismaAvatar[] = []): Promise<User> {
 		const entityAvatars = await Promise.all(
 			avatars.map(async (avatar) => await UserAvatarPrismaMapper.toEntity(avatar))
 		);

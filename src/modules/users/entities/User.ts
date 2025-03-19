@@ -20,8 +20,8 @@ import { randomUUID } from "crypto";
 import { NoSpaces } from "../../../common/class-validator/noSpaces.decorator";
 import { Entity } from "../../../core/entity/Entity";
 import { Nullable } from "../../../core/types/utility.types";
-import { UserAvatar } from "./UserAvatar";
 import { AvatarLengthConflict } from "../errors/errors";
+import { UserAvatar } from "./UserAvatar";
 
 export interface UserProps {
 	id?: string;
@@ -131,7 +131,6 @@ export class User extends Entity {
 	public async setPassword(password: string) {
 		this._password = password;
 		await this.validate();
-		await this.hashPassword();
 	}
 
 	public get age(): number {
@@ -194,23 +193,18 @@ export class User extends Entity {
 	}
 
 	private async hashPassword() {
-		if (this._password.startsWith("$argon2")) {
-			return;
-		}
-
 		this._password = await argon.hash(this._password, {
 			type: argon2id,
 		});
 	}
 
-	public async comparePassword(nonhashedPassword: string) {
+	private async comparePassword(nonhashedPassword: string) {
 		return await argon.verify(this._password, nonhashedPassword);
 	}
 
 	public static async create(props: UserProps): Promise<User> {
 		const user = new User(props);
 		await user.validate();
-		await user.hashPassword();
 
 		return user;
 	}

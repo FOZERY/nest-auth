@@ -19,8 +19,6 @@ export class AccessTokenStrategy extends PassportStrategy(Strategy, "access-toke
 	}
 
 	async validate(payload: AccessJwtPayload) {
-		// сомнительно, но окэй?? а как еще это сделать? через блэклист + рэдис? хм...
-		// удалили пользователя но access остался у него на руках, поэтому + проверка
 		const exists = await this.usersService.checkIfExists(payload.id);
 		if (!exists) {
 			return null;

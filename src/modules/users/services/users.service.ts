@@ -19,7 +19,9 @@ import { UpdateUserRequestDTO } from "../dto/users/requests/update-user.request.
 import { User } from "../entities/User";
 import { UserAvatar } from "../entities/UserAvatar";
 import { UsersRepositoryImpl } from "../external/prisma/users.repository.impl";
+import { FindUserOptions } from "../interfaces/find-user-options";
 import { UsersRepository } from "../repositories/users.repository";
+import { comparePassword, hashPassword } from "../../../common/utils/hash-password";
 
 @Injectable()
 export class UsersService {
@@ -37,9 +39,9 @@ export class UsersService {
 		this.S3_URL = this.configService.get<string>("S3_URL")!;
 	}
 
-	public async getAllUsersWithPagination(
+	public async paginate(
 		dto: GetAllUsersRequestQueryDTO,
-		withDeleted: boolean = false
+		options: FindUserOptions
 	): Promise<FindAllUsersWithPaginationOutputDTO> {
 		return await this.usersRepository.findAllWithPagination(
 			{
@@ -48,35 +50,36 @@ export class UsersService {
 				skip: dto.skip,
 				orderBy: dto.order === Order.ASC ? "asc" : "desc",
 			},
-			withDeleted
+			options
 		);
 	}
 
+	@Transactional()
 	public async deleteById(id: string) {
 		await this.usersRepository.softDeleteByUserId(id);
 		await this.tokenService.deleteAllRefreshSessionsByUserId(id);
 	}
 
 	public async checkIfExists(userId: string) {
-		return await this.usersRepository.ifExists(userId);
+		return await this.usersRepository.exists(userId);
 	}
 
-	public async findById(id: string, withDeleted: boolean = false) {
-		return await this.usersRepository.findByUserId(id, withDeleted);
+	public async findById(id: string, options: FindUserOptions) {
+		return await this.usersRepository.findByUserId(id, options);
 	}
 
-	public async findByEmail(email: string, withDeleted: boolean = false) {
-		return await this.usersRepository.findByEmail(email, withDeleted);
+	public async findByEmail(email: string, options: FindUserOptions) {
+		return await this.usersRepository.findByEmail(email, options);
 	}
 
-	public async findByLogin(login: string, withDeleted: boolean = false): Promise<User | null> {
-		return await this.usersRepository.findByLogin(login, withDeleted);
+	public async findByLogin(login: string, options: FindUserOptions): Promise<User | null> {
+		return await this.usersRepository.findByLogin(login, options);
 	}
 
 	public async create(dto: CreateUserRequestDTO): Promise<User> {
 		const user = await User.create({
 			login: dto.login,
-			password: dto.password,
+			password: await hashPassword(dto.password),
 			email: dto.email,
 			about: dto.about,
 			age: dto.age,
@@ -89,7 +92,10 @@ export class UsersService {
 	}
 
 	public async update(dto: UpdateUserRequestDTO): Promise<void> {
-		const user = await this.usersRepository.findByUserId(dto.id);
+		const user = await this.usersRepository.findByUserId(dto.id, {
+			withDeleted: false,
+			withAvatars: false,
+		});
 
 		if (!user) {
 			throw new NotFoundException("User not found");
@@ -103,20 +109,25 @@ export class UsersService {
 		return await this.usersRepository.update(user);
 	}
 
+	@Transactional()
 	public async updatePersonalProfilePassword(
 		dto: UpdatePersonalPasswordServiceDTO
 	): Promise<AccessRefreshTokens> {
-		const user = await this.usersRepository.findByUserId(dto.userId);
+		const user = await this.usersRepository.findByUserId(dto.userId, {
+			withAvatars: false,
+			withDeleted: false,
+		});
 
 		if (!user) {
 			throw new NotFoundException("User not found");
 		}
 
-		if (!(await user.comparePassword(dto.oldPassword))) {
+		if (!(await comparePassword(dto.oldPassword, user.password))) {
 			throw new BadRequestException("Old password is incorrect");
 		}
 
-		await user.setPassword(dto.newPassword);
+		await user.setPassword(await hashPassword(dto.newPassword));
+
 		await this.usersRepository.update(user);
 		await this.tokenService.deleteAllRefreshSessionsByUserId(dto.userId);
 
@@ -131,7 +142,7 @@ export class UsersService {
 	}
 
 	public async getAllUserAvatarsUrl(userId: string): Promise<string[]> {
-		const avatars = await this.usersRepository.findNonDeletedUserAvatarsByUserId(userId);
+		const avatars = await this.usersRepository.findUserAvatarsByUserId(userId);
 
 		return avatars.map((avatar) => `${this.S3_URL}/${this.S3_AVATARS_BUCKET}/${avatar.path}`);
 	}
@@ -150,7 +161,7 @@ export class UsersService {
 	public async uploadPersonalProfileAvatar(
 		dto: UploadAvatarDTO
 	): Promise<UploadAvatarResponseDTO> {
-		const avatars = await this.usersRepository.findNonDeletedUserAvatarsByUserId(dto.userId);
+		const avatars = await this.usersRepository.findUserAvatarsByUserId(dto.userId);
 
 		if (avatars.length >= 5) {
 			throw new BadRequestException("You can't upload more than 5 avatars");

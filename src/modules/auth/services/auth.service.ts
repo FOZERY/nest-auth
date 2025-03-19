@@ -5,6 +5,7 @@ import { LoginUserRequestDTO } from "../dto/requests/login-user.request.dto";
 import { RegisterUserRequestDTO } from "../dto/requests/register-user.request.dto";
 import { RefreshTokenServiceDTO } from "../dto/services/refresh-token.service.dto";
 import { AccessRefreshTokens } from "../types/auth.types";
+import { comparePassword } from "../../../common/utils/hash-password";
 
 @Injectable()
 export class AuthService {
@@ -15,10 +16,16 @@ export class AuthService {
 
 	public async login(dto: LoginUserRequestDTO): Promise<AccessRefreshTokens> {
 		const user = dto.login
-			? await this.usersService.findByLogin(dto.login)
-			: await this.usersService.findByEmail(dto.email!);
+			? await this.usersService.findByLogin(dto.login, {
+					withAvatars: false,
+					withDeleted: false,
+				})
+			: await this.usersService.findByEmail(dto.email!, {
+					withAvatars: false,
+					withDeleted: false,
+				});
 
-		if (!user || !(await user.comparePassword(dto.password))) {
+		if (!user || !(await comparePassword(dto.password, user.password))) {
 			throw new UnauthorizedException("Неправильно указан логин/email или пароль.");
 		}
 
@@ -63,13 +70,19 @@ export class AuthService {
 	}
 
 	public async register(dto: RegisterUserRequestDTO): Promise<AccessRefreshTokens> {
-		const candidateByLogin = await this.usersService.findByLogin(dto.login, true);
+		const candidateByLogin = await this.usersService.findByLogin(dto.login, {
+			withDeleted: false,
+			withAvatars: false,
+		});
 
 		if (candidateByLogin) {
 			throw new ConflictException("Пользователь с таким логином уже существует.");
 		}
 
-		const candidateByEmail = await this.usersService.findByEmail(dto.email, true);
+		const candidateByEmail = await this.usersService.findByEmail(dto.email, {
+			withDeleted: false,
+			withAvatars: false,
+		});
 
 		if (candidateByEmail) {
 			throw new ConflictException("Пользователь с таким email уже существует.");
@@ -98,7 +111,10 @@ export class AuthService {
 		await this.tokenService.deleteRefreshSessionByToken(dto.refreshToken);
 
 		// проверяем что пользователь с такой сессией существует/не удален + данные для access token
-		const user = await this.usersService.findById(existingSession.userId);
+		const user = await this.usersService.findById(existingSession.userId, {
+			withAvatars: false,
+			withDeleted: false,
+		});
 
 		if (!user) {
 			throw new UnauthorizedException();

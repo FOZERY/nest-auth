@@ -1,15 +1,16 @@
+import { TransactionHost } from "@nestjs-cls/transactional";
+import { TransactionalAdapterPrisma } from "@nestjs-cls/transactional-adapter-prisma";
 import { Injectable } from "@nestjs/common";
-import { PrismaService } from "../../../../external/persistence/prisma/prisma.service";
 import { RefreshSession } from "../../../token/entities/RefreshSession";
 import { RefreshSessionsRepository } from "../../repositories/refreshSessions.repository";
 import { RefreshSessionsMapper } from "./mappers/refreshSessions.mapper";
 
 @Injectable()
 export class RefreshSessionsRepositoryImpl implements RefreshSessionsRepository {
-	constructor(private readonly prisma: PrismaService) {}
+	constructor(private readonly txHost: TransactionHost<TransactionalAdapterPrisma>) {}
 
 	public async getRefreshSessionByToken(token: string): Promise<RefreshSession | null> {
-		const refreshSession = await this.prisma.refresh_sessions.findUnique({
+		const refreshSession = await this.txHost.tx.refresh_sessions.findUnique({
 			where: {
 				refresh_token: token,
 			},
@@ -25,7 +26,7 @@ export class RefreshSessionsRepositoryImpl implements RefreshSessionsRepository 
 	public async getAllRefreshSessionsByUserIdOrderedByCreatedAtAsc(
 		userId: string
 	): Promise<RefreshSession[]> {
-		const refreshSessions = await this.prisma.refresh_sessions.findMany({
+		const refreshSessions = await this.txHost.tx.refresh_sessions.findMany({
 			where: {
 				user_id: userId,
 			},
@@ -40,7 +41,7 @@ export class RefreshSessionsRepositoryImpl implements RefreshSessionsRepository 
 	}
 
 	public async createRefreshSession(session: RefreshSession): Promise<void> {
-		await this.prisma.refresh_sessions.create({
+		await this.txHost.tx.refresh_sessions.create({
 			data: {
 				user_id: session.userId,
 				refresh_token: session.refreshToken,
@@ -54,13 +55,13 @@ export class RefreshSessionsRepositoryImpl implements RefreshSessionsRepository 
 
 	public async deleteRefreshSessionByToken(refreshToken: string): Promise<void> {
 		// deleteMany чтобы не падала ошибка, если сессии с таким токеном нет
-		await this.prisma.refresh_sessions.deleteMany({
+		await this.txHost.tx.refresh_sessions.deleteMany({
 			where: { refresh_token: refreshToken },
 		});
 	}
 
 	public async deleteAllRefreshSessionsByUserId(userId: string): Promise<void> {
-		await this.prisma.refresh_sessions.deleteMany({
+		await this.txHost.tx.refresh_sessions.deleteMany({
 			where: { user_id: userId },
 		});
 	}
@@ -69,7 +70,7 @@ export class RefreshSessionsRepositoryImpl implements RefreshSessionsRepository 
 		userId: string,
 		refreshToken: string
 	): Promise<void> {
-		await this.prisma.refresh_sessions.deleteMany({
+		await this.txHost.tx.refresh_sessions.deleteMany({
 			where: {
 				user_id: userId,
 				NOT: {

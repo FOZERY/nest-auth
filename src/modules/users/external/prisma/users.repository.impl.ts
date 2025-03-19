@@ -7,6 +7,7 @@ import {
 } from "../../dto/users/repositories/find-all-users-w-pagination.dto";
 import { User } from "../../entities/User";
 import { UserAvatar } from "../../entities/UserAvatar";
+import { FindUserOptions } from "../../interfaces/find-user-options";
 import { UsersRepository } from "../../repositories/users.repository";
 import { UserAvatarPrismaMapper } from "./mappers/avatars.mapper";
 import { UserPrismaMapper } from "./mappers/users.mapper";
@@ -15,7 +16,7 @@ import { UserPrismaMapper } from "./mappers/users.mapper";
 export class UsersRepositoryImpl implements UsersRepository {
 	constructor(private readonly txHost: TransactionHost<TransactionalAdapterPrisma>) {}
 
-	public async ifExists(id: string): Promise<boolean> {
+	public async exists(id: string): Promise<boolean> {
 		const user = await this.txHost.tx.users.findUnique({
 			where: {
 				id: id,
@@ -27,11 +28,11 @@ export class UsersRepositoryImpl implements UsersRepository {
 
 	public async findAllWithPagination(
 		dto: FindAllUsersWithPaginationInputDTO,
-		withDeleted: boolean = false
+		options: FindUserOptions
 	): Promise<FindAllUsersWithPaginationOutputDTO> {
 		const total = await this.txHost.tx.users.count({
 			where: {
-				deleted_at: withDeleted ? undefined : null,
+				deleted_at: options.withDeleted ? undefined : null,
 				login: {
 					startsWith: dto.login,
 					mode: "insensitive",
@@ -50,9 +51,10 @@ export class UsersRepositoryImpl implements UsersRepository {
 				login: true,
 				age: true,
 				about: true,
+				avatars: options.withAvatars,
 			},
 			where: {
-				deleted_at: withDeleted ? undefined : null,
+				deleted_at: options.withDeleted ? undefined : null,
 				login: {
 					startsWith: dto.login,
 					mode: "insensitive",
@@ -66,14 +68,14 @@ export class UsersRepositoryImpl implements UsersRepository {
 		};
 	}
 
-	public async findByUserId(id: string, withDeleted: boolean = false): Promise<User | null> {
+	public async findByUserId(id: string, options: FindUserOptions): Promise<User | null> {
 		const prismaUser = await this.txHost.tx.users.findUnique({
 			where: {
 				id: id,
-				deleted_at: withDeleted ? undefined : null,
+				deleted_at: options.withDeleted ? undefined : null,
 			},
 			include: {
-				avatars: true,
+				avatars: options.withAvatars,
 			},
 		});
 
@@ -85,14 +87,14 @@ export class UsersRepositoryImpl implements UsersRepository {
 		return await UserPrismaMapper.toEntity(user, avatars);
 	}
 
-	public async findByLogin(login: string, withDeleted: boolean = false): Promise<User | null> {
+	public async findByLogin(login: string, options: FindUserOptions): Promise<User | null> {
 		const prismaUser = await this.txHost.tx.users.findUnique({
 			where: {
 				login: login,
-				deleted_at: withDeleted ? undefined : null,
+				deleted_at: options.withDeleted ? undefined : null,
 			},
 			include: {
-				avatars: true,
+				avatars: options.withAvatars,
 			},
 		});
 
@@ -104,14 +106,14 @@ export class UsersRepositoryImpl implements UsersRepository {
 		return await UserPrismaMapper.toEntity(user, avatars);
 	}
 
-	public async findByEmail(email: string, withDeleted: boolean = false): Promise<User | null> {
+	public async findByEmail(email: string, options: FindUserOptions): Promise<User | null> {
 		const prismaUser = await this.txHost.tx.users.findUnique({
 			where: {
 				email: email,
-				deleted_at: withDeleted ? undefined : null,
+				deleted_at: options.withDeleted ? undefined : null,
 			},
 			include: {
-				avatars: true,
+				avatars: options.withAvatars,
 			},
 		});
 
@@ -167,7 +169,7 @@ export class UsersRepositoryImpl implements UsersRepository {
 		return await UserAvatarPrismaMapper.toEntity(prismaAvatar);
 	}
 
-	public async findNonDeletedUserAvatarsByUserId(userId: string): Promise<UserAvatar[]> {
+	public async findUserAvatarsByUserId(userId: string): Promise<UserAvatar[]> {
 		const prismaAvatars = await this.txHost.tx.avatars.findMany({
 			where: {
 				user_id: userId,

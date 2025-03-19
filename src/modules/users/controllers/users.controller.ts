@@ -35,7 +35,10 @@ export class UsersController {
 	public async paginate(
 		@Query() queryDto: GetAllUsersRequestQueryDTO
 	): Promise<WithPaginationResponseDTO<GetUserResponseDTO>> {
-		const users = await this.usersService.getAllUsersWithPagination(queryDto);
+		const users = await this.usersService.paginate(queryDto, {
+			withAvatars: false,
+			withDeleted: false,
+		});
 		const pageMetaDto = new PageMetaDTO({ itemCount: users.total, pageOptionsDto: queryDto });
 
 		return new WithPaginationResponseDTO(users.data, pageMetaDto);
@@ -55,7 +58,10 @@ export class UsersController {
 	@UseGuards(AccessTokenGuard)
 	@Get(":id")
 	public async getUser(@Param("id", ParseUUIDPipe) userId: string): Promise<GetUserResponseDTO> {
-		const user = await this.usersService.findById(userId);
+		const user = await this.usersService.findById(userId, {
+			withAvatars: false,
+			withDeleted: true,
+		});
 
 		if (!user) {
 			throw new NotFoundException("User not found");
