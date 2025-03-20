@@ -6,7 +6,7 @@ import path from "path";
 import { TransportTargetOptions } from "pino";
 import { PrettyOptions } from "pino-pretty";
 
-export const loggerConfig: LoggerModuleAsyncParams = {
+export const pinoConfig: LoggerModuleAsyncParams = {
 	imports: [ConfigModule],
 	inject: [ConfigService],
 	useFactory: (config: ConfigService) => {
@@ -16,7 +16,7 @@ export const loggerConfig: LoggerModuleAsyncParams = {
 		if (config.get("LOG_TO_CONSOLE") === "true") {
 			if (process.env.NODE_ENV === "development") {
 				targets.push({
-					target: path.resolve(__dirname, "pino", "pino-pretty-transport"),
+					target: path.resolve(__dirname, "pino-pretty-transport"),
 					options: {
 						colorize: true,
 						singleLine: false,
@@ -50,7 +50,7 @@ export const loggerConfig: LoggerModuleAsyncParams = {
 				base: {
 					pid: process.pid,
 					hostname: os.hostname(),
-					app: config.get("APP_NAME") ?? "nestjs-api",
+					app: config.get<string>("APP_NAME"),
 					context: "NestApplication",
 					env: process.env.NODE_ENV,
 				},

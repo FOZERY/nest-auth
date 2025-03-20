@@ -3,16 +3,16 @@ import { APP_PIPE } from "@nestjs/core";
 import cookieParser from "cookie-parser";
 import { ClsModule } from "nestjs-cls";
 import { LoggerModule } from "nestjs-pino";
-import { clsConfig } from "./config/cls.config";
 import { ConfigModule } from "./config/config.module";
-import { loggerConfig } from "./config/logger.config";
+import { pinoConfig } from "./external/logger/pino/pino.config";
+import { clsConfig } from "./external/persistence/cls-transactional/cls.config";
 import { AuthModule } from "./modules/auth/auth.module";
 import { UsersModule } from "./modules/users/users.module";
 
 @Module({
 	imports: [
 		ConfigModule,
-		LoggerModule.forRootAsync(loggerConfig),
+		LoggerModule.forRootAsync(pinoConfig),
 		ClsModule.forRoot(clsConfig),
 		UsersModule,
 		AuthModule,
