@@ -10,7 +10,7 @@ import { UserAvatar } from "../../entities/UserAvatar";
 import { FindUserOptions } from "../../interfaces/find-user-options";
 import { UsersRepository } from "../../repositories/users.repository";
 import { UserAvatarPrismaMapper } from "./mappers/avatars.mapper";
-import { UserPrismaMapper } from "./mappers/users.mapper";
+import { UserPrismaMapper } from "./mappers/users-prisma.mapper";
 
 @Injectable()
 export class UsersRepositoryImpl implements UsersRepository {
@@ -73,6 +73,11 @@ export class UsersRepositoryImpl implements UsersRepository {
 			where: {
 				id: id,
 				deleted_at: options.withDeleted ? undefined : null,
+				avatars: {
+					none: {
+						deleted_at: null,
+					},
+				},
 			},
 			include: {
 				avatars: options.withAvatars,

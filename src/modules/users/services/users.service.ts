@@ -1,10 +1,11 @@
-import { BadRequestException, Inject, Injectable, NotFoundException } from "@nestjs/common";
+import { BadRequestException, Inject, Injectable, Logger, NotFoundException } from "@nestjs/common";
 import { randomUUID } from "node:crypto";
 import { Order } from "../../../common/dtos/pagination/page-options.request.dto";
 import { AccessRefreshTokens } from "../../auth/types/auth.types";
 
 import { Transactional } from "@nestjs-cls/transactional";
 import { ConfigService } from "@nestjs/config";
+import { comparePassword, hashPassword } from "../../../common/utils/hash-password";
 import { FileUploadStrategy } from "../../file/strategies/file.strategy";
 import { S3FileUploadStrategy } from "../../file/strategies/impl/s3-file.strategy";
 import { TokenService } from "../../token/services/token.service";
@@ -19,17 +20,19 @@ import { UpdateUserRequestDTO } from "../dto/users/requests/update-user.request.
 import { User } from "../entities/User";
 import { UserAvatar } from "../entities/UserAvatar";
 import { UsersRepositoryImpl } from "../external/prisma/users.repository.impl";
+import { UsersCacheService } from "../external/redis/users-cache.service";
 import { FindUserOptions } from "../interfaces/find-user-options";
 import { UsersRepository } from "../repositories/users.repository";
-import { comparePassword, hashPassword } from "../../../common/utils/hash-password";
 
 @Injectable()
 export class UsersService {
+	private readonly LOGGER = new Logger(UsersService.name);
 	private readonly S3_AVATARS_BUCKET: string;
 	private readonly S3_URL: string;
 
 	constructor(
 		@Inject(UsersRepositoryImpl) private readonly usersRepository: UsersRepository,
+		private readonly usersCacheService: UsersCacheService,
 		private readonly tokenService: TokenService,
 		@Inject(S3FileUploadStrategy)
 		private readonly fileUploadStrategy: FileUploadStrategy,
@@ -64,8 +67,24 @@ export class UsersService {
 		return await this.usersRepository.exists(userId);
 	}
 
-	public async findById(id: string, options: FindUserOptions) {
-		return await this.usersRepository.findByUserId(id, options);
+	public async findById(id: string, options: FindUserOptions): Promise<User | null> {
+		const cachedUser = await this.usersCacheService.getUserById(id);
+
+		if (cachedUser !== null) {
+			this.LOGGER.log("get user with id %s from cache", cachedUser.id);
+			return cachedUser;
+		}
+
+		const user = await this.usersRepository.findByUserId(id, options);
+
+		if (!user) {
+			return null;
+		}
+
+		await this.usersCacheService.cacheUser(user, 120000);
+		this.LOGGER.log("set user cache with id %s", user.id);
+
+		return user;
 	}
 
 	public async findByEmail(email: string, options: FindUserOptions) {
@@ -106,6 +125,8 @@ export class UsersService {
 		if (dto.age) await user.setAge(dto.age);
 		if (dto.about) await user.setAbout(dto.about);
 
+		await this.usersCacheService.deleteFromCacheById(dto.id);
+
 		return await this.usersRepository.update(user);
 	}
 
@@ -128,7 +149,9 @@ export class UsersService {
 
 		await user.setPassword(await hashPassword(dto.newPassword));
 
+		await this.usersCacheService.deleteFromCacheById(user.id);
 		await this.usersRepository.update(user);
+
 		await this.tokenService.deleteAllRefreshSessionsByUserId(dto.userId);
 
 		return await this.tokenService.createAccessRefreshTokens({

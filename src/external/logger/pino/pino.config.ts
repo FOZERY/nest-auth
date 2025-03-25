@@ -2,31 +2,38 @@ import { ConfigModule, ConfigService } from "@nestjs/config";
 import { randomUUID } from "crypto";
 import { LoggerModuleAsyncParams } from "nestjs-pino";
 import os from "node:os";
-import path from "path";
-import { TransportTargetOptions } from "pino";
-import { PrettyOptions } from "pino-pretty";
+import { DestinationStream } from "pino";
+import PinoPretty from "pino-pretty";
+import { LogMessage } from "./pino-pretty-transport";
 
 export const pinoConfig: LoggerModuleAsyncParams = {
 	imports: [ConfigModule],
 	inject: [ConfigService],
 	useFactory: (config: ConfigService) => {
 		const level: string = config.get<string>("LOG_LEVEL") ?? "info";
-		const targets: TransportTargetOptions[] = [];
 
-		if (config.get("LOG_TO_CONSOLE") === "true") {
-			if (process.env.NODE_ENV === "development") {
-				targets.push({
-					target: path.resolve(__dirname, "pino-pretty-transport"),
-					options: {
-						colorize: true,
-						singleLine: false,
-					} as PrettyOptions,
-				});
-			} else {
-				targets.push({
-					target: "pino/file",
-					options: {
-						destination: 1,
+		let stream: DestinationStream | undefined = undefined;
+		if (config.get("LOG_TO_CONSOLE")) {
+			if (config.get("NODE_ENV") === "development") {
+				stream = PinoPretty({
+					colorize: true,
+					singleLine: false,
+					messageFormat(log: LogMessage, messageKey: string, _, { colors }) {
+						const formattedContext = log.context
+							? `${colors.gray(`[${log.context}]`)} `
+							: "";
+
+						let reqIdPart = "";
+
+						if (log.req && typeof log.req === "object") {
+							if ("id" in log.req && log.req.id) {
+								reqIdPart = `${colors.yellow(`REQ_ID`)}:${colors.yellowBright(log.req.id)} `;
+							}
+						}
+
+						const message: string = log[messageKey] as string;
+
+						return `${formattedContext}${reqIdPart}– ${message}`;
 					},
 				});
 			}
@@ -44,15 +51,13 @@ export const pinoConfig: LoggerModuleAsyncParams = {
 					return id;
 				},
 				autoLogging: true,
-				transport: {
-					targets: targets,
-				},
+				stream: stream,
 				base: {
 					pid: process.pid,
 					hostname: os.hostname(),
 					app: config.get<string>("APP_NAME"),
 					context: "NestApplication",
-					env: process.env.NODE_ENV,
+					env: config.get<string>("NODE_ENV"),
 				},
 			},
 		};

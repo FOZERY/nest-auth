@@ -1,27 +1,37 @@
+import { CACHE_MANAGER } from "@nestjs/cache-manager";
 import { Inject } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { JwtService } from "@nestjs/jwt";
+import { Cache } from "cache-manager";
 import { randomUUID } from "crypto";
 import { parseTimeToMilliseconds } from "../../auth/helpers/parseTimeToMilliseconds";
+import { AccessRefreshTokens } from "../../auth/types/auth.types";
+import { CreateAccessRefreshTokensServiceDTO } from "../dtos/services/create-access-refresh.service.dto";
 import { CreateAccessTokenServiceDTO } from "../dtos/services/create-access-token.service.dto";
 import { CreateRefreshServiceDTO } from "../dtos/services/create-refresh-session.service.dto";
 import { RefreshSession } from "../entities/RefreshSession";
 import { RefreshSessionsRepositoryImpl } from "../external/prisma/refreshSessions.repository.impl";
 import { CreateRefreshSessionResult } from "../interfaces/create-refreshSession-result";
 import { RefreshSessionsRepository } from "../repositories/refreshSessions.repository";
-import { CreateAccessRefreshTokensServiceDTO } from "../dtos/services/create-access-refresh.service.dto";
-import { AccessRefreshTokens } from "../../auth/types/auth.types";
 
 export class TokenService {
 	constructor(
 		private readonly configService: ConfigService,
 		private readonly accessJwtService: JwtService,
+		@Inject(CACHE_MANAGER)
+		private readonly cacheManager: Cache,
 		@Inject(RefreshSessionsRepositoryImpl)
 		private readonly refreshSessionRepository: RefreshSessionsRepository
 	) {}
 
 	public async getRefreshSessionByToken(refreshToken: string): Promise<RefreshSession | null> {
 		return await this.refreshSessionRepository.getRefreshSessionByToken(refreshToken);
+	}
+
+	public async getRefreshSessionByTokenCached(refreshToken: string) {
+		const session = await this.cacheManager.get(`user_session:${refreshToken}`);
+		console.log(session);
+		console.log(typeof session);
 	}
 
 	public async getAllRefreshSessionsByUserId(userId: string): Promise<RefreshSession[]> {
@@ -78,7 +88,12 @@ export class TokenService {
 			ipAddress: dto.ipAddress,
 		});
 
-		await this.refreshSessionRepository.createRefreshSession(refreshSession);
+		// await this.refreshSessionRepository.createRefreshSession(refreshSession);
+		await this.cacheManager.set(
+			`user_session:${refreshSession.refreshToken}`,
+			refreshSession.toJSON(),
+			60
+		);
 
 		return {
 			refreshToken: refreshSession.refreshToken,

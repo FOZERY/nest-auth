@@ -48,7 +48,6 @@ export class AuthController {
 	@HttpCode(200)
 	@Post("login")
 	public async login(
-		@Req() req: Request,
 		@Body() dto: LoginUserRequestDTO,
 		@Res({ passthrough: true }) res: Response
 	): Promise<AccessTokenResponse> {

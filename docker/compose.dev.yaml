@@ -17,6 +17,24 @@ services:
                     cpus: "1"
                     memory: 1G
 
+    redis:
+        container_name: redis-dev
+        image: redis:7-alpine
+        restart: unless-stopped
+        ports:
+            - "${REDIS_PORT}:6379"
+        command: redis-server --requirepass ${REDIS_PASSWORD} --appendonly yes
+        deploy:
+            resources:
+                limits:
+                    cpus: "0.5"
+                    memory: 512M
+                reservations:
+                    cpus: "0.25"
+                    memory: 256M
+        volumes:
+            - cache:/data
+
     minio:
         container_name: minio-dev
         image: minio/minio:latest
@@ -41,3 +59,4 @@ volumes:
     postgres-data-dev:
     minio-storage:
     minio-config:
+    cache:

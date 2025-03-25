@@ -1,4 +1,3 @@
-import argon, { argon2id } from "argon2";
 import { Type } from "class-transformer";
 import {
 	IsArray,
@@ -36,9 +35,22 @@ export interface UserProps {
 	deletedAt?: Nullable<Date>;
 }
 
+export type UserJSON = {
+	id: string;
+	login: string;
+	email: string;
+	age: number;
+	about: string;
+	password: string;
+	avatars: Array<UserAvatar>;
+	createdAt: Nullable<Date>;
+	updatedAt: Nullable<Date>;
+	deletedAt: Nullable<Date>;
+};
+
 export class User extends Entity {
 	@IsUUID()
-	private _id: string;
+	public id: string;
 
 	@IsNotEmpty()
 	@IsString()
@@ -48,158 +60,58 @@ export class User extends Entity {
 	})
 	@MinLength(3)
 	@MaxLength(255)
-	private _login: string;
+	public login: string;
 
 	@IsNotEmpty()
 	@IsEmail()
 	@MaxLength(255)
-	private _email: string;
+	public email: string;
 
 	@IsNotEmpty()
 	@IsString()
 	@MaxLength(255)
-	private _password: string;
+	public password: string;
 
 	@IsNotEmpty()
 	@IsNumber()
 	@Max(150)
 	@Min(0)
-	private _age: number;
+	public age: number;
 
 	@IsOptional()
 	@IsString()
 	@MaxLength(1000)
-	private _about: Nullable<string>;
+	public about: Nullable<string>;
 
 	@IsArray()
 	@ValidateNested({ each: true })
 	@Type(() => UserAvatar)
-	private _avatars: UserAvatar[];
+	public avatars: UserAvatar[];
 
 	@IsOptional()
 	@IsDate()
-	private _updatedAt: Nullable<Date>;
+	public updatedAt: Nullable<Date>;
 
 	@IsOptional()
 	@IsDate()
-	private _createdAt: Nullable<Date>;
+	public createdAt: Nullable<Date>;
 
 	@IsOptional()
 	@IsDate()
-	private _deletedAt: Nullable<Date>;
+	public deletedAt: Nullable<Date>;
 
 	private constructor(props: UserProps) {
 		super();
-		this._id = props.id ?? randomUUID();
-		this._login = props.login;
-		this._email = props.email;
-		this._password = props.password;
-		this._age = props.age;
-		this._avatars = props.avatars;
-		this._about = props.about ?? null;
-		this._createdAt = props.createdAt ?? null;
-		this._updatedAt = props.updatedAt ?? null;
-		this._deletedAt = props.deletedAt ?? null;
-	}
-
-	public get id(): string {
-		return this._id;
-	}
-
-	public get login(): string {
-		return this._login;
-	}
-
-	public async setLogin(login: string) {
-		this._login = login;
-		await this.validate();
-	}
-
-	public get email(): string {
-		return this._email;
-	}
-
-	public async setEmail(email: string) {
-		this._email = email;
-		await this.validate();
-	}
-
-	public get password(): string {
-		return this._password;
-	}
-
-	public async setPassword(password: string) {
-		this._password = password;
-		await this.validate();
-	}
-
-	public get age(): number {
-		return this._age;
-	}
-
-	public async setAge(age: number) {
-		this._age = age;
-		await this.validate();
-	}
-
-	public get about(): Nullable<string> {
-		return this._about;
-	}
-
-	public async setAbout(about: string) {
-		this._about = about;
-		await this.validate();
-	}
-
-	public get avatars(): UserAvatar[] {
-		return this._avatars;
-	}
-
-	public get nonDeletedAvatars(): UserAvatar[] {
-		return this._avatars.filter((avatar) => avatar.deletedAt === null);
-	}
-
-	public get deletedAvatars(): UserAvatar[] {
-		return this._avatars.filter((avatar) => avatar.deletedAt !== null);
-	}
-
-	public addAvatar(avatar: UserAvatar) {
-		if (this.nonDeletedAvatars.length >= 5) {
-			throw new AvatarLengthConflict();
-		}
-
-		this._avatars.push(avatar);
-	}
-
-	public removeAvatar(id: string) {
-		const avatar = this._avatars.find((avatar) => avatar.id === id);
-		if (!avatar) {
-			throw new Error("Avatar not found");
-		}
-
-		avatar.deletedAt = new Date();
-	}
-
-	public get createdAt(): Nullable<Date> {
-		return this._createdAt;
-	}
-
-	public get updatedAt(): Nullable<Date> {
-		return this._updatedAt;
-	}
-
-	public get deletedAt(): Nullable<Date> {
-		return this._deletedAt;
-	}
-
-	private async hashPassword() {
-		this._password = await argon.hash(this._password, {
-			type: argon2id,
-		});
-	}
-
-	private async comparePassword(nonhashedPassword: string) {
-		return await argon.verify(this._password, nonhashedPassword);
+		this.id = props.id ?? randomUUID();
+		this.login = props.login;
+		this.email = props.email;
+		this.password = props.password;
+		this.age = props.age;
+		this.avatars = props.avatars;
+		this.about = props.about ?? null;
+		this.createdAt = props.createdAt ?? null;
+		this.updatedAt = props.updatedAt ?? null;
+		this.deletedAt = props.deletedAt ?? null;
 	}
 
 	public static async create(props: UserProps): Promise<User> {
@@ -207,5 +119,79 @@ export class User extends Entity {
 		await user.validate();
 
 		return user;
+	}
+
+	public async setLogin(login: string) {
+		this.login = login;
+		await this.validate();
+	}
+
+	public async setEmail(email: string) {
+		this.email = email;
+		await this.validate();
+	}
+
+	public async setPassword(password: string) {
+		this.password = password;
+		await this.validate();
+	}
+
+	public async setAge(age: number) {
+		this.age = age;
+		await this.validate();
+	}
+
+	public async setAbout(about: string) {
+		this.about = about;
+		await this.validate();
+	}
+
+	public getNonDeletedAvatars(): UserAvatar[] {
+		return this.avatars.filter((avatar) => avatar.deletedAt === null);
+	}
+
+	public getDeletedAvatars(): UserAvatar[] {
+		return this.avatars.filter((avatar) => avatar.deletedAt !== null);
+	}
+
+	public addAvatar(avatar: UserAvatar) {
+		if (this.getDeletedAvatars.length >= 5) {
+			throw new AvatarLengthConflict();
+		}
+
+		this.avatars.push(avatar);
+	}
+
+	public removeAvatar(id: string) {
+		const avatar = this.avatars.find((avatar) => avatar.id === id);
+		if (!avatar) {
+			throw new Error("Avatar not found");
+		}
+
+		avatar.deletedAt = new Date();
+	}
+
+	// private async hashPassword() {
+	// 	this.password = await argon.hash(this.password, {
+	// 		type: argon2id,
+	// 	});
+	// }
+
+	// private async comparePassword(nonhashedPassword: string) {
+	// 	return await argon.verify(this.password, nonhashedPassword);
+	// }
+
+	public toJSON() {
+		return JSON.stringify({
+			id: this.id,
+			login: this.login,
+			email: this.email,
+			age: this.age,
+			about: this.about,
+			avatars: this.avatars,
+			createdAt: this.createdAt,
+			updatedAt: this.updatedAt,
+			deletedAt: this.deletedAt,
+		} as UserJSON);
 	}
 }

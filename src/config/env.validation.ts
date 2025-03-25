@@ -2,9 +2,9 @@ import { plainToInstance } from "class-transformer";
 import {
 	IsBoolean,
 	IsEnum,
+	IsIP,
 	IsNumber,
 	IsString,
-	IsUrl,
 	Matches,
 	validateSync,
 } from "class-validator";
@@ -58,11 +58,23 @@ export class EnvironmentVariables {
 	@Matches(/^\d+[smhd]$/)
 	ACCESS_EXPIRED_IN: string;
 
-	@IsUrl()
+	@IsString()
 	DATABASE_URL: string;
 
-	@IsUrl()
+	@IsString()
+	REDIS_USER: string;
+
+	@IsString()
+	REDIS_PASSWORD: string;
+
+	@IsString()
 	S3_URL: string;
+
+	@IsIP()
+	REDIS_HOST: string;
+
+	@IsNumber()
+	REDIS_PORT: number;
 
 	@IsString()
 	S3_ACCESS_KEY_ID: string;

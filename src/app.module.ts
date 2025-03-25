@@ -1,4 +1,7 @@
+import { createKeyv } from "@keyv/redis";
+import { CacheModule } from "@nestjs/cache-manager";
 import { MiddlewareConsumer, Module, NestModule, ValidationPipe } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
 import { APP_PIPE } from "@nestjs/core";
 import cookieParser from "cookie-parser";
 import { ClsModule } from "nestjs-cls";
@@ -14,6 +17,20 @@ import { UsersModule } from "./modules/users/users.module";
 		ConfigModule,
 		LoggerModule.forRootAsync(pinoConfig),
 		ClsModule.forRoot(clsConfig),
+		// TODO: вынести в отдельный конфиг
+		CacheModule.registerAsync({
+			useFactory: (configService: ConfigService) => {
+				return {
+					stores: [
+						createKeyv(
+							`redis://:${configService.get("REDIS_PASSWORD")}@${configService.get("REDIS_HOST")}:${configService.get("REDIS_PORT")}`
+						),
+					],
+				};
+			},
+			inject: [ConfigService],
+			isGlobal: true,
+		}),
 		UsersModule,
 		AuthModule,
 	],

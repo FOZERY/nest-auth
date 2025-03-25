@@ -1,3 +1,4 @@
+import { IsBoolean, IsDate, IsNotEmpty, IsString, IsUUID } from "class-validator";
 import { randomUUID } from "crypto";
 import { Entity } from "../../../core/entity/Entity";
 import { Nullable } from "../../../core/types/utility.types";
@@ -13,12 +14,26 @@ export interface UserAvatarProps {
 }
 
 export class UserAvatar extends Entity {
+	@IsUUID()
 	private _id: string;
+
+	@IsUUID()
 	private _userId: string;
+
+	@IsNotEmpty()
+	@IsString()
 	private _path: string;
+
+	@IsBoolean()
 	private _active: boolean;
+
+	@IsDate()
 	private _createdAt: Nullable<Date>;
+
+	@IsDate()
 	private _updatedAt: Nullable<Date>;
+
+	@IsDate()
 	private _deletedAt: Nullable<Date>;
 
 	private constructor(props: UserAvatarProps) {

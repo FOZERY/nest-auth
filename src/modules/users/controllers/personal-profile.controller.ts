@@ -192,7 +192,6 @@ export class PersonalProfileController {
 		@Req() req: RequestWithUser,
 		@Body() dto: RemoveAvatarRequestDTO
 	) {
-		this.LOGGER.log("softDeleteAvatar");
 		await this.usersService.softDeletePersonalProfileAvatar({
 			userId: req.user.id,
 			avatarId: dto.avatarId,

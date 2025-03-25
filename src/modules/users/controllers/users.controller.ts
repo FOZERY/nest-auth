@@ -1,7 +1,9 @@
+import { CACHE_MANAGER } from "@nestjs/cache-manager";
 import {
 	Controller,
 	Get,
 	HttpCode,
+	Inject,
 	Logger,
 	NotFoundException,
 	Param,
@@ -10,6 +12,7 @@ import {
 	UseGuards,
 } from "@nestjs/common";
 import { ApiBearerAuth, ApiNotFoundResponse, ApiOkResponse, ApiOperation } from "@nestjs/swagger";
+import { Cache } from "cache-manager";
 import {
 	PageMetaDTO,
 	WithPaginationResponseDTO,
@@ -24,7 +27,10 @@ import { UsersService } from "../services/users.service";
 export class UsersController {
 	private LOGGER = new Logger(UsersController.name);
 
-	constructor(private readonly usersService: UsersService) {}
+	constructor(
+		private readonly usersService: UsersService,
+		@Inject(CACHE_MANAGER) private readonly cacheManager: Cache
+	) {}
 
 	@ApiOperation({
 		summary: "Получить всех пользователей с пагинацией",
@@ -63,10 +69,11 @@ export class UsersController {
 	public async getUser(@Param("id", ParseUUIDPipe) userId: string): Promise<GetUserResponseDTO> {
 		const user = await this.usersService.findById(userId, {
 			withAvatars: false,
-			withDeleted: true,
+			withDeleted: false,
 		});
 
 		if (!user) {
+			this.LOGGER.log(`user with id %s not found`, userId);
 			throw new NotFoundException("User not found");
 		}
 

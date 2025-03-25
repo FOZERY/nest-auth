@@ -1,14 +1,16 @@
-import { ConflictException, Injectable, UnauthorizedException } from "@nestjs/common";
+import { ConflictException, Injectable, Logger, UnauthorizedException } from "@nestjs/common";
+import { comparePassword } from "../../../common/utils/hash-password";
 import { TokenService } from "../../token/services/token.service";
 import { UsersService } from "../../users/services/users.service";
 import { LoginUserRequestDTO } from "../dto/requests/login-user.request.dto";
 import { RegisterUserRequestDTO } from "../dto/requests/register-user.request.dto";
 import { RefreshTokenServiceDTO } from "../dto/services/refresh-token.service.dto";
 import { AccessRefreshTokens } from "../types/auth.types";
-import { comparePassword } from "../../../common/utils/hash-password";
 
 @Injectable()
 export class AuthService {
+	private LOGGER = new Logger(AuthService.name);
+
 	constructor(
 		private readonly usersService: UsersService,
 		private readonly tokenService: TokenService

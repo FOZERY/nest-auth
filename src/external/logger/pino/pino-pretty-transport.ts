@@ -1,10 +1,10 @@
 import PinoPretty, { PrettyOptions } from "pino-pretty";
 
-interface LogRequest {
+export interface LogRequest {
 	id?: string;
 }
 
-interface LogMessage {
+export interface LogMessage {
 	req?: LogRequest | null;
 	context?: string;
 }
