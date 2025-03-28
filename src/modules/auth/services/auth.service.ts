@@ -18,14 +18,8 @@ export class AuthService {
 
 	public async login(dto: LoginUserRequestDTO): Promise<AccessRefreshTokens> {
 		const user = dto.login
-			? await this.usersService.findByLogin(dto.login, {
-					withAvatars: false,
-					withDeleted: false,
-				})
-			: await this.usersService.findByEmail(dto.email!, {
-					withAvatars: false,
-					withDeleted: false,
-				});
+			? await this.usersService.getByLogin(dto.login)
+			: await this.usersService.getByEmail(dto.email!);
 
 		if (!user || !(await comparePassword(dto.password, user.password))) {
 			throw new UnauthorizedException("Неправильно указан логин/email или пароль.");
@@ -72,19 +66,13 @@ export class AuthService {
 	}
 
 	public async register(dto: RegisterUserRequestDTO): Promise<AccessRefreshTokens> {
-		const candidateByLogin = await this.usersService.findByLogin(dto.login, {
-			withDeleted: false,
-			withAvatars: false,
-		});
+		const candidateByLogin = await this.usersService.getByLogin(dto.login);
 
 		if (candidateByLogin) {
 			throw new ConflictException("Пользователь с таким логином уже существует.");
 		}
 
-		const candidateByEmail = await this.usersService.findByEmail(dto.email, {
-			withDeleted: false,
-			withAvatars: false,
-		});
+		const candidateByEmail = await this.usersService.getByEmail(dto.email);
 
 		if (candidateByEmail) {
 			throw new ConflictException("Пользователь с таким email уже существует.");
@@ -113,10 +101,7 @@ export class AuthService {
 		await this.tokenService.deleteRefreshSessionByToken(dto.refreshToken);
 
 		// проверяем что пользователь с такой сессией существует/не удален + данные для access token
-		const user = await this.usersService.findById(existingSession.userId, {
-			withAvatars: false,
-			withDeleted: false,
-		});
+		const user = await this.usersService.getById(existingSession.userId);
 
 		if (!user) {
 			throw new UnauthorizedException();

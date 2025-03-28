@@ -2,6 +2,7 @@ import {
 	Body,
 	Controller,
 	HttpCode,
+	Logger,
 	Post,
 	Req,
 	Res,
@@ -29,6 +30,8 @@ import { AuthService } from "../services/auth.service";
 
 @Controller("auth")
 export class AuthController {
+	private readonly LOGGER = new Logger(AuthController.name);
+
 	constructor(private readonly authService: AuthService) {}
 
 	@ApiOperation({
@@ -152,6 +155,7 @@ export class AuthController {
 	@Post("logout-all-sessions-except-current")
 	public async logoutAllSessionsExceptCurrent(@Req() req: RequestWithUser): Promise<void> {
 		const refreshToken: string = req.cookies["refreshToken"];
+		this.LOGGER.log("logoutAllSessionsExceptCurrent", { refreshToken });
 
 		if (!refreshToken) {
 			throw new UnauthorizedException("No refresh token provided");
@@ -185,6 +189,7 @@ export class AuthController {
 		@Body() dto: RefreshTokenRequestDTO
 	): Promise<AccessTokenResponse> {
 		const refreshToken: string = req.cookies["refreshToken"];
+		this.LOGGER.log("refreshToken %s", refreshToken);
 
 		if (!refreshToken) {
 			throw new UnauthorizedException("Refresh token is required");

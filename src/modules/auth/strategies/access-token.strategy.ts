@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, Logger } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { PassportStrategy } from "@nestjs/passport";
 import { ExtractJwt, Strategy } from "passport-jwt";
@@ -7,6 +7,8 @@ import { AccessJwtPayload } from "../types/auth.types";
 
 @Injectable()
 export class AccessTokenStrategy extends PassportStrategy(Strategy, "access-token") {
+	private readonly LOGGER = new Logger(AccessTokenStrategy.name);
+
 	constructor(
 		configService: ConfigService,
 		private readonly usersService: UsersService
@@ -19,6 +21,7 @@ export class AccessTokenStrategy extends PassportStrategy(Strategy, "access-toke
 	}
 
 	async validate(payload: AccessJwtPayload) {
+		this.LOGGER.log("validate", { payload });
 		const exists = await this.usersService.checkIfExists(payload.id);
 		if (!exists) {
 			return null;
