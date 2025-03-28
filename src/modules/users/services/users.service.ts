@@ -1,60 +1,64 @@
+import { Transactional } from "@nestjs-cls/transactional";
 import { BadRequestException, Inject, Injectable, Logger, NotFoundException } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
 import { randomUUID } from "node:crypto";
 import { Order } from "../../../common/dtos/pagination/page-options.request.dto";
-import { AccessRefreshTokens } from "../../auth/types/auth.types";
-
-import { Transactional } from "@nestjs-cls/transactional";
-import { ConfigService } from "@nestjs/config";
 import { comparePassword, hashPassword } from "../../../common/utils/hash-password";
-import { FileUploadStrategy } from "../../file/strategies/file.strategy";
-import { S3FileUploadStrategy } from "../../file/strategies/impl/s3-file.strategy";
+import { S3Service } from "../../../external/s3/s3.service";
+import { AccessRefreshTokens } from "../../auth/types/auth.types";
+import {
+	FileOperationTypes,
+	FileProcessingQueueProducer,
+} from "../../file/queue/file-processing.producer";
 import { TokenService } from "../../token/services/token.service";
-import { UploadAvatarResponseDTO } from "../dto/profiles/responses/upload-avatar.response.dto";
 import { RemoveAvatarDTO } from "../dto/profiles/services/remove-avatar.dto";
 import { UpdatePersonalPasswordServiceDTO } from "../dto/profiles/services/update-profile-password.request.dto";
 import { UploadAvatarDTO } from "../dto/profiles/services/upload-avatar.dto";
-import { FindAllUsersWithPaginationOutputDTO } from "../dto/users/repositories/find-all-users-w-pagination.dto";
-import { CreateUserRequestDTO } from "../dto/users/requests/create-user.request.dto";
-import { GetAllUsersRequestQueryDTO } from "../dto/users/requests/get-all-users.request.dto";
-import { UpdateUserRequestDTO } from "../dto/users/requests/update-user.request.dto";
+import { FindAllUsersWithPaginationOutputDTO } from "../dtos/find-all-users-w-pagination.dto";
+import { CreateUserRequestDTO } from "../dtos/requests/create-user.request.dto";
+import { UsersPaginatedRequestDTO } from "../dtos/requests/get-all-users.request.dto";
+import { UpdateUserRequestDTO } from "../dtos/requests/update-user.request.dto";
+import { UserAvatarResponseDTO } from "../dtos/responses/user-avatar.response.dto";
 import { User } from "../entities/User";
 import { UserAvatar } from "../entities/UserAvatar";
 import { UsersRepositoryImpl } from "../external/prisma/users.repository.impl";
-import { UsersCacheService } from "../external/redis/users-cache.service";
-import { FindUserOptions } from "../interfaces/find-user-options";
 import { UsersRepository } from "../repositories/users.repository";
 
 @Injectable()
 export class UsersService {
 	private readonly LOGGER = new Logger(UsersService.name);
-	private readonly S3_AVATARS_BUCKET: string;
-	private readonly S3_URL: string;
 
 	constructor(
+		private readonly configService: ConfigService,
 		@Inject(UsersRepositoryImpl) private readonly usersRepository: UsersRepository,
-		private readonly usersCacheService: UsersCacheService,
 		private readonly tokenService: TokenService,
-		@Inject(S3FileUploadStrategy)
-		private readonly fileUploadStrategy: FileUploadStrategy,
-		private readonly configService: ConfigService
-	) {
-		this.S3_AVATARS_BUCKET = "users-avatars";
-		this.S3_URL = this.configService.get<string>("S3_URL")!;
-	}
+		private readonly S3AvatarsService: S3Service,
+		private readonly fileProcessingQueueProducer: FileProcessingQueueProducer
+	) {}
 
+	// TODO: check dto
 	public async paginate(
-		dto: GetAllUsersRequestQueryDTO,
-		options: FindUserOptions
+		dto: UsersPaginatedRequestDTO
 	): Promise<FindAllUsersWithPaginationOutputDTO> {
-		return await this.usersRepository.findAllWithPagination(
-			{
-				login: dto.login,
-				take: dto.take!,
-				skip: dto.skip,
-				orderBy: dto.order === Order.ASC ? "asc" : "desc",
-			},
-			options
-		);
+		const users = await this.usersRepository.findAllWithPagination({
+			login: dto.login,
+			take: dto.take!,
+			skip: dto.skip,
+			orderBy: dto.order === Order.ASC ? "asc" : "desc",
+		});
+
+		return {
+			data: users.data.map((user) => ({
+				...user,
+				activeAvatar: user.activeAvatar
+					? {
+							...user.activeAvatar,
+							url: this.S3AvatarsService.getFileUrl(user.activeAvatar.path),
+						}
+					: null,
+			})),
+			total: users.total,
+		};
 	}
 
 	@Transactional()
@@ -67,32 +71,22 @@ export class UsersService {
 		return await this.usersRepository.exists(userId);
 	}
 
-	public async findById(id: string, options: FindUserOptions): Promise<User | null> {
-		const cachedUser = await this.usersCacheService.getUserById(id);
-
-		if (cachedUser !== null) {
-			this.LOGGER.log("get user with id %s from cache", cachedUser.id);
-			return cachedUser;
-		}
-
-		const user = await this.usersRepository.findByUserId(id, options);
+	public async getById(id: string): Promise<User | null> {
+		const user = await this.usersRepository.getById(id);
 
 		if (!user) {
 			return null;
 		}
 
-		await this.usersCacheService.cacheUser(user, 120000);
-		this.LOGGER.log("set user cache with id %s", user.id);
-
 		return user;
 	}
 
-	public async findByEmail(email: string, options: FindUserOptions) {
-		return await this.usersRepository.findByEmail(email, options);
+	public async getByEmail(email: string) {
+		return await this.usersRepository.getByEmail(email);
 	}
 
-	public async findByLogin(login: string, options: FindUserOptions): Promise<User | null> {
-		return await this.usersRepository.findByLogin(login, options);
+	public async getByLogin(login: string): Promise<User | null> {
+		return await this.usersRepository.getByLogin(login);
 	}
 
 	public async create(dto: CreateUserRequestDTO): Promise<User> {
@@ -111,10 +105,7 @@ export class UsersService {
 	}
 
 	public async update(dto: UpdateUserRequestDTO): Promise<void> {
-		const user = await this.usersRepository.findByUserId(dto.id, {
-			withDeleted: false,
-			withAvatars: false,
-		});
+		const user = await this.usersRepository.getById(dto.id);
 
 		if (!user) {
 			throw new NotFoundException("User not found");
@@ -125,8 +116,6 @@ export class UsersService {
 		if (dto.age) await user.setAge(dto.age);
 		if (dto.about) await user.setAbout(dto.about);
 
-		await this.usersCacheService.deleteFromCacheById(dto.id);
-
 		return await this.usersRepository.update(user);
 	}
 
@@ -134,10 +123,7 @@ export class UsersService {
 	public async updatePersonalProfilePassword(
 		dto: UpdatePersonalPasswordServiceDTO
 	): Promise<AccessRefreshTokens> {
-		const user = await this.usersRepository.findByUserId(dto.userId, {
-			withAvatars: false,
-			withDeleted: false,
-		});
+		const user = await this.usersRepository.getById(dto.userId);
 
 		if (!user) {
 			throw new NotFoundException("User not found");
@@ -149,7 +135,6 @@ export class UsersService {
 
 		await user.setPassword(await hashPassword(dto.newPassword));
 
-		await this.usersCacheService.deleteFromCacheById(user.id);
 		await this.usersRepository.update(user);
 
 		await this.tokenService.deleteAllRefreshSessionsByUserId(dto.userId);
@@ -164,26 +149,36 @@ export class UsersService {
 		});
 	}
 
-	public async getAllUserAvatarsUrl(userId: string): Promise<string[]> {
+	public async getAllUserAvatars(userId: string): Promise<UserAvatarResponseDTO[]> {
 		const avatars = await this.usersRepository.findUserAvatarsByUserId(userId);
 
-		return avatars.map((avatar) => `${this.S3_URL}/${this.S3_AVATARS_BUCKET}/${avatar.path}`);
+		return avatars.map((avatar) => ({
+			id: avatar.id,
+			userId: avatar.userId,
+			active: avatar.active,
+			createdAt: avatar.createdAt,
+			url: this.S3AvatarsService.getFileUrl(avatar.path),
+		}));
 	}
 
-	public async getActiveUserAvatarUrl(userId: string): Promise<string | null> {
+	public async getActiveUserAvatar(userId: string): Promise<UserAvatarResponseDTO | null> {
 		const avatar = await this.usersRepository.findActiveUserAvatarByUserId(userId);
 
 		if (!avatar) {
 			return null;
 		}
 
-		return `${this.S3_URL}/${this.S3_AVATARS_BUCKET}/${avatar?.path}`;
+		return {
+			id: avatar.id,
+			userId: avatar.userId,
+			createdAt: avatar.createdAt,
+			active: avatar.active,
+			url: this.S3AvatarsService.getFileUrl(avatar.path),
+		};
 	}
 
 	@Transactional()
-	public async uploadPersonalProfileAvatar(
-		dto: UploadAvatarDTO
-	): Promise<UploadAvatarResponseDTO> {
+	public async uploadPersonalProfileAvatar(dto: UploadAvatarDTO): Promise<UserAvatarResponseDTO> {
 		const avatars = await this.usersRepository.findUserAvatarsByUserId(dto.userId);
 
 		if (avatars.length >= 5) {
@@ -191,25 +186,26 @@ export class UsersService {
 		}
 
 		const id = randomUUID();
-		const uploadPath = `${dto.userId}/${id}`;
-		// TODO: BullMQ
-		const { path, url } = await this.fileUploadStrategy.uploadPublicFile({
-			bucket: this.S3_AVATARS_BUCKET,
-			path: uploadPath,
-			file: {
-				buffer: dto.file.buffer,
-				fieldname: dto.file.fieldname,
-				mimetype: dto.file.mimetype,
-				originalname: dto.file.originalname,
-				size: dto.file.size,
-			},
+		const uploadKey = `${dto.userId}/${id}`;
+		const { url } = await this.S3AvatarsService.uploadFile({
+			Body: dto.file.buffer,
+			ACL: "public-read",
+			ContentType: dto.file.mimetype,
+			Key: uploadKey,
 		});
 
-		try {
-			if (!url) {
-				throw new Error("Avatar upload failed. URL is undefined");
-			}
+		this.LOGGER.log(
+			{
+				file: {
+					url,
+					bucket: this.S3AvatarsService.getBucket(),
+					uploadKey,
+				},
+			},
+			"uploaded file"
+		);
 
+		try {
 			const currentActiveAvatar = avatars.find((avatar) => avatar.active);
 			if (currentActiveAvatar) {
 				await this.usersRepository.updateAvatarActiveStatusByAvatarId(
@@ -220,7 +216,7 @@ export class UsersService {
 
 			const avatar = await UserAvatar.create({
 				id: id,
-				path: path,
+				path: uploadKey,
 				userId: dto.userId,
 				active: true,
 			});
@@ -228,14 +224,23 @@ export class UsersService {
 			await this.usersRepository.createUserAvatar(avatar);
 
 			return {
-				avatarUrl: url,
+				id: avatar.id,
+				userId: avatar.userId,
+				active: avatar.active,
+				createdAt: avatar.createdAt,
+				url: url,
 			};
 		} catch (error) {
-			// TODO: BullMQ
-			await this.fileUploadStrategy.removeFile({
-				path: path,
-				bucket: this.S3_AVATARS_BUCKET,
-			});
+			await this.fileProcessingQueueProducer.produce(
+				FileOperationTypes.DELETE,
+				{
+					bucket: this.S3AvatarsService.getBucket(),
+					key: uploadKey,
+				},
+				{ attempts: 0, backoff: { type: "exponential", delay: 2000 } }
+			);
+			this.LOGGER.log("added to queue");
+
 			throw error;
 		}
 	}

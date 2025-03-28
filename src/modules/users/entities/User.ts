@@ -94,7 +94,7 @@ export class User extends Entity {
 
 	@IsOptional()
 	@IsDate()
-	public createdAt: Nullable<Date>;
+	public createdAt: Date;
 
 	@IsOptional()
 	@IsDate()
@@ -109,7 +109,7 @@ export class User extends Entity {
 		this.age = props.age;
 		this.avatars = props.avatars;
 		this.about = props.about ?? null;
-		this.createdAt = props.createdAt ?? null;
+		this.createdAt = props.createdAt ?? new Date();
 		this.updatedAt = props.updatedAt ?? null;
 		this.deletedAt = props.deletedAt ?? null;
 	}
@@ -144,6 +144,10 @@ export class User extends Entity {
 	public async setAbout(about: string) {
 		this.about = about;
 		await this.validate();
+	}
+
+	public getActiveAvatar(): Nullable<UserAvatar> {
+		return this.avatars.find((avatar) => avatar.active) ?? null;
 	}
 
 	public getNonDeletedAvatars(): UserAvatar[] {
