@@ -1,4 +1,4 @@
-import { ConfigModule, ConfigService } from "@nestjs/config";
+import { ConfigService } from "@nestjs/config";
 import { randomUUID } from "crypto";
 import { LoggerModuleAsyncParams } from "nestjs-pino";
 import os from "node:os";
@@ -7,13 +7,13 @@ import PinoPretty from "pino-pretty";
 import { LogMessage } from "./pino-pretty-transport";
 
 export const pinoConfig: LoggerModuleAsyncParams = {
-	imports: [ConfigModule],
+	imports: [],
 	inject: [ConfigService],
 	useFactory: (config: ConfigService) => {
 		const level: string = config.get<string>("LOG_LEVEL") ?? "info";
 
 		let stream: DestinationStream | undefined = undefined;
-		if (config.get("LOG_TO_CONSOLE")) {
+		if (config.get<boolean>("LOG_TO_CONSOLE")) {
 			if (config.get("NODE_ENV") === "development") {
 				stream = PinoPretty({
 					colorize: true,
@@ -42,6 +42,7 @@ export const pinoConfig: LoggerModuleAsyncParams = {
 		return {
 			pinoHttp: {
 				level: level,
+				enabled: config.get<boolean>("LOG_TO_CONSOLE"),
 				genReqId: (req, res) => {
 					// trace logging
 					const existingID = req.id ?? req.headers["X-Request-Id"];

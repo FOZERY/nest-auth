@@ -1,15 +1,15 @@
 import { applyDecorators, Type } from "@nestjs/common";
 import { ApiExtraModels, ApiOkResponse, getSchemaPath } from "@nestjs/swagger";
-import { WithPaginationResponseDTO } from "../../../common/dtos/pagination/with-pagination.response.dto";
+import { PaginatedResponseDto } from "../../../common/dtos/pagination/with-pagination.response.dto";
 
 export const ApiPaginatedOkResponse = <TModel extends Type<any>>(model: TModel) => {
 	return applyDecorators(
-		ApiExtraModels(WithPaginationResponseDTO, model),
+		ApiExtraModels(PaginatedResponseDto, model),
 		ApiOkResponse({
 			description: "Успешно получены данные",
 			schema: {
 				allOf: [
-					{ $ref: getSchemaPath(WithPaginationResponseDTO) },
+					{ $ref: getSchemaPath(PaginatedResponseDto) },
 					{
 						properties: {
 							data: {

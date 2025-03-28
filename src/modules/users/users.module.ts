@@ -1,5 +1,7 @@
 import { Module } from "@nestjs/common";
-import { FilesModule } from "../file/file.module";
+import { ConfigService } from "@nestjs/config";
+import { S3Module } from "../../external/s3/s3.module";
+import { FileModule } from "../file/file.module";
 import { TokenModule } from "../token/token.module";
 import { PersonalProfileController } from "./controllers/personal-profile.controller";
 import { UsersController } from "./controllers/users.controller";
@@ -8,7 +10,16 @@ import { UsersCacheService } from "./external/redis/users-cache.service";
 import { UsersService } from "./services/users.service";
 
 @Module({
-	imports: [TokenModule, FilesModule],
+	imports: [
+		TokenModule,
+		FileModule,
+		S3Module.forFeatureAsync({
+			useFactory: (configService: ConfigService) => ({
+				bucket: configService.get<string>("S3_USER_AVATARS_BUCKET")!,
+			}),
+			inject: [ConfigService],
+		}),
+	],
 	providers: [UsersRepositoryImpl, UsersService, UsersCacheService],
 	controllers: [UsersController, PersonalProfileController],
 	exports: [UsersService],

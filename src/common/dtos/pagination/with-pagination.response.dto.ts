@@ -2,12 +2,12 @@ import { ApiProperty } from "@nestjs/swagger";
 import { IsArray } from "class-validator";
 import { PageOptionsRequestDTO } from "./page-options.request.dto";
 
-export interface PageMetaDTOParams {
+export interface PageMetaDtoParams {
 	pageOptionsDto: PageOptionsRequestDTO;
 	itemCount: number;
 }
 
-export class PageMetaDTO {
+export class PageMetaDto {
 	@ApiProperty({
 		description: "Текущая страница",
 		example: 1,
@@ -44,7 +44,7 @@ export class PageMetaDTO {
 	})
 	readonly hasNextPage: boolean;
 
-	constructor({ pageOptionsDto, itemCount }: PageMetaDTOParams) {
+	constructor({ pageOptionsDto, itemCount }: PageMetaDtoParams) {
 		this.page = pageOptionsDto.page!;
 		this.take = pageOptionsDto.take!;
 		this.itemCount = itemCount;
@@ -54,7 +54,7 @@ export class PageMetaDTO {
 	}
 }
 
-export class WithPaginationResponseDTO<T> {
+export class PaginatedResponseDto<T> {
 	@IsArray()
 	@ApiProperty({
 		description: "Данные для пагинации",
@@ -62,10 +62,10 @@ export class WithPaginationResponseDTO<T> {
 	})
 	data: T[];
 
-	@ApiProperty({ type: () => PageMetaDTO })
-	meta: PageMetaDTO;
+	@ApiProperty({ type: () => PageMetaDto })
+	meta: PageMetaDto;
 
-	constructor(data: T[], meta: PageMetaDTO) {
+	constructor(data: T[], meta: PageMetaDto) {
 		this.data = data;
 		this.meta = meta;
 	}
