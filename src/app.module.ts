@@ -1,35 +1,44 @@
-import { createKeyv } from "@keyv/redis";
-import { CacheModule } from "@nestjs/cache-manager";
+import { BullModule } from "@nestjs/bullmq";
 import { MiddlewareConsumer, Module, NestModule, ValidationPipe } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { APP_PIPE } from "@nestjs/core";
 import cookieParser from "cookie-parser";
 import { ClsModule } from "nestjs-cls";
 import { LoggerModule } from "nestjs-pino";
-import { ConfigModule } from "./config/config.module";
+import { AppConfigModule } from "./config/config.module";
+import { RedisModule } from "./external/cache/redis/redis.module";
 import { pinoConfig } from "./external/logger/pino/pino.config";
 import { clsConfig } from "./external/persistence/cls-transactional/cls.config";
+import { S3Module } from "./external/s3/s3.module";
 import { AuthModule } from "./modules/auth/auth.module";
 import { UsersModule } from "./modules/users/users.module";
 
 @Module({
 	imports: [
-		ConfigModule,
+		AppConfigModule,
 		LoggerModule.forRootAsync(pinoConfig),
 		ClsModule.forRoot(clsConfig),
-		// TODO: вынести в отдельный конфиг
-		CacheModule.registerAsync({
-			useFactory: (configService: ConfigService) => {
-				return {
-					stores: [
-						createKeyv(
-							`redis://:${configService.get("REDIS_PASSWORD")}@${configService.get("REDIS_HOST")}:${configService.get("REDIS_PORT")}`
-						),
-					],
-				};
-			},
+		RedisModule,
+		BullModule.forRootAsync({
+			useFactory: (configService: ConfigService) => ({
+				connection: {
+					host: configService.get<string>("REDIS_HOST"),
+					port: configService.get<number>("REDIS_PORT"),
+					password: configService.get<string>("REDIS_PASSWORD"),
+				},
+			}),
 			inject: [ConfigService],
-			isGlobal: true,
+		}),
+		S3Module.forRootAsync({
+			useFactory: (configService: ConfigService) => ({
+				region: configService.get<string>("S3_REGION") || "",
+				endpoint: configService.get<string>("S3_URL") || "",
+				credentials: {
+					accessKeyId: configService.get<string>("S3_ACCESS_KEY_ID") || "",
+					secretAccessKey: configService.get<string>("S3_SECRET_ACCESS_KEY") || "",
+				},
+			}),
+			inject: [ConfigService],
 		}),
 		UsersModule,
 		AuthModule,

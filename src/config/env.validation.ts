@@ -1,4 +1,4 @@
-import { plainToInstance } from "class-transformer";
+import { plainToInstance, Transform } from "class-transformer";
 import {
 	IsBoolean,
 	IsEnum,
@@ -31,6 +31,7 @@ export class EnvironmentVariables {
 	@IsString()
 	APP_NAME: string;
 
+	@Transform(({ value }) => Number(value))
 	@IsNumber()
 	APP_PORT: number = 3000;
 
@@ -43,6 +44,7 @@ export class EnvironmentVariables {
 	@IsString()
 	POSTGRES_DB: string;
 
+	@Transform(({ value }) => Number(value))
 	@IsNumber()
 	POSTGRES_PORT: number;
 
@@ -67,12 +69,20 @@ export class EnvironmentVariables {
 	@IsString()
 	REDIS_PASSWORD: string;
 
+	@Transform(({ value }) => Number(value))
+	@IsNumber()
+	REDIS_DEFAULT_TTL_SECONDS: number;
+
 	@IsString()
 	S3_URL: string;
+
+	@IsString()
+	S3_USER_AVATARS_BUCKET: string;
 
 	@IsIP()
 	REDIS_HOST: string;
 
+	@Transform(({ value }) => Number(value))
 	@IsNumber()
 	REDIS_PORT: number;
 
@@ -86,18 +96,25 @@ export class EnvironmentVariables {
 	S3_REGION: string;
 
 	@IsEnum(LogLevel)
-	LOG_LEVEL: string;
+	LOG_LEVEL: LogLevel;
 
+	@Transform(({ value }) => {
+		if (value === "true") return true;
+		if (value === "false") return false;
+		return value;
+	})
 	@IsBoolean()
 	LOG_TO_CONSOLE: boolean;
 }
 
 export function validate(config: Record<string, unknown>) {
 	const validatedConfig = plainToInstance(EnvironmentVariables, config, {
-		enableImplicitConversion: true,
 		exposeDefaultValues: true,
 	});
-	const errors = validateSync(validatedConfig, { skipMissingProperties: false });
+
+	const errors = validateSync(validatedConfig, {
+		skipMissingProperties: false,
+	});
 
 	if (errors.length > 0) {
 		throw new Error(errors.toString());
