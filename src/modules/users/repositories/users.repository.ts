@@ -1,20 +1,18 @@
 import {
 	FindAllUsersWithPaginationInputDTO,
-	FindAllUsersWithPaginationOutputDTO,
-} from "../dto/users/repositories/find-all-users-w-pagination.dto";
+	FindAllUsersWithPaginationRepositoryResultDTO,
+} from "../dtos/find-all-users-w-pagination.dto";
 import { User } from "../entities/User";
 import { UserAvatar } from "../entities/UserAvatar";
-import { FindUserOptions } from "../interfaces/find-user-options";
 
 export interface UsersRepository {
 	exists(userId: string): Promise<boolean>;
 	findAllWithPagination(
-		dto: FindAllUsersWithPaginationInputDTO,
-		options: FindUserOptions
-	): Promise<FindAllUsersWithPaginationOutputDTO>;
-	findByUserId(userId: string, options: FindUserOptions): Promise<User | null>;
-	findByLogin(login: string, options: FindUserOptions): Promise<User | null>;
-	findByEmail(email: string, options: FindUserOptions): Promise<User | null>;
+		dto: FindAllUsersWithPaginationInputDTO
+	): Promise<FindAllUsersWithPaginationRepositoryResultDTO>;
+	getById(userId: string): Promise<User | null>;
+	getByLogin(login: string): Promise<User | null>;
+	getByEmail(email: string): Promise<User | null>;
 	create(user: User): Promise<void>;
 	update(user: User): Promise<void>;
 	softDeleteByUserId(userId: string): Promise<void>;

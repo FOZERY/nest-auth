@@ -3,11 +3,10 @@ import { TransactionalAdapterPrisma } from "@nestjs-cls/transactional-adapter-pr
 import { Injectable } from "@nestjs/common";
 import {
 	FindAllUsersWithPaginationInputDTO,
-	FindAllUsersWithPaginationOutputDTO,
-} from "../../dto/users/repositories/find-all-users-w-pagination.dto";
+	FindAllUsersWithPaginationRepositoryResultDTO,
+} from "../../dtos/find-all-users-w-pagination.dto";
 import { User } from "../../entities/User";
 import { UserAvatar } from "../../entities/UserAvatar";
-import { FindUserOptions } from "../../interfaces/find-user-options";
 import { UsersRepository } from "../../repositories/users.repository";
 import { UserAvatarPrismaMapper } from "./mappers/avatars.mapper";
 import { UserPrismaMapper } from "./mappers/users-prisma.mapper";
@@ -27,12 +26,11 @@ export class UsersRepositoryImpl implements UsersRepository {
 	}
 
 	public async findAllWithPagination(
-		dto: FindAllUsersWithPaginationInputDTO,
-		options: FindUserOptions
-	): Promise<FindAllUsersWithPaginationOutputDTO> {
+		dto: FindAllUsersWithPaginationInputDTO
+	): Promise<FindAllUsersWithPaginationRepositoryResultDTO> {
 		const total = await this.txHost.tx.users.count({
 			where: {
-				deleted_at: options.withDeleted ? undefined : null,
+				deleted_at: null,
 				login: {
 					startsWith: dto.login,
 					mode: "insensitive",
@@ -51,10 +49,23 @@ export class UsersRepositoryImpl implements UsersRepository {
 				login: true,
 				age: true,
 				about: true,
-				avatars: options.withAvatars,
+				avatars: {
+					where: {
+						active: true,
+						deleted_at: null,
+					},
+					select: {
+						id: true,
+						user_id: true,
+						path: true,
+						active: true,
+						created_at: true,
+					},
+					take: 1,
+				},
 			},
 			where: {
-				deleted_at: options.withDeleted ? undefined : null,
+				deleted_at: null,
 				login: {
 					startsWith: dto.login,
 					mode: "insensitive",
@@ -63,25 +74,44 @@ export class UsersRepositoryImpl implements UsersRepository {
 		});
 
 		return {
-			data: prismaUsers,
+			data: prismaUsers.map((prUser) => {
+				return {
+					id: prUser.id,
+					login: prUser.login,
+					age: prUser.age,
+					about: prUser.about,
+					activeAvatar:
+						prUser.avatars.length > 0
+							? {
+									id: prUser.avatars[0].id,
+									path: prUser.avatars[0].path,
+									active: prUser.avatars[0].active,
+									createdAt: prUser.avatars[0].created_at,
+									userId: prUser.avatars[0].user_id,
+								}
+							: null,
+				};
+			}),
 			total,
 		};
 	}
 
-	public async findByUserId(id: string, options: FindUserOptions): Promise<User | null> {
+	public async getById(id: string): Promise<User | null> {
 		const prismaUser = await this.txHost.tx.users.findUnique({
 			where: {
 				id: id,
-				deleted_at: options.withDeleted ? undefined : null,
+				deleted_at: null,
+			},
+			include: {
 				avatars: {
-					none: {
+					where: {
 						deleted_at: null,
+					},
+					orderBy: {
+						created_at: "desc",
 					},
 				},
 			},
-			include: {
-				avatars: options.withAvatars,
-			},
 		});
 
 		if (!prismaUser) {
@@ -92,14 +122,21 @@ export class UsersRepositoryImpl implements UsersRepository {
 		return await UserPrismaMapper.toEntity(user, avatars);
 	}
 
-	public async findByLogin(login: string, options: FindUserOptions): Promise<User | null> {
+	public async getByLogin(login: string): Promise<User | null> {
 		const prismaUser = await this.txHost.tx.users.findUnique({
 			where: {
 				login: login,
-				deleted_at: options.withDeleted ? undefined : null,
+				deleted_at: null,
 			},
 			include: {
-				avatars: options.withAvatars,
+				avatars: {
+					where: {
+						deleted_at: null,
+					},
+					orderBy: {
+						created_at: "desc",
+					},
+				},
 			},
 		});
 
@@ -111,14 +148,21 @@ export class UsersRepositoryImpl implements UsersRepository {
 		return await UserPrismaMapper.toEntity(user, avatars);
 	}
 
-	public async findByEmail(email: string, options: FindUserOptions): Promise<User | null> {
+	public async getByEmail(email: string): Promise<User | null> {
 		const prismaUser = await this.txHost.tx.users.findUnique({
 			where: {
 				email: email,
-				deleted_at: options.withDeleted ? undefined : null,
+				deleted_at: null,
 			},
 			include: {
-				avatars: options.withAvatars,
+				avatars: {
+					where: {
+						deleted_at: null,
+					},
+					orderBy: {
+						created_at: "desc",
+					},
+				},
 			},
 		});
 
