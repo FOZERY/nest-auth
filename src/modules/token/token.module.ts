@@ -18,6 +18,7 @@ import { TokenService } from "./services/token.service";
 			inject: [ConfigService],
 		}),
 	],
+
 	providers: [TokenService, RefreshSessionsRepositoryImpl],
 	exports: [TokenService],
 })

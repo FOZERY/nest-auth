@@ -41,18 +41,6 @@ export class RefreshSession extends Entity {
 	@IsDate()
 	private _createdAt: Nullable<Date>;
 
-	public toJSON() {
-		return JSON.stringify({
-			refreshToken: this.refreshToken,
-			userId: this.userId,
-			fingerprint: this.fingerprint,
-			ipAddress: this.ipAddress,
-			userAgent: this.userAgent,
-			expiresAt: this.expiresAt,
-			createdAt: this.createdAt,
-		});
-	}
-
 	private constructor(props: RefreshSessionProps) {
 		super();
 
