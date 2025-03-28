@@ -1,11 +1,11 @@
 import { avatars as PrismaAvatar, users as PrismaUser } from "@prisma/client";
-import { User } from "../../../entities/User";
-import { UserAvatarPrismaMapper } from "./avatars.mapper";
+import { User } from "../entities/User";
+import { AvatarMapper } from "./avatar.mapper";
 
 export class UserPrismaMapper {
 	static async toEntity(prismaUser: PrismaUser, avatars: PrismaAvatar[] = []): Promise<User> {
 		const entityAvatars = await Promise.all(
-			avatars.map(async (avatar) => await UserAvatarPrismaMapper.toEntity(avatar))
+			avatars.map(async (avatar) => await AvatarMapper.fromPrismaToEntity(avatar))
 		);
 
 		return await User.create({
@@ -19,6 +19,18 @@ export class UserPrismaMapper {
 			createdAt: prismaUser.created_at,
 			updatedAt: prismaUser.updated_at,
 			deletedAt: prismaUser.deleted_at,
+		});
+	}
+
+	public static fromEntityToCache(user: User): string {
+		return JSON.stringify({
+			id: user.id,
+			about: user.about,
+			age: user.age,
+			createdAt: user.createdAt,
+			activeAvatar: user.getActiveAvatar(),
+			email: user.email,
+			login: user.login,
 		});
 	}
 }

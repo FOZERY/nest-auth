@@ -1,6 +1,7 @@
-import "reflect-metadata";
 import argon2 from "argon2";
 import { randomUUID } from "crypto";
+import "reflect-metadata";
+import { comparePassword } from "../../../common/utils/hash-password";
 import { User, UserProps } from "./User";
 
 describe("User", () => {
@@ -278,8 +279,8 @@ describe("User", () => {
 			const password = "password";
 			await user.setPassword(password);
 
-			await expect(user.comparePassword(password)).resolves.toBe(true);
-			await expect(user.comparePassword("wrong-password")).resolves.toBe(false);
+			await expect(comparePassword(password, user.password)).resolves.toBe(true);
+			await expect(comparePassword("wrong-password", user.password)).resolves.toBe(false);
 		});
 	});
 

@@ -4,9 +4,9 @@ import { Prisma, PrismaClient } from "@prisma/client";
 import assert from "node:assert";
 import request from "supertest";
 import { AppModule } from "../../src/app.module";
-import { WithPaginationResponseDTO } from "../../src/common/dtos/pagination/with-pagination.response.dto";
+import { PaginatedResponseDto } from "../../src/common/dtos/pagination/with-pagination.response.dto";
 import { initMainConfig } from "../../src/main.config";
-import { GetUserResponseDTO } from "../../src/modules/users/dto/users/responses/get-public-user.response.dto";
+import { UserPublicResponseDTO } from "../../src/modules/users/dtos/responses/user-public.response.dto";
 
 describe("Users (e2e)", () => {
 	let app: INestApplication;
@@ -129,7 +129,7 @@ describe("Users (e2e)", () => {
 					take: 10,
 					pageCount: 1,
 				},
-			} as WithPaginationResponseDTO<GetUserResponseDTO>);
+			} as PaginatedResponseDto<UserPublicResponseDTO>);
 		});
 
 		it("should return only one user when ?take=1", async () => {
@@ -149,7 +149,7 @@ describe("Users (e2e)", () => {
 					take: 1,
 					pageCount: 5,
 				},
-			} as WithPaginationResponseDTO<GetUserResponseDTO>);
+			} as PaginatedResponseDto<UserPublicResponseDTO>);
 		});
 
 		it("should return 2nd page with ?take=1&page=2", async () => {
@@ -169,7 +169,7 @@ describe("Users (e2e)", () => {
 					take: 1,
 					pageCount: 5,
 				},
-			} as WithPaginationResponseDTO<GetUserResponseDTO>);
+			} as PaginatedResponseDto<UserPublicResponseDTO>);
 		});
 
 		it("should return last page with ?take=1&page=5", async () => {
@@ -189,7 +189,7 @@ describe("Users (e2e)", () => {
 					take: 1,
 					pageCount: 5,
 				},
-			} as WithPaginationResponseDTO<GetUserResponseDTO>);
+			} as PaginatedResponseDto<UserPublicResponseDTO>);
 		});
 
 		it("should return users with search ?login=johndoe", async () => {
@@ -209,7 +209,7 @@ describe("Users (e2e)", () => {
 					take: 10,
 					pageCount: 1,
 				},
-			} as WithPaginationResponseDTO<GetUserResponseDTO>);
+			} as PaginatedResponseDto<UserPublicResponseDTO>);
 		});
 
 		it("should return 400 if ?take= is not number", async () => {

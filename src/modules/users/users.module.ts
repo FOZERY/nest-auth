@@ -6,7 +6,6 @@ import { TokenModule } from "../token/token.module";
 import { PersonalProfileController } from "./controllers/personal-profile.controller";
 import { UsersController } from "./controllers/users.controller";
 import { UsersRepositoryImpl } from "./external/prisma/users.repository.impl";
-import { UsersCacheService } from "./external/redis/users-cache.service";
 import { UsersService } from "./services/users.service";
 
 @Module({
@@ -20,7 +19,7 @@ import { UsersService } from "./services/users.service";
 			inject: [ConfigService],
 		}),
 	],
-	providers: [UsersRepositoryImpl, UsersService, UsersCacheService],
+	providers: [UsersRepositoryImpl, UsersService],
 	controllers: [UsersController, PersonalProfileController],
 	exports: [UsersService],
 })

@@ -7,10 +7,9 @@ import {
 } from "../../dtos/find-all-users-w-pagination.dto";
 import { User } from "../../entities/User";
 import { UserAvatar } from "../../entities/UserAvatar";
+import { AvatarMapper } from "../../mappers/avatar.mapper";
+import { UserPrismaMapper } from "../../mappers/users-prisma.mapper";
 import { UsersRepository } from "../../repositories/users.repository";
-import { UserAvatarPrismaMapper } from "./mappers/avatars.mapper";
-import { UserPrismaMapper } from "./mappers/users-prisma.mapper";
-
 @Injectable()
 export class UsersRepositoryImpl implements UsersRepository {
 	constructor(private readonly txHost: TransactionHost<TransactionalAdapterPrisma>) {}
@@ -215,7 +214,7 @@ export class UsersRepositoryImpl implements UsersRepository {
 			return null;
 		}
 
-		return await UserAvatarPrismaMapper.toEntity(prismaAvatar);
+		return await AvatarMapper.fromPrismaToEntity(prismaAvatar);
 	}
 
 	public async findUserAvatarsByUserId(userId: string): Promise<UserAvatar[]> {
@@ -228,7 +227,7 @@ export class UsersRepositoryImpl implements UsersRepository {
 
 		return await Promise.all(
 			prismaAvatars.map(
-				async (prismaAvatar) => await UserAvatarPrismaMapper.toEntity(prismaAvatar)
+				async (prismaAvatar) => await AvatarMapper.fromPrismaToEntity(prismaAvatar)
 			)
 		);
 	}
@@ -246,7 +245,7 @@ export class UsersRepositoryImpl implements UsersRepository {
 			return null;
 		}
 
-		return await UserAvatarPrismaMapper.toEntity(prismaAvatar);
+		return await AvatarMapper.fromPrismaToEntity(prismaAvatar);
 	}
 
 	public async createUserAvatar(avatar: UserAvatar): Promise<void> {
