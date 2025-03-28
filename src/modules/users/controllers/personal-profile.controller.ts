@@ -104,7 +104,6 @@ export class PersonalProfileController {
 		}
 
 		const user = await this.usersService.getById(req.user.id);
-		console.log("user", user);
 
 		if (!user) {
 			throw new NotFoundException("User not found");

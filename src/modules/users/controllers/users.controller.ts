@@ -9,20 +9,22 @@ import {
 	Query,
 	UseGuards,
 } from "@nestjs/common";
-import { ConfigService } from "@nestjs/config";
 import { ApiBearerAuth, ApiNotFoundResponse, ApiOkResponse, ApiOperation } from "@nestjs/swagger";
 import {
 	PageMetaDto,
 	PaginatedResponseDto,
 } from "../../../common/dtos/pagination/with-pagination.response.dto";
 import { RedisService } from "../../../external/cache/redis/redis.service";
+import { S3Service } from "../../../external/s3/s3.service";
 import { ApiPaginatedOkResponse } from "../../../external/swagger/decorators/apiPaginatedOkResponse.swagger";
 import { AccessTokenGuard } from "../../auth/guards/access-token-auth.guard";
 import { UsersPaginatedRequestDTO } from "../dtos/requests/get-all-users.request.dto";
 import { UserAvatarResponseDTO } from "../dtos/responses/user-avatar.response.dto";
 import { UserPublicResponseDTO } from "../dtos/responses/user-public.response.dto";
 import { CachedUser } from "../interfaces/cached-user.interface";
+import { AvatarMapper } from "../mappers/avatar.mapper";
 import { UsersService } from "../services/users.service";
+
 @Controller("users")
 export class UsersController {
 	private LOGGER = new Logger(UsersController.name);
@@ -30,7 +32,7 @@ export class UsersController {
 	constructor(
 		private readonly usersService: UsersService,
 		private readonly redisService: RedisService,
-		private readonly configService: ConfigService
+		private readonly s3AvatarsService: S3Service
 	) {}
 
 	@ApiOperation({
@@ -79,21 +81,17 @@ export class UsersController {
 		);
 
 		if (cachedUser) {
-			const activeAvatar = cachedUser.activeAvatar;
 			this.LOGGER.log("User with id %s was found in cache", userId);
 			return {
 				id: cachedUser.id,
 				age: cachedUser.age,
 				about: cachedUser.about,
 				login: cachedUser.login,
-				activeAvatar: activeAvatar
-					? {
-							id: activeAvatar.id,
-							userId: activeAvatar.userId,
-							url: `${this.configService.get("S3_URL")}/${this.configService.get("S3_USER_AVATARS_BUCKET")}/${activeAvatar.path}`,
-							active: activeAvatar.active,
-							createdAt: activeAvatar.createdAt,
-						}
+				activeAvatar: cachedUser.activeAvatar
+					? AvatarMapper.toResponseDTO(
+							cachedUser.activeAvatar,
+							this.s3AvatarsService.getFileUrl(cachedUser.activeAvatar.path)
+						)
 					: null,
 			};
 		}
@@ -126,13 +124,10 @@ export class UsersController {
 			about: user.about,
 			login: user.login,
 			activeAvatar: activeAvatar
-				? {
-						id: activeAvatar.id,
-						userId: activeAvatar.userId,
-						url: `${this.configService.get("S3_URL")}/${this.configService.get("S3_USER_AVATARS_BUCKET")}/${activeAvatar.path}`,
-						active: activeAvatar.active,
-						createdAt: activeAvatar.createdAt,
-					}
+				? AvatarMapper.toResponseDTO(
+						activeAvatar,
+						this.s3AvatarsService.getFileUrl(activeAvatar.path)
+					)
 				: null,
 		};
 	}

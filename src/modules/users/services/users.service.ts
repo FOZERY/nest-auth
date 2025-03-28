@@ -1,15 +1,10 @@
 import { Transactional } from "@nestjs-cls/transactional";
 import { BadRequestException, Inject, Injectable, Logger, NotFoundException } from "@nestjs/common";
-import { ConfigService } from "@nestjs/config";
 import { randomUUID } from "node:crypto";
 import { Order } from "../../../common/dtos/pagination/page-options.request.dto";
 import { comparePassword, hashPassword } from "../../../common/utils/hash-password";
 import { S3Service } from "../../../external/s3/s3.service";
 import { AccessRefreshTokens } from "../../auth/types/auth.types";
-import {
-	FileOperationTypes,
-	FileProcessingQueueProducer,
-} from "../../file/queue/file-processing.producer";
 import { TokenService } from "../../token/services/token.service";
 import { RemoveAvatarDTO } from "../dto/profiles/services/remove-avatar.dto";
 import { UpdatePersonalPasswordServiceDTO } from "../dto/profiles/services/update-profile-password.request.dto";
@@ -22,6 +17,7 @@ import { UserAvatarResponseDTO } from "../dtos/responses/user-avatar.response.dt
 import { User } from "../entities/User";
 import { UserAvatar } from "../entities/UserAvatar";
 import { UsersRepositoryImpl } from "../external/prisma/users.repository.impl";
+import { AvatarMapper } from "../mappers/avatar.mapper";
 import { UsersRepository } from "../repositories/users.repository";
 
 @Injectable()
@@ -29,11 +25,9 @@ export class UsersService {
 	private readonly LOGGER = new Logger(UsersService.name);
 
 	constructor(
-		private readonly configService: ConfigService,
 		@Inject(UsersRepositoryImpl) private readonly usersRepository: UsersRepository,
 		private readonly tokenService: TokenService,
-		private readonly S3AvatarsService: S3Service,
-		private readonly fileProcessingQueueProducer: FileProcessingQueueProducer
+		private readonly S3AvatarsService: S3Service
 	) {}
 
 	// TODO: check dto
@@ -51,10 +45,10 @@ export class UsersService {
 			data: users.data.map((user) => ({
 				...user,
 				activeAvatar: user.activeAvatar
-					? {
-							...user.activeAvatar,
-							url: this.S3AvatarsService.getFileUrl(user.activeAvatar.path),
-						}
+					? AvatarMapper.toResponseDTO(
+							user.activeAvatar,
+							this.S3AvatarsService.getFileUrl(user.activeAvatar.path)
+						)
 					: null,
 			})),
 			total: users.total,
@@ -152,13 +146,9 @@ export class UsersService {
 	public async getAllUserAvatars(userId: string): Promise<UserAvatarResponseDTO[]> {
 		const avatars = await this.usersRepository.findUserAvatarsByUserId(userId);
 
-		return avatars.map((avatar) => ({
-			id: avatar.id,
-			userId: avatar.userId,
-			active: avatar.active,
-			createdAt: avatar.createdAt,
-			url: this.S3AvatarsService.getFileUrl(avatar.path),
-		}));
+		return avatars.map((avatar) =>
+			AvatarMapper.toResponseDTO(avatar, this.S3AvatarsService.getFileUrl(avatar.path))
+		);
 	}
 
 	public async getActiveUserAvatar(userId: string): Promise<UserAvatarResponseDTO | null> {
@@ -168,13 +158,7 @@ export class UsersService {
 			return null;
 		}
 
-		return {
-			id: avatar.id,
-			userId: avatar.userId,
-			createdAt: avatar.createdAt,
-			active: avatar.active,
-			url: this.S3AvatarsService.getFileUrl(avatar.path),
-		};
+		return AvatarMapper.toResponseDTO(avatar, this.S3AvatarsService.getFileUrl(avatar.path));
 	}
 
 	@Transactional()
@@ -187,6 +171,24 @@ export class UsersService {
 
 		const id = randomUUID();
 		const uploadKey = `${dto.userId}/${id}`;
+
+		const currentActiveAvatar = avatars.find((avatar) => avatar.active);
+		if (currentActiveAvatar) {
+			await this.usersRepository.updateAvatarActiveStatusByAvatarId(
+				currentActiveAvatar.id,
+				false
+			);
+		}
+
+		const avatar = await UserAvatar.create({
+			id: id,
+			path: uploadKey,
+			userId: dto.userId,
+			active: true,
+		});
+
+		await this.usersRepository.createUserAvatar(avatar);
+
 		const { url } = await this.S3AvatarsService.uploadFile({
 			Body: dto.file.buffer,
 			ACL: "public-read",
@@ -205,44 +207,7 @@ export class UsersService {
 			"uploaded file"
 		);
 
-		try {
-			const currentActiveAvatar = avatars.find((avatar) => avatar.active);
-			if (currentActiveAvatar) {
-				await this.usersRepository.updateAvatarActiveStatusByAvatarId(
-					currentActiveAvatar.id,
-					false
-				);
-			}
-
-			const avatar = await UserAvatar.create({
-				id: id,
-				path: uploadKey,
-				userId: dto.userId,
-				active: true,
-			});
-
-			await this.usersRepository.createUserAvatar(avatar);
-
-			return {
-				id: avatar.id,
-				userId: avatar.userId,
-				active: avatar.active,
-				createdAt: avatar.createdAt,
-				url: url,
-			};
-		} catch (error) {
-			await this.fileProcessingQueueProducer.produce(
-				FileOperationTypes.DELETE,
-				{
-					bucket: this.S3AvatarsService.getBucket(),
-					key: uploadKey,
-				},
-				{ attempts: 0, backoff: { type: "exponential", delay: 2000 } }
-			);
-			this.LOGGER.log("added to queue");
-
-			throw error;
-		}
+		return AvatarMapper.toResponseDTO(avatar, this.S3AvatarsService.getFileUrl(avatar.path));
 	}
 
 	public async softDeletePersonalProfileAvatar(dto: RemoveAvatarDTO) {

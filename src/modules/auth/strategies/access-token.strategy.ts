@@ -21,7 +21,7 @@ export class AccessTokenStrategy extends PassportStrategy(Strategy, "access-toke
 	}
 
 	async validate(payload: AccessJwtPayload) {
-		this.LOGGER.log("validate", { payload });
+		this.LOGGER.log({ payload }, "validate");
 		const exists = await this.usersService.checkIfExists(payload.id);
 		if (!exists) {
 			return null;
