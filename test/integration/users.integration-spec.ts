@@ -5,8 +5,8 @@ import assert from "node:assert";
 import request from "supertest";
 import { AppModule } from "../../src/app.module";
 import { WithPaginationResponseDTO } from "../../src/common/dtos/pagination/with-pagination.response.dto";
-import { GetUserResponseDTO } from "../../src/modules/users/dto/users/responses/get-user.response.dto";
 import { initMainConfig } from "../../src/main.config";
+import { GetUserResponseDTO } from "../../src/modules/users/dto/users/responses/get-public-user.response.dto";
 
 describe("Users (e2e)", () => {
 	let app: INestApplication;

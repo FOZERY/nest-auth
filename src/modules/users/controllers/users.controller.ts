@@ -1,9 +1,7 @@
-import { CACHE_MANAGER } from "@nestjs/cache-manager";
 import {
 	Controller,
 	Get,
 	HttpCode,
-	Inject,
 	Logger,
 	NotFoundException,
 	Param,
@@ -11,46 +9,46 @@ import {
 	Query,
 	UseGuards,
 } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
 import { ApiBearerAuth, ApiNotFoundResponse, ApiOkResponse, ApiOperation } from "@nestjs/swagger";
-import { Cache } from "cache-manager";
 import {
-	PageMetaDTO,
-	WithPaginationResponseDTO,
+	PageMetaDto,
+	PaginatedResponseDto,
 } from "../../../common/dtos/pagination/with-pagination.response.dto";
+import { RedisService } from "../../../external/cache/redis/redis.service";
 import { ApiPaginatedOkResponse } from "../../../external/swagger/decorators/apiPaginatedOkResponse.swagger";
 import { AccessTokenGuard } from "../../auth/guards/access-token-auth.guard";
-import { GetAllUsersRequestQueryDTO } from "../dto/users/requests/get-all-users.request.dto";
-import { GetUserResponseDTO } from "../dto/users/responses/get-user.response.dto";
+import { UsersPaginatedRequestDTO } from "../dtos/requests/get-all-users.request.dto";
+import { UserAvatarResponseDTO } from "../dtos/responses/user-avatar.response.dto";
+import { UserPublicResponseDTO } from "../dtos/responses/user-public.response.dto";
+import { CachedUser } from "../interfaces/cached-user.interface";
 import { UsersService } from "../services/users.service";
-
 @Controller("users")
 export class UsersController {
 	private LOGGER = new Logger(UsersController.name);
 
 	constructor(
 		private readonly usersService: UsersService,
-		@Inject(CACHE_MANAGER) private readonly cacheManager: Cache
+		private readonly redisService: RedisService,
+		private readonly configService: ConfigService
 	) {}
 
 	@ApiOperation({
 		summary: "Получить всех пользователей с пагинацией",
 		description: "Получить всех пользователей с пагинацией",
 	})
-	@ApiPaginatedOkResponse(GetUserResponseDTO)
+	@ApiPaginatedOkResponse(UserPublicResponseDTO)
 	@ApiBearerAuth()
 	@HttpCode(200)
 	@UseGuards(AccessTokenGuard)
 	@Get()
 	public async paginate(
-		@Query() queryDto: GetAllUsersRequestQueryDTO
-	): Promise<WithPaginationResponseDTO<GetUserResponseDTO>> {
-		const users = await this.usersService.paginate(queryDto, {
-			withAvatars: false,
-			withDeleted: false,
-		});
-		const pageMetaDto = new PageMetaDTO({ itemCount: users.total, pageOptionsDto: queryDto });
+		@Query() queryDto: UsersPaginatedRequestDTO
+	): Promise<PaginatedResponseDto<UserPublicResponseDTO>> {
+		const users = await this.usersService.paginate(queryDto);
+		const pageMetaDto = new PageMetaDto({ itemCount: users.total, pageOptionsDto: queryDto });
 
-		return new WithPaginationResponseDTO(users.data, pageMetaDto);
+		return new PaginatedResponseDto(users.data, pageMetaDto);
 	}
 
 	@ApiOperation({
@@ -58,7 +56,7 @@ export class UsersController {
 		description: "Получить профиль пользователя",
 	})
 	@ApiOkResponse({
-		type: GetUserResponseDTO,
+		type: UserPublicResponseDTO,
 		description: "Успешно получен профиль пользователя",
 	})
 	@ApiNotFoundResponse({ description: "Пользователь не найден" })
@@ -66,46 +64,100 @@ export class UsersController {
 	@HttpCode(200)
 	@UseGuards(AccessTokenGuard)
 	@Get(":id")
-	public async getUser(@Param("id", ParseUUIDPipe) userId: string): Promise<GetUserResponseDTO> {
-		const user = await this.usersService.findById(userId, {
-			withAvatars: false,
-			withDeleted: false,
-		});
+	public async getUser(
+		@Param("id", ParseUUIDPipe) userId: string
+	): Promise<UserPublicResponseDTO> {
+		const cachedUser = await this.redisService.getJson<CachedUser>(
+			`user:${userId}`,
+			(key, value) => {
+				if (key === "createdAt") {
+					return new Date(value);
+				}
+
+				return value;
+			}
+		);
+
+		if (cachedUser) {
+			const activeAvatar = cachedUser.activeAvatar;
+			this.LOGGER.log("User with id %s was found in cache", userId);
+			return {
+				id: cachedUser.id,
+				age: cachedUser.age,
+				about: cachedUser.about,
+				login: cachedUser.login,
+				activeAvatar: activeAvatar
+					? {
+							id: activeAvatar.id,
+							userId: activeAvatar.userId,
+							url: `${this.configService.get("S3_URL")}/${this.configService.get("S3_USER_AVATARS_BUCKET")}/${activeAvatar.path}`,
+							active: activeAvatar.active,
+							createdAt: activeAvatar.createdAt,
+						}
+					: null,
+			};
+		}
+
+		const user = await this.usersService.getById(userId);
 
 		if (!user) {
-			this.LOGGER.log(`user with id %s not found`, userId);
 			throw new NotFoundException("User not found");
 		}
 
+		await this.redisService.setJson<CachedUser>(
+			`user:${user.id}`,
+			{
+				id: user.id,
+				age: user.age,
+				about: user.about,
+				login: user.login,
+				activeAvatar: user.getActiveAvatar(),
+				email: user.email,
+				createdAt: user.createdAt,
+			},
+			30
+		);
+		this.LOGGER.log("User with id %s was set to cache", user.id);
+
+		const activeAvatar = user.getActiveAvatar();
 		return {
 			id: user.id,
-			login: user.login,
 			age: user.age,
 			about: user.about,
+			login: user.login,
+			activeAvatar: activeAvatar
+				? {
+						id: activeAvatar.id,
+						userId: activeAvatar.userId,
+						url: `${this.configService.get("S3_URL")}/${this.configService.get("S3_USER_AVATARS_BUCKET")}/${activeAvatar.path}`,
+						active: activeAvatar.active,
+						createdAt: activeAvatar.createdAt,
+					}
+				: null,
 		};
 	}
 
 	@HttpCode(200)
 	@UseGuards(AccessTokenGuard)
 	@Get(":id/active-avatar")
-	public async getUserActiveAvatarUrl(@Param("id", ParseUUIDPipe) userId: string) {
-		const avatarUrl = await this.usersService.getActiveUserAvatarUrl(userId);
+	public async getUserActiveAvatarUrl(
+		@Param("id", ParseUUIDPipe) userId: string
+	): Promise<UserAvatarResponseDTO> {
+		const avatar = await this.usersService.getActiveUserAvatar(userId);
 
-		if (!avatarUrl) {
+		if (!avatar) {
 			throw new NotFoundException("Avatar not found");
 		}
 
-		return {
-			avatarUrl,
-		};
+		return avatar;
 	}
 
 	@HttpCode(200)
 	@UseGuards(AccessTokenGuard)
 	@Get(":id/avatars")
-	public async getAllUserAvatarsUrl(@Param("id", ParseUUIDPipe) userId: string) {
-		const avatars = await this.usersService.getAllUserAvatarsUrl(userId);
-
-		return avatars;
+	public async getAllUserAvatarsUrl(
+		@Param("id", ParseUUIDPipe) userId: string
+	): Promise<UserAvatarResponseDTO[]> {
+		return await this.usersService.getAllUserAvatars(userId);
 	}
 }

@@ -17,6 +17,7 @@ import {
 	UseGuards,
 	UseInterceptors,
 } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
 import { FileInterceptor } from "@nestjs/platform-express";
 import {
 	ApiBadRequestResponse,
@@ -30,13 +31,15 @@ import {
 import { Response } from "express";
 import { AccessTokenResponse } from "../../../common/dtos/tokens/access-token.response";
 import { RequestWithUser } from "../../../common/types/common.types";
+import { RedisService } from "../../../external/cache/redis/redis.service";
 import { setCookieSwaggerHeader } from "../../../external/swagger/setCookieHeader.swagger";
 import { AccessTokenGuard } from "../../auth/guards/access-token-auth.guard";
 import { RemoveAvatarRequestDTO } from "../dto/profiles/requests/remove-avatar.request.dto";
 import { UpdatePersonalProfilePasswordRequestDTO } from "../dto/profiles/requests/update-profile-password.request.dto";
 import { UpdatePersonalProfileRequestDTO } from "../dto/profiles/requests/update-profile.request.dto";
-import { GetPersonalProfileResponseDTO } from "../dto/profiles/responses/get-profile.response.dto";
-import { UploadAvatarResponseDTO } from "../dto/profiles/responses/upload-avatar.response.dto";
+import { UserAvatarResponseDTO } from "../dtos/responses/user-avatar.response.dto";
+import { UserPersonalProfileResponseDto } from "../dtos/responses/user-personal-profile.response.dto";
+import { CachedUser } from "../interfaces/cached-user.interface";
 import { UsersService } from "../services/users.service";
 
 @ApiBearerAuth()
@@ -47,7 +50,11 @@ import { UsersService } from "../services/users.service";
 export class PersonalProfileController {
 	private LOGGER = new Logger(PersonalProfileController.name);
 
-	constructor(private readonly usersService: UsersService) {}
+	constructor(
+		private readonly usersService: UsersService,
+		private readonly redisService: RedisService,
+		private readonly configService: ConfigService
+	) {}
 
 	@ApiOperation({
 		description: "Получение профиля пользователя",
@@ -55,7 +62,7 @@ export class PersonalProfileController {
 	})
 	@ApiOkResponse({
 		description: "Профиль пользователя был успешно получен",
-		type: GetPersonalProfileResponseDTO,
+		type: UserPersonalProfileResponseDto,
 	})
 	@ApiNotFoundResponse({
 		description: "Пользователь не найден",
@@ -64,23 +71,77 @@ export class PersonalProfileController {
 	@Get()
 	public async getPersonalProfile(
 		@Req() req: RequestWithUser
-	): Promise<GetPersonalProfileResponseDTO> {
-		const user = await this.usersService.findById(req.user.id, {
-			withAvatars: false,
-			withDeleted: false,
-		});
+	): Promise<UserPersonalProfileResponseDto> {
+		const cachedUser = await this.redisService.getJson<CachedUser>(
+			req.user.id,
+			(key, value) => {
+				if (key === "createdAt") {
+					return new Date(value);
+				}
+				return value;
+			}
+		);
+
+		if (cachedUser) {
+			this.LOGGER.log("User with id %s was found in cache", req.user.id);
+			return {
+				id: cachedUser.id,
+				login: cachedUser.login,
+				email: cachedUser.email,
+				about: cachedUser.about,
+				age: cachedUser.age,
+				createdAt: cachedUser.createdAt,
+				activeAvatar: cachedUser.activeAvatar
+					? {
+							id: cachedUser.activeAvatar.id,
+							userId: cachedUser.activeAvatar.userId,
+							url: `${this.configService.get("S3_URL")}/${this.configService.get("S3_USER_AVATARS_BUCKET")}/${cachedUser.activeAvatar.path}`,
+							active: cachedUser.activeAvatar.active,
+							createdAt: cachedUser.activeAvatar.createdAt,
+						}
+					: null,
+			};
+		}
+
+		const user = await this.usersService.getById(req.user.id);
+		console.log("user", user);
 
 		if (!user) {
 			throw new NotFoundException("User not found");
 		}
 
+		await this.redisService.setJson<CachedUser>(
+			user.id,
+			{
+				id: user.id,
+				login: user.login,
+				email: user.email,
+				about: user.about,
+				age: user.age,
+				createdAt: user.createdAt,
+				activeAvatar: user.getActiveAvatar(),
+			},
+			30
+		);
+		this.LOGGER.log("User with id %s was set to cache", user.id);
+
+		const activeAvatar = user.getActiveAvatar();
 		return {
 			id: user.id,
 			login: user.login,
 			email: user.email,
-			age: user.age,
 			about: user.about,
-			createdAt: user.createdAt!, // TODO: check later
+			age: user.age,
+			createdAt: user.createdAt,
+			activeAvatar: activeAvatar
+				? {
+						id: activeAvatar.id,
+						userId: activeAvatar.userId,
+						url: `${this.configService.get("S3_URL")}/${this.configService.get("S3_USER_AVATARS_BUCKET")}/${activeAvatar.path}`,
+						active: activeAvatar.active,
+						createdAt: activeAvatar.createdAt,
+					}
+				: null,
 		};
 	}
 
@@ -100,13 +161,13 @@ export class PersonalProfileController {
 		@Req() req: RequestWithUser,
 		@Body() dto: UpdatePersonalProfileRequestDTO
 	) {
+		await this.redisService.del(req.user.id);
 		await this.usersService.update({
 			id: req.user.id,
 			...dto,
 		});
 	}
 
-	// TODO: POST или PUT + название роута??
 	@ApiOperation({
 		description:
 			"Обновление пароля пользователем. После обновления пароля, все предыдущие refreshToken'ы становятся недействительными",
@@ -164,6 +225,7 @@ export class PersonalProfileController {
 	@HttpCode(200)
 	@Delete()
 	public async deletePersonalProfile(@Req() req: RequestWithUser) {
+		await this.redisService.del(req.user.id);
 		await this.usersService.deleteById(req.user.id);
 	}
 
@@ -180,7 +242,7 @@ export class PersonalProfileController {
 			})
 		)
 		file: Express.Multer.File
-	): Promise<UploadAvatarResponseDTO> {
+	): Promise<UserAvatarResponseDTO> {
 		return await this.usersService.uploadPersonalProfileAvatar({
 			userId: req.user.id,
 			file: file,
