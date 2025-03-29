@@ -11,6 +11,7 @@ import { pinoConfig } from "./external/logger/pino/pino.config";
 import { clsConfig } from "./external/persistence/cls-transactional/cls.config";
 import { S3Module } from "./external/s3/s3.module";
 import { AuthModule } from "./modules/auth/auth.module";
+import { TransactionsModule } from "./modules/transactions/transactions.module";
 import { UsersModule } from "./modules/users/users.module";
 
 @Module({
@@ -41,6 +42,7 @@ import { UsersModule } from "./modules/users/users.module";
 			inject: [ConfigService],
 		}),
 		UsersModule,
+		TransactionsModule,
 		AuthModule,
 	],
 	providers: [
