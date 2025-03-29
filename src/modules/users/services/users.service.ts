@@ -1,4 +1,5 @@
 import { Transactional } from "@nestjs-cls/transactional";
+import { TransactionalAdapterPrisma } from "@nestjs-cls/transactional-adapter-prisma";
 import { BadRequestException, Inject, Injectable, Logger, NotFoundException } from "@nestjs/common";
 import { randomUUID } from "node:crypto";
 import { Order } from "../../../common/dtos/pagination/page-options.request.dto";
@@ -75,6 +76,16 @@ export class UsersService {
 		return user;
 	}
 
+	public async getByIdForUpdate(id: string): Promise<User | null> {
+		const user = await this.usersRepository.getForUpdate(id);
+
+		if (!user) {
+			return null;
+		}
+
+		return user;
+	}
+
 	public async getByEmail(email: string) {
 		return await this.usersRepository.getByEmail(email);
 	}
@@ -82,6 +93,10 @@ export class UsersService {
 	public async getByLogin(login: string): Promise<User | null> {
 		return await this.usersRepository.getByLogin(login);
 	}
+
+	// public async getUserBalance(userId: string) {
+	// 	return await this.usersRepository.getBalance();
+	// }
 
 	public async create(dto: CreateUserRequestDTO): Promise<User> {
 		const user = await User.create({
@@ -111,6 +126,13 @@ export class UsersService {
 		if (dto.about) await user.setAbout(dto.about);
 
 		return await this.usersRepository.update(user);
+	}
+
+	@Transactional<TransactionalAdapterPrisma>({
+		isolationLevel: "RepeatableRead",
+	})
+	public async updateBalance(userId: string, balance: number): Promise<void> {
+		return await this.usersRepository.updateBalance(userId, balance);
 	}
 
 	@Transactional()

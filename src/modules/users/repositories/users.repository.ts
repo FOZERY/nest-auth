@@ -15,6 +15,7 @@ export interface UsersRepository {
 	getByEmail(email: string): Promise<User | null>;
 	create(user: User): Promise<void>;
 	update(user: User): Promise<void>;
+	updateBalance(userId: string, balance: number): Promise<void>;
 	softDeleteByUserId(userId: string): Promise<void>;
 	findAvatarByUserId(userId: string): Promise<UserAvatar | null>;
 	findActiveUserAvatarByUserId(userId: string): Promise<UserAvatar | null>;
@@ -22,4 +23,5 @@ export interface UsersRepository {
 	createUserAvatar(avatar: UserAvatar): Promise<void>;
 	softRemoveAvatarByAvatarId(avatarId: string): Promise<void>;
 	updateAvatarActiveStatusByAvatarId(avatarId: string, isActive: boolean): Promise<void>;
+	getForUpdate(userId: string): Promise<User | null>;
 }

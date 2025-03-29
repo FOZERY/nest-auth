@@ -1,6 +1,8 @@
 import { TransactionHost } from "@nestjs-cls/transactional";
 import { TransactionalAdapterPrisma } from "@nestjs-cls/transactional-adapter-prisma";
 import { Injectable } from "@nestjs/common";
+import { users as PrismaUser } from "@prisma/client";
+
 import {
 	FindAllUsersWithPaginationInputDTO,
 	FindAllUsersWithPaginationRepositoryResultDTO,
@@ -182,6 +184,7 @@ export class UsersRepositoryImpl implements UsersRepository {
 				login: user.login,
 				password: user.password,
 				about: user.about,
+				created_at: user.createdAt,
 			},
 		});
 	}
@@ -198,6 +201,17 @@ export class UsersRepositoryImpl implements UsersRepository {
 			},
 			where: {
 				id: user.id,
+			},
+		});
+	}
+
+	public async updateBalance(userId: string, balance: number): Promise<void> {
+		await this.txHost.tx.users.update({
+			data: {
+				balance: balance,
+			},
+			where: {
+				id: userId,
 			},
 		});
 	}
@@ -295,5 +309,20 @@ export class UsersRepositoryImpl implements UsersRepository {
 				id: id,
 			},
 		});
+	}
+
+	public async getForUpdate(userId: string): Promise<User | null> {
+		const prismaUser = await this.txHost.tx.$queryRaw<PrismaUser[]>`
+			SELECT * FROM users
+			WHERE id = ${userId}::uuid AND deleted_at IS NULL
+			FOR UPDATE
+		`;
+
+		if (prismaUser.length === 0) {
+			return null;
+		}
+
+		const userWithAvatars = prismaUser[0];
+		return await UserPrismaMapper.toEntity(userWithAvatars);
 	}
 }

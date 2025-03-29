@@ -13,6 +13,7 @@ export class UserPrismaMapper {
 			age: prismaUser.age,
 			email: prismaUser.email,
 			login: prismaUser.login,
+			balance: prismaUser.balance.toNumber(),
 			password: prismaUser.password,
 			about: prismaUser.about,
 			avatars: entityAvatars,

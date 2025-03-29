@@ -29,6 +29,7 @@ export interface UserProps {
 	password: string;
 	age: number;
 	avatars: UserAvatar[];
+	balance?: Nullable<number>;
 	about?: Nullable<string>;
 	createdAt?: Nullable<Date>;
 	updatedAt?: Nullable<Date>;
@@ -83,6 +84,11 @@ export class User extends Entity {
 	@MaxLength(1000)
 	public about: Nullable<string>;
 
+	@IsNotEmpty()
+	@IsNumber()
+	@Min(0)
+	public balance: number;
+
 	@IsArray()
 	@ValidateNested({ each: true })
 	@Type(() => UserAvatar)
@@ -107,6 +113,8 @@ export class User extends Entity {
 		this.email = props.email;
 		this.password = props.password;
 		this.age = props.age;
+		this.about = props.about ?? null;
+		this.balance = props.balance ?? 0;
 		this.avatars = props.avatars;
 		this.about = props.about ?? null;
 		this.createdAt = props.createdAt ?? new Date();
@@ -146,6 +154,11 @@ export class User extends Entity {
 		await this.validate();
 	}
 
+	public async setBalance(balance: number) {
+		this.balance = balance;
+		await this.validate();
+	}
+
 	public getActiveAvatar(): Nullable<UserAvatar> {
 		return this.avatars.find((avatar) => avatar.active) ?? null;
 	}
@@ -173,29 +186,5 @@ export class User extends Entity {
 		}
 
 		avatar.deletedAt = new Date();
-	}
-
-	// private async hashPassword() {
-	// 	this.password = await argon.hash(this.password, {
-	// 		type: argon2id,
-	// 	});
-	// }
-
-	// private async comparePassword(nonhashedPassword: string) {
-	// 	return await argon.verify(this.password, nonhashedPassword);
-	// }
-
-	public toJSON() {
-		return JSON.stringify({
-			id: this.id,
-			login: this.login,
-			email: this.email,
-			age: this.age,
-			about: this.about,
-			avatars: this.avatars,
-			createdAt: this.createdAt,
-			updatedAt: this.updatedAt,
-			deletedAt: this.deletedAt,
-		} as UserJSON);
 	}
 }
