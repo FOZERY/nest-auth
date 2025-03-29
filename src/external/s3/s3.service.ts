@@ -19,25 +19,27 @@ export class S3Service {
 		this.defaultBucket = clientProvider.bucket;
 	}
 
-	private validateBucket(bucket?: string): string {
-		if (this.defaultBucket && bucket) {
-			throw new Error("Cannot specify bucket when default bucket is set");
-		}
-
-		if (!bucket && !this.defaultBucket) {
+	public getBucket(): string {
+		if (!this.defaultBucket) {
 			throw new Error("Bucket is required");
 		}
 
-		return bucket || this.defaultBucket!;
-	}
-
-	public getBucket(): string {
-		return this.validateBucket();
+		return this.defaultBucket;
 	}
 
 	public getFileUrl(path: string, bucket?: string): string {
-		const validatedBucket = this.validateBucket(bucket);
-		return `${this.clientBaseURL}/${validatedBucket}/${path}`;
+		console.log("bucket", bucket, this.defaultBucket);
+
+		if (!this.defaultBucket && !bucket) {
+			throw new Error("Bucket is required");
+		}
+
+		if (bucket && this.defaultBucket) {
+			throw new Error("Cannot specify bucket when default bucket is set");
+		}
+
+		const targetBucket = bucket || this.defaultBucket!;
+		return `${this.clientBaseURL}/${targetBucket}/${path}`;
 	}
 
 	async uploadFile(
@@ -49,17 +51,25 @@ export class S3Service {
 			throw new Error("Key can't be empty");
 		}
 
-		const validatedBucket = this.validateBucket(options.Bucket);
+		if (!this.defaultBucket && !options.Bucket) {
+			throw new Error("Bucket is required");
+		}
+
+		if (options.Bucket && this.defaultBucket) {
+			throw new Error("Cannot specify bucket when default bucket is set");
+		}
+
+		const targetBucket = options.Bucket || this.defaultBucket!;
 
 		await this.s3Client.send(
 			new PutObjectCommand({
 				...options,
-				Bucket: validatedBucket,
+				Bucket: targetBucket,
 			})
 		);
 
 		return {
-			url: this.getFileUrl(options.Key, validatedBucket),
+			url: this.getFileUrl(options.Key, options.Bucket),
 		};
 	}
 
@@ -68,11 +78,19 @@ export class S3Service {
 	): Promise<void> {
 		if (!options.Key) return;
 
-		const validatedBucket = this.validateBucket(options.Bucket);
+		if (!this.defaultBucket && !options.Bucket) {
+			throw new Error("Bucket is required");
+		}
+
+		if (options.Bucket && this.defaultBucket) {
+			throw new Error("Cannot specify bucket when default bucket is set");
+		}
+
+		const targetBucket = options.Bucket || this.defaultBucket!;
 
 		await this.s3Client.send(
 			new DeleteObjectCommand({
-				Bucket: validatedBucket,
+				Bucket: targetBucket,
 				Key: options.Key,
 			})
 		);
