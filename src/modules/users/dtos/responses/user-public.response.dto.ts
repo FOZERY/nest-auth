@@ -29,5 +29,17 @@ export class UserPublicResponseDTO {
 	})
 	about: Nullable<string>;
 
+	@ApiProperty({
+		description: "Active avatar",
+		type: UserAvatarResponseDTO,
+		example: {
+			id: "123e4567-e89b-12d3-a456-426614174000",
+			userId: "123e4567-e89b-12d3-a456-426614174000",
+			url: "https://example.com/avatar.jpg",
+			active: true,
+			createdAt: "2021-01-01T00:00:00.000Z",
+		},
+		nullable: true,
+	})
 	activeAvatar: Nullable<UserAvatarResponseDTO>;
 }

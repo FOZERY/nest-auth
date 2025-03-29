@@ -132,6 +132,16 @@ export class UsersController {
 		};
 	}
 
+	@ApiOperation({
+		summary: "Получить активный аватар пользователя",
+		description: "Получить активный аватар пользователя",
+	})
+	@ApiOkResponse({
+		type: UserAvatarResponseDTO,
+		description: "Успешно получен активный аватар пользователя",
+	})
+	@ApiNotFoundResponse({ description: "Аватар не найден" })
+	@ApiBearerAuth()
 	@HttpCode(200)
 	@UseGuards(AccessTokenGuard)
 	@Get(":id/active-avatar")
@@ -147,6 +157,15 @@ export class UsersController {
 		return avatar;
 	}
 
+	@ApiOperation({
+		summary: "Получить все аватары пользователя",
+		description: "Получить все аватары пользователя",
+	})
+	@ApiOkResponse({
+		type: [UserAvatarResponseDTO],
+		description: "Успешно получены все аватары пользователя",
+	})
+	@ApiBearerAuth()
 	@HttpCode(200)
 	@UseGuards(AccessTokenGuard)
 	@Get(":id/avatars")

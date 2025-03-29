@@ -22,6 +22,9 @@ import { FileInterceptor } from "@nestjs/platform-express";
 import {
 	ApiBadRequestResponse,
 	ApiBearerAuth,
+	ApiBody,
+	ApiConsumes,
+	ApiCreatedResponse,
 	ApiNotFoundResponse,
 	ApiOkResponse,
 	ApiOperation,
@@ -144,6 +147,12 @@ export class PersonalProfileController {
 		};
 	}
 
+	// @HttpCode(200)
+	// @Get("balance")
+	// public async getUserBalance(@Req() req: RequestWithUser) {
+	// 	return await this.usersService.getUserBalance(req.user.id);
+	// }
+
 	@ApiOperation({
 		description: "Обновление профиля пользователя",
 		summary: "Обновление профиля пользователя",
@@ -228,6 +237,26 @@ export class PersonalProfileController {
 		await this.usersService.deleteById(req.user.id);
 	}
 
+	@ApiOperation({
+		description:
+			"Загрузка аватара для профиля пользователя. Максимальный размер файла 10MB, разрешенные форматы: jpg, jpeg, png. Максимум 5 аватаров на одного пользователя",
+		summary: "Загрузка аватара для профиля пользователя",
+	})
+	@ApiConsumes("multipart/form-data")
+	@ApiBody({
+		description: "Аватар для профиля пользователя",
+		schema: {
+			type: "object",
+			properties: {
+				avatar: { type: "string", format: "binary" },
+			},
+		},
+	})
+	@ApiCreatedResponse({
+		description: "Аватар был успешно загружен",
+		type: UserAvatarResponseDTO,
+	})
+	@HttpCode(201)
 	@Post("upload-avatar")
 	@UseInterceptors(FileInterceptor("avatar"))
 	public async uploadAvatar(
@@ -248,11 +277,19 @@ export class PersonalProfileController {
 		});
 	}
 
+	@ApiOperation({
+		description: "Удаление аватара для профиля пользователя",
+		summary: "Удаление аватара для профиля пользователя",
+	})
+	@ApiOkResponse({
+		description: "Аватар был успешно удален",
+	})
+	@HttpCode(200)
 	@Delete("avatar")
 	public async softDeleteAvatar(
 		@Req() req: RequestWithUser,
 		@Body() dto: RemoveAvatarRequestDTO
-	) {
+	): Promise<void> {
 		await this.usersService.softDeletePersonalProfileAvatar({
 			userId: req.user.id,
 			avatarId: dto.avatarId,
