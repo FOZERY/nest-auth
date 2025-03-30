@@ -15,4 +15,6 @@ export interface RefreshSessionsRepository {
 		userId: string,
 		refreshToken: string
 	): Promise<void>;
+
+	cleanupExpiredSessions(): Promise<void>;
 }

@@ -79,4 +79,10 @@ export class RefreshSessionsRepositoryImpl implements RefreshSessionsRepository 
 			},
 		});
 	}
+
+	public async cleanupExpiredSessions(): Promise<void> {
+		await this.txHost.tx.refresh_sessions.deleteMany({
+			where: { expires_at: { lt: new Date() } },
+		});
+	}
 }

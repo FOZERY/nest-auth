@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, Logger } from "@nestjs/common";
 import { RedisService } from "../../../../external/cache/redis/redis.service";
 import { RefreshSession } from "../../entities/RefreshSession";
 import { RefreshSessionMapper } from "../../mappers/refreshSession.mapper";
@@ -7,6 +7,8 @@ import { RefreshSessionCached } from "../../types/refreshSession-cached.type";
 
 @Injectable()
 export class RefreshSessionsRedisRepositoryImpl implements RefreshSessionsRepository {
+	private readonly LOGGER = new Logger(RefreshSessionsRedisRepositoryImpl.name);
+
 	private readonly sessionKeyPrefix = "refresh_session:";
 	private readonly userSessionsKeyPrefix = "user_sessions:";
 
@@ -165,5 +167,74 @@ export class RefreshSessionsRedisRepositoryImpl implements RefreshSessionsReposi
 		pipeline.srem(userSessionsKey, ...sessionsToDelete);
 
 		await pipeline.exec();
+	}
+
+	public async cleanupExpiredSessions(): Promise<void> {
+		const BATCH_SIZE = 100;
+		let totalCleaned = 0;
+
+		return new Promise((resolve, reject) => {
+			// Используем scan вместо keys для неблокирующего получения ключей
+			const stream = this.redis.scanStream({
+				match: `${this.userSessionsKeyPrefix}*`,
+				count: BATCH_SIZE,
+			});
+
+			stream.on("data", (keys: Array<string | undefined>) => {
+				this.LOGGER.verbose(`Get user_sessions:* batch with ${keys.length} keys`);
+
+				stream.pause();
+
+				if (keys.length === 0) {
+					stream.resume();
+					return;
+				}
+
+				Promise.all(
+					keys.map(async (key: string | undefined) => {
+						const sessions = await this.redis.smembers(key as string);
+
+						this.LOGGER.verbose(`Found ${sessions.length} sessions for user ${key}`);
+						if (sessions.length === 0) return;
+
+						const sessionsToDelete = sessions.filter(
+							(session) => Date.now() >= Number(session.split(":")[1])
+						);
+
+						this.LOGGER.verbose(
+							`Found ${sessionsToDelete.length} expired sessions to delete`
+						);
+
+						if (sessionsToDelete.length === 0) return;
+
+						await this.redis.srem(key as string, ...sessionsToDelete);
+						this.LOGGER.verbose(`Deleted ${sessionsToDelete.length} expired sessions`);
+						totalCleaned += sessionsToDelete.length;
+					})
+				)
+					.then(() => {
+						stream.resume();
+					})
+					.catch(reject);
+			});
+
+			stream.on("error", (error) => {
+				this.LOGGER.error(`Failed to cleanup expired sessions: ${error.message}`);
+				reject(error);
+			});
+
+			stream.on("pause", () => {
+				this.LOGGER.debug(`Paused cleanup of expired sessions`);
+			});
+
+			stream.on("resume", () => {
+				this.LOGGER.debug(`Resumed cleanup of expired sessions`);
+			});
+
+			stream.on("end", () => {
+				this.LOGGER.debug(`Cleaned up ${totalCleaned} expired sessions`);
+				resolve();
+			});
+		});
 	}
 }

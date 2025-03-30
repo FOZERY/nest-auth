@@ -2,6 +2,7 @@ import { BullModule } from "@nestjs/bullmq";
 import { MiddlewareConsumer, Module, NestModule, ValidationPipe } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { APP_PIPE } from "@nestjs/core";
+import { ScheduleModule } from "@nestjs/schedule";
 import cookieParser from "cookie-parser";
 import { ClsModule } from "nestjs-cls";
 import { LoggerModule } from "nestjs-pino";
@@ -21,6 +22,7 @@ import { UsersModule } from "./modules/users/users.module";
 		LoggerModule.forRootAsync(pinoConfig),
 		ClsModule.forRoot(clsConfig),
 		RedisModule,
+		ScheduleModule.forRoot(),
 		BullModule.forRootAsync({
 			useFactory: (configService: ConfigService) => ({
 				connection: {
