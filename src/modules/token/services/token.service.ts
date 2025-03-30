@@ -1,4 +1,4 @@
-import { Inject } from "@nestjs/common";
+import { Inject, Logger } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { JwtService } from "@nestjs/jwt";
 import { randomUUID } from "crypto";
@@ -8,15 +8,17 @@ import { CreateAccessRefreshTokensServiceDTO } from "../dtos/services/create-acc
 import { CreateAccessTokenServiceDTO } from "../dtos/services/create-access-token.service.dto";
 import { CreateRefreshServiceDTO } from "../dtos/services/create-refresh-session.service.dto";
 import { RefreshSession } from "../entities/RefreshSession";
-import { RefreshSessionsRepositoryImpl } from "../external/prisma/refreshSessions.repository.impl";
+import { RefreshSessionsRedisRepositoryImpl } from "../external/redis/refreshSessions.repository.impl";
 import { CreateRefreshSessionResult } from "../interfaces/create-refreshSession-result";
 import { RefreshSessionsRepository } from "../repositories/refreshSessions.repository";
 
 export class TokenService {
+	private readonly LOGGER = new Logger(TokenService.name);
+
 	constructor(
 		private readonly configService: ConfigService,
 		private readonly accessJwtService: JwtService,
-		@Inject(RefreshSessionsRepositoryImpl)
+		@Inject(RefreshSessionsRedisRepositoryImpl)
 		private readonly refreshSessionRepository: RefreshSessionsRepository
 	) {}
 
@@ -78,6 +80,7 @@ export class TokenService {
 			ipAddress: dto.ipAddress,
 		});
 
+		this.LOGGER.debug(refreshSession, "refreshSession");
 		await this.refreshSessionRepository.createRefreshSession(refreshSession);
 
 		return {

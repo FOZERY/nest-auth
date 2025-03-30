@@ -14,75 +14,46 @@ export interface RefreshSessionProps {
 
 export class RefreshSession extends Entity {
 	@IsUUID()
-	private _refreshToken: string;
+	public refreshToken: string;
 
 	@IsUUID()
-	private _userId: string;
+	public userId: string;
 
 	@IsNotEmpty()
 	@IsString()
 	@MaxLength(255)
-	private _fingerprint: string;
+	public fingerprint: string;
 
 	@IsOptional()
 	@IsIP()
-	private _ipAddress: Nullable<string>;
+	public ipAddress: Nullable<string>;
 
 	@IsOptional()
 	@IsNotEmpty()
 	@IsString()
 	@MaxLength(255)
-	private _userAgent: Nullable<string>;
+	public userAgent: Nullable<string>;
 
 	@IsDate()
-	private _expiresAt: Date;
+	public expiresAt: Date;
 
-	@IsOptional()
 	@IsDate()
-	private _createdAt: Nullable<Date>;
+	public createdAt: Date;
 
 	private constructor(props: RefreshSessionProps) {
 		super();
 
-		this._refreshToken = props.refreshToken;
-		this._userId = props.userId;
-		this._fingerprint = props.fingerprint;
-		this._ipAddress = props.ipAddress ?? null;
-		this._userAgent = props.userAgent ?? null;
-		this._expiresAt = props.expiresAt;
-		this._createdAt = props.createdAt ?? null;
-	}
-
-	public get refreshToken(): string {
-		return this._refreshToken;
-	}
-
-	public get userId(): string {
-		return this._userId;
-	}
-
-	public get fingerprint(): string {
-		return this._fingerprint;
-	}
-
-	public get ipAddress(): Nullable<string> {
-		return this._ipAddress;
-	}
-
-	public get userAgent(): Nullable<string> {
-		return this._userAgent;
-	}
-
-	public get expiresAt(): Date {
-		return this._expiresAt;
+		this.refreshToken = props.refreshToken;
+		this.userId = props.userId;
+		this.fingerprint = props.fingerprint;
+		this.ipAddress = props.ipAddress ?? null;
+		this.userAgent = props.userAgent ?? null;
+		this.expiresAt = props.expiresAt;
+		this.createdAt = props.createdAt ?? new Date();
 	}
 
 	public get expiresInMs(): number {
-		return this._expiresAt.getTime() - Date.now();
-	}
-
-	public get createdAt(): Nullable<Date> {
-		return this._createdAt;
+		return this.expiresAt.getTime() - Date.now();
 	}
 
 	public static async create(props: RefreshSessionProps) {
@@ -92,6 +63,18 @@ export class RefreshSession extends Entity {
 	}
 
 	public isExpired(): boolean {
-		return Date.now() - this._expiresAt.getTime() >= 0;
+		return Date.now() - this.expiresAt.getTime() >= 0;
+	}
+
+	public toJSON(): string {
+		return JSON.stringify({
+			refreshToken: this.refreshToken,
+			userId: this.userId,
+			expiresAt: this.expiresAt,
+			createdAt: this.createdAt,
+			fingerprint: this.fingerprint,
+			ipAddress: this.ipAddress,
+			userAgent: this.userAgent,
+		});
 	}
 }
