@@ -25,7 +25,7 @@ export class TransactionsRepositoryImpl implements TransactionsRepository {
 		const createdTransaction = await this.txHost.tx.transactions.create({
 			data: {
 				id: transaction.id,
-				amount: transaction.amount,
+				amount: transaction.amount.toNumber(),
 				from_user_id: transaction.from,
 				to_user_id: transaction.to,
 				type: transaction.type,
@@ -34,11 +34,11 @@ export class TransactionsRepositoryImpl implements TransactionsRepository {
 
 		return {
 			id: createdTransaction.id,
-			amount: transaction.amount,
+			amount: createdTransaction.amount.toNumber(),
 			createdAt: createdTransaction.created_at,
-			from: transaction.from ?? null,
-			to: transaction.to,
-			type: transaction.type,
+			from: createdTransaction.from_user_id ?? null,
+			to: createdTransaction.to_user_id,
+			type: createdTransaction.type as TransactionType,
 		};
 	}
 }

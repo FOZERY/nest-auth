@@ -2,6 +2,7 @@ import { Transactional } from "@nestjs-cls/transactional";
 import { TransactionalAdapterPrisma } from "@nestjs-cls/transactional-adapter-prisma";
 import { BadRequestException, Inject, Injectable, NotFoundException } from "@nestjs/common";
 import { Nullable } from "../../../core/types/utility.types";
+import { Money } from "../../../core/value-objects/Money";
 import { UsersService } from "../../users/services/users.service";
 import { CreateDepositRequestDto } from "../dtos/requests/create-deposit.request.dto";
 import { CreateTransferRequestDto } from "../dtos/requests/create-transfer.request.dto";
@@ -29,6 +30,8 @@ export class TransactionsService {
 		to: string;
 		type: TransactionType;
 	}> {
+		const amount = Money.fromNumber(dto.amount);
+
 		const fromUser = await this.usersService.getByIdForUpdate(dto.from);
 		const toUser = await this.usersService.getByIdForUpdate(dto.to);
 
@@ -36,17 +39,17 @@ export class TransactionsService {
 			throw new NotFoundException("User not found");
 		}
 
-		if (fromUser.balance < dto.amount) {
+		if (fromUser.balance.isLessThan(amount)) {
 			throw new BadRequestException("Insufficient balance");
 		}
 
-		await fromUser.setBalance(fromUser.balance - dto.amount);
-		await toUser.setBalance(toUser.balance + dto.amount);
+		await fromUser.setBalance(fromUser.balance.subtract(amount));
+		await toUser.setBalance(toUser.balance.add(amount));
 
 		const transaction = await Transaction.create({
 			from: dto.from,
 			to: dto.to,
-			amount: dto.amount,
+			amount: amount,
 			type: TransactionType.TRANSFER,
 		});
 
@@ -74,17 +77,19 @@ export class TransactionsService {
 		to: string;
 		type: TransactionType;
 	}> {
+		const amount = Money.fromNumber(dto.amount);
+
 		const user = await this.usersService.getByIdForUpdate(dto.userId);
 
 		if (!user) {
 			throw new NotFoundException("User not found");
 		}
 
-		await user.setBalance(user.balance + dto.amount);
+		await user.setBalance(user.balance.add(amount));
 
 		const transaction = await Transaction.create({
 			to: dto.userId,
-			amount: dto.amount,
+			amount: amount,
 			type: TransactionType.SYSTEM_DEPOSIT,
 		});
 

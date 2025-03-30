@@ -1,23 +1,23 @@
+import { Type } from "class-transformer";
 import {
 	IsEnum,
-	IsNumber,
+	IsNotEmpty,
 	IsOptional,
-	IsPositive,
 	IsUUID,
-	Max,
-	Min,
 	ValidateIf,
+	ValidateNested,
 } from "class-validator";
 import { randomUUID } from "node:crypto";
 import { Entity } from "../../../core/entity/Entity";
 import { Nullable } from "../../../core/types/utility.types";
+import { Money } from "../../../core/value-objects/Money";
 import { TransactionType } from "../types/transaction-type.enum";
 
 export interface TransactionProps {
 	id?: string;
 	from?: Nullable<string>;
 	to: string;
-	amount: number;
+	amount: Money;
 	type: TransactionType;
 	createdAt?: Nullable<Date>;
 }
@@ -33,11 +33,10 @@ export class Transaction extends Entity {
 	@IsUUID()
 	to: string;
 
-	@IsNumber()
-	@IsPositive()
-	@Min(1)
-	@Max(10_000)
-	amount: number;
+	@IsNotEmpty()
+	@ValidateNested()
+	@Type(() => Money)
+	amount: Money;
 
 	@IsEnum(TransactionType)
 	type: TransactionType;
@@ -53,6 +52,14 @@ export class Transaction extends Entity {
 		this.amount = props.amount;
 		this.type = props.type;
 		this.createdAt = props.createdAt ?? null;
+
+		if (this.amount.isLessThan(Money.fromNumber(0))) {
+			throw new Error("Amount cannot be negative");
+		}
+
+		if (this.amount.isGreaterThan(Money.fromNumber(10_000))) {
+			throw new Error("Amount cannot be greater than 10,000");
+		}
 	}
 
 	public static async create(props: TransactionProps) {
