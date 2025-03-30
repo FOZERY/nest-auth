@@ -19,6 +19,7 @@ import { randomUUID } from "crypto";
 import { NoSpaces } from "../../../common/class-validator/noSpaces.decorator";
 import { Entity } from "../../../core/entity/Entity";
 import { Nullable } from "../../../core/types/utility.types";
+import { Money } from "../../../core/value-objects/Money";
 import { AvatarLengthConflict } from "../errors/errors";
 import { UserAvatar } from "./UserAvatar";
 
@@ -29,7 +30,7 @@ export interface UserProps {
 	password: string;
 	age: number;
 	avatars: UserAvatar[];
-	balance?: Nullable<number>;
+	balance?: Nullable<Money>;
 	about?: Nullable<string>;
 	createdAt?: Nullable<Date>;
 	updatedAt?: Nullable<Date>;
@@ -44,6 +45,7 @@ export type UserJSON = {
 	about: string;
 	password: string;
 	avatars: Array<UserAvatar>;
+	balance: string;
 	createdAt: Nullable<Date>;
 	updatedAt: Nullable<Date>;
 	deletedAt: Nullable<Date>;
@@ -85,9 +87,8 @@ export class User extends Entity {
 	public about: Nullable<string>;
 
 	@IsNotEmpty()
-	@IsNumber()
-	@Min(0)
-	public balance: number;
+	@ValidateNested()
+	public balance: Money;
 
 	@IsArray()
 	@ValidateNested({ each: true })
@@ -114,9 +115,8 @@ export class User extends Entity {
 		this.password = props.password;
 		this.age = props.age;
 		this.about = props.about ?? null;
-		this.balance = props.balance ?? 0;
+		this.balance = props.balance ?? Money.zero();
 		this.avatars = props.avatars;
-		this.about = props.about ?? null;
 		this.createdAt = props.createdAt ?? new Date();
 		this.updatedAt = props.updatedAt ?? null;
 		this.deletedAt = props.deletedAt ?? null;
@@ -154,7 +154,7 @@ export class User extends Entity {
 		await this.validate();
 	}
 
-	public async setBalance(balance: number) {
+	public async setBalance(balance: Money) {
 		this.balance = balance;
 		await this.validate();
 	}

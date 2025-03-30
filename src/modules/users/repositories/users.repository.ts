@@ -24,4 +24,6 @@ export interface UsersRepository {
 	softRemoveAvatarByAvatarId(avatarId: string): Promise<void>;
 	updateAvatarActiveStatusByAvatarId(avatarId: string, isActive: boolean): Promise<void>;
 	getForUpdate(userId: string): Promise<User | null>;
+	getBalance(userId: string): Promise<number | null>;
+	resetAllUsersBalance(): Promise<void>;
 }

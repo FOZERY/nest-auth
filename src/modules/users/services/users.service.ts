@@ -4,6 +4,7 @@ import { BadRequestException, Inject, Injectable, Logger, NotFoundException } fr
 import { randomUUID } from "node:crypto";
 import { Order } from "../../../common/dtos/pagination/page-options.request.dto";
 import { comparePassword, hashPassword } from "../../../common/utils/hash-password";
+import { Money } from "../../../core/value-objects/Money";
 import { S3Service } from "../../../external/s3/s3.service";
 import { AccessRefreshTokens } from "../../auth/types/auth.types";
 import { TokenService } from "../../token/services/token.service";
@@ -94,9 +95,15 @@ export class UsersService {
 		return await this.usersRepository.getByLogin(login);
 	}
 
-	// public async getUserBalance(userId: string) {
-	// 	return await this.usersRepository.getBalance();
-	// }
+	public async getUserBalance(userId: string) {
+		const balance = await this.usersRepository.getBalance(userId);
+
+		if (balance === null) {
+			throw new NotFoundException("User balance not found");
+		}
+
+		return balance;
+	}
 
 	public async create(dto: CreateUserRequestDTO): Promise<User> {
 		const user = await User.create({
@@ -131,8 +138,8 @@ export class UsersService {
 	@Transactional<TransactionalAdapterPrisma>({
 		isolationLevel: "RepeatableRead",
 	})
-	public async updateBalance(userId: string, balance: number): Promise<void> {
-		return await this.usersRepository.updateBalance(userId, balance);
+	public async updateBalance(userId: string, balance: Money): Promise<void> {
+		return await this.usersRepository.updateBalance(userId, balance.toNumber());
 	}
 
 	@Transactional()
@@ -240,5 +247,9 @@ export class UsersService {
 		}
 
 		await this.usersRepository.softRemoveAvatarByAvatarId(avatar.id);
+	}
+
+	public async resetAllUsersBalance() {
+		await this.usersRepository.resetAllUsersBalance();
 	}
 }

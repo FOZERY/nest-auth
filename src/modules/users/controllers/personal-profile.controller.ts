@@ -147,11 +147,22 @@ export class PersonalProfileController {
 		};
 	}
 
-	// @HttpCode(200)
-	// @Get("balance")
-	// public async getUserBalance(@Req() req: RequestWithUser) {
-	// 	return await this.usersService.getUserBalance(req.user.id);
-	// }
+	@ApiOperation({
+		description: "Получение баланса пользователя",
+		summary: "Получение баланса пользователя",
+	})
+	@ApiOkResponse({
+		description: "Баланс пользователя был успешно получен",
+		type: Number,
+	})
+	@ApiNotFoundResponse({
+		description: "Баланс пользователя или пользователь не найдены",
+	})
+	@HttpCode(200)
+	@Get("balance")
+	public async getPersonalProfileBalance(@Req() req: RequestWithUser) {
+		return await this.usersService.getUserBalance(req.user.id);
+	}
 
 	@ApiOperation({
 		description: "Обновление профиля пользователя",

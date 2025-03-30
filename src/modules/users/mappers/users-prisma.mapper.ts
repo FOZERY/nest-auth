@@ -1,4 +1,5 @@
 import { avatars as PrismaAvatar, users as PrismaUser } from "@prisma/client";
+import { Money } from "../../../core/value-objects/Money";
 import { User } from "../entities/User";
 import { AvatarMapper } from "./avatar.mapper";
 
@@ -13,7 +14,7 @@ export class UserPrismaMapper {
 			age: prismaUser.age,
 			email: prismaUser.email,
 			login: prismaUser.login,
-			balance: prismaUser.balance.toNumber(),
+			balance: Money.fromNumber(prismaUser.balance.toNumber()),
 			password: prismaUser.password,
 			about: prismaUser.about,
 			avatars: entityAvatars,

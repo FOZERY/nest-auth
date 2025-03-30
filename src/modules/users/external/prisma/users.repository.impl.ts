@@ -175,6 +175,19 @@ export class UsersRepositoryImpl implements UsersRepository {
 		return await UserPrismaMapper.toEntity(user, avatars);
 	}
 
+	public async getBalance(userId: string): Promise<number | null> {
+		const balance = await this.txHost.tx.users.findUnique({
+			where: { id: userId },
+			select: { balance: true },
+		});
+
+		if (!balance) {
+			return null;
+		}
+
+		return balance.balance.toNumber();
+	}
+
 	public async create(user: User): Promise<void> {
 		await this.txHost.tx.users.create({
 			data: {
@@ -324,5 +337,11 @@ export class UsersRepositoryImpl implements UsersRepository {
 
 		const userWithAvatars = prismaUser[0];
 		return await UserPrismaMapper.toEntity(userWithAvatars);
+	}
+
+	public async resetAllUsersBalance(): Promise<void> {
+		await this.txHost.tx.users.updateMany({
+			data: { balance: 0 },
+		});
 	}
 }
