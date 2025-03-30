@@ -12,6 +12,7 @@ import { clsConfig } from "./external/persistence/cls-transactional/cls.config";
 import { S3Module } from "./external/s3/s3.module";
 import { AuthModule } from "./modules/auth/auth.module";
 import { TransactionsModule } from "./modules/transactions/transactions.module";
+import { UserBalanceResetModule } from "./modules/users-balance-reset/user-balance-reset.module";
 import { UsersModule } from "./modules/users/users.module";
 
 @Module({
@@ -44,6 +45,7 @@ import { UsersModule } from "./modules/users/users.module";
 		UsersModule,
 		TransactionsModule,
 		AuthModule,
+		UserBalanceResetModule,
 	],
 	providers: [
 		{
