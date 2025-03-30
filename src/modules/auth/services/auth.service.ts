@@ -27,23 +27,31 @@ export class AuthService {
 
 		let userSessions = await this.tokenService.getAllRefreshSessionsByUserId(user.id);
 
+		this.LOGGER.debug(userSessions, "userSessions");
+
 		const sameFingerprintSession = userSessions.find(
 			(session) => session.fingerprint === dto.fingerprint
 		);
 
 		if (sameFingerprintSession) {
+			this.LOGGER.debug(sameFingerprintSession, "sameFingerprintSession");
 			await this.tokenService.deleteRefreshSessionByToken(
 				sameFingerprintSession.refreshToken
 			);
+			this.LOGGER.debug(userSessions, "userSessions after delete");
 			userSessions = userSessions.filter(
 				(s) => s.refreshToken !== sameFingerprintSession.refreshToken
 			);
+			this.LOGGER.debug(userSessions, "userSessions after filter");
 		}
 
 		if (userSessions.length >= 5) {
+			this.LOGGER.debug(userSessions, "userSessions before delete");
 			await this.tokenService.deleteRefreshSessionByToken(userSessions[0].refreshToken);
+			this.LOGGER.debug(userSessions, "userSessions after delete");
 		}
 
+		this.LOGGER.debug(userSessions, "userSessions before create");
 		return await this.tokenService.createAccessRefreshTokens({
 			userId: user.id,
 			login: user.login,

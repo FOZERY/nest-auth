@@ -17,3 +17,7 @@ export function parseTimeToMilliseconds(timeString: string): number {
 			throw new Error(`Unknown time unit: ${timeUnit}`);
 	}
 }
+
+export function parseTimeToSeconds(timeString: string): number {
+	return parseTimeToMilliseconds(timeString) / 1000;
+}
