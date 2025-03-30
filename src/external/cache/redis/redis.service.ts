@@ -4,24 +4,23 @@ import Redis from "ioredis";
 import { MAX_RETRY_ATTEMPTS, MAX_RETRY_DELAY, MIN_RETRY_DELAY } from "./constants/redis.constants";
 
 @Injectable({
-	scope: Scope.DEFAULT, // use as singletone
+	scope: Scope.DEFAULT,
 })
-export class RedisService implements OnModuleInit, OnModuleDestroy {
+export class RedisService extends Redis implements OnModuleInit, OnModuleDestroy {
 	private readonly logger = new Logger(RedisService.name);
-	private readonly redis: Redis;
 	private readonly defaultTtlSeconds: number;
 
 	constructor(configService: ConfigService) {
 		const host = configService.get<string>("REDIS_HOST");
 		const port = configService.get<number>("REDIS_PORT");
 		const password = configService.get<string>("REDIS_PASSWORD");
-		this.defaultTtlSeconds = configService.get<number>("REDIS_DEFAULT_TTL_SECONDS") ?? 30;
+		const defaultTtlSeconds = configService.get<number>("REDIS_DEFAULT_TTL_SECONDS") ?? 30;
 
 		if (!host || !port || !password) {
 			throw new Error("Redis configuration is missing required parameters");
 		}
 
-		this.redis = new Redis({
+		super({
 			host,
 			port,
 			password,
@@ -39,18 +38,20 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
 			autoResendUnfulfilledCommands: true,
 		});
 
-		this.redis.on("error", (error) => {
+		this.defaultTtlSeconds = defaultTtlSeconds;
+
+		this.on("error", (error) => {
 			this.logger.error("Redis connection error:", error);
 		});
 
-		this.redis.on("connect", () => {
+		this.on("connect", () => {
 			this.logger.log("Successfully connected to Redis");
 		});
 	}
 
 	async onModuleInit(): Promise<void> {
 		try {
-			await this.redis.connect();
+			await this.connect();
 			this.logger.log("Redis client initialized");
 		} catch (error) {
 			this.logger.error("Failed to initialize Redis client:", error);
@@ -60,19 +61,11 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
 
 	async onModuleDestroy(): Promise<void> {
 		try {
-			await this.redis.quit();
+			await this.quit();
 			this.logger.log("Redis client disconnected");
 		} catch (error) {
 			this.logger.error("Error while disconnecting Redis client:", error);
 		}
-	}
-
-	async del(key: string): Promise<void> {
-		await this.redis.del(key);
-	}
-
-	async set(key: string, value: string, ttlSeconds?: number): Promise<void> {
-		await this.redis.setex(key, ttlSeconds ?? this.defaultTtlSeconds, value);
 	}
 
 	/**
@@ -80,18 +73,14 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
 	 */
 	async setJson<T>(key: string, value: T, ttlSeconds?: number): Promise<void> {
 		const serialized = JSON.stringify(value);
-		await this.redis.setex(key, ttlSeconds ?? this.defaultTtlSeconds, serialized);
-	}
-
-	async get(key: string): Promise<string | null> {
-		return await this.redis.get(key);
+		await this.setex(key, ttlSeconds ?? this.defaultTtlSeconds, serialized);
 	}
 
 	/**
 	 * Обертка над методом get для автоматической десериализации JSON
 	 */
 	async getJson<T>(key: string, reviver?: (key: string, value: any) => any): Promise<T | null> {
-		const value = await this.redis.get(key);
+		const value = await this.get(key);
 		if (!value) return null;
 
 		try {
@@ -99,18 +88,6 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
 		} catch (error) {
 			this.logger.error(`Error parsing JSON for key ${key}:`, error);
 			return null;
-		}
-	}
-
-	/**
-	 * Выполнение Lua скрипта
-	 */
-	async executeLuaScript<T>(script: string, keys: string[] = [], args: any[] = []): Promise<T> {
-		try {
-			return (await this.redis.eval(script, keys.length, ...keys, ...args)) as T;
-		} catch (error) {
-			this.logger.error("Error executing Lua script:", error);
-			throw error;
 		}
 	}
 }
