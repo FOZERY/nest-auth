@@ -19,7 +19,7 @@ export interface UsersRepository {
 	softDeleteByUserId(userId: string): Promise<void>;
 	findAvatarByUserId(userId: string): Promise<UserAvatar | null>;
 	findActiveUserAvatarByUserId(userId: string): Promise<UserAvatar | null>;
-	findUserAvatarsByUserId(userId: string): Promise<UserAvatar[]>;
+	findUserAvatarsByUserIdSortedDesc(userId: string): Promise<UserAvatar[]>;
 	createUserAvatar(avatar: UserAvatar): Promise<void>;
 	softRemoveAvatarByAvatarId(avatarId: string): Promise<void>;
 	updateAvatarActiveStatusByAvatarId(avatarId: string, isActive: boolean): Promise<void>;

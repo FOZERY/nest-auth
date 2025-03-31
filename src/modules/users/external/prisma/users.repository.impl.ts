@@ -244,11 +244,14 @@ export class UsersRepositoryImpl implements UsersRepository {
 		return await AvatarMapper.fromPrismaToEntity(prismaAvatar);
 	}
 
-	public async findUserAvatarsByUserId(userId: string): Promise<UserAvatar[]> {
+	public async findUserAvatarsByUserIdSortedDesc(userId: string): Promise<UserAvatar[]> {
 		const prismaAvatars = await this.txHost.tx.avatars.findMany({
 			where: {
 				user_id: userId,
 				deleted_at: null,
+			},
+			orderBy: {
+				created_at: "desc",
 			},
 		});
 

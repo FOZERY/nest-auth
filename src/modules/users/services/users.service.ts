@@ -364,7 +364,7 @@ export class UsersService {
 			"Attempting to get all user avatars"
 		);
 
-		const avatars = await this.usersRepository.findUserAvatarsByUserId(userId);
+		const avatars = await this.usersRepository.findUserAvatarsByUserIdSortedDesc(userId);
 
 		this.LOGGER.debug(
 			{
@@ -419,7 +419,7 @@ export class UsersService {
 			"Attempting to upload personal profile avatar"
 		);
 
-		const avatars = await this.usersRepository.findUserAvatarsByUserId(dto.userId);
+		const avatars = await this.usersRepository.findUserAvatarsByUserIdSortedDesc(dto.userId);
 
 		if (avatars.length >= 5) {
 			this.LOGGER.warn(
@@ -460,6 +460,13 @@ export class UsersService {
 
 		await this.usersRepository.createUserAvatar(avatar);
 
+		const { url } = await this.S3AvatarsService.uploadFile({
+			Key: uploadKey,
+			Body: dto.file.buffer,
+			ContentType: dto.file.mimetype,
+			ACL: "public-read",
+		});
+
 		this.LOGGER.log(
 			{
 				userId: dto.userId,
@@ -468,7 +475,7 @@ export class UsersService {
 			"Personal profile avatar uploaded successfully"
 		);
 
-		return AvatarMapper.toResponseDTO(avatar, this.S3AvatarsService.getFileUrl(avatar.path));
+		return AvatarMapper.toResponseDTO(avatar, url);
 	}
 
 	@Transactional()
@@ -482,6 +489,12 @@ export class UsersService {
 		);
 
 		await this.usersRepository.softRemoveAvatarByAvatarId(dto.avatarId);
+
+		// ищем последний аватар и делаем его активным
+		const avatars = await this.usersRepository.findUserAvatarsByUserIdSortedDesc(dto.userId);
+		if (avatars.length !== 0) {
+			await this.usersRepository.updateAvatarActiveStatusByAvatarId(avatars[0].id, true);
+		}
 
 		this.LOGGER.log(
 			{
