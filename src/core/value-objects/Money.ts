@@ -1,8 +1,6 @@
 import Decimal from "decimal.js";
 import { IsDecimalJS } from "../../common/class-validator/isDecimal.decorator";
 
-const DecimalClone = Decimal.clone({ precision: 3, rounding: 6 }); // банковское четное окгруление, да я ахуел что такое бывает
-
 export class Money {
 	@IsDecimalJS()
 	private readonly amount: Decimal;
@@ -20,7 +18,7 @@ export class Money {
 			throw new Error("Money amount cannot be negative");
 		}
 
-		return new Money(new DecimalClone(amount));
+		return new Money(new Decimal(amount));
 	}
 
 	public static fromString(amount: string): Money {
@@ -32,11 +30,11 @@ export class Money {
 	}
 
 	public static zero(): Money {
-		return new Money(new DecimalClone(0));
+		return new Money(new Decimal(0));
 	}
 
 	public add(other: Money): Money {
-		return new Money(this.amount.plus(other.amount));
+		return new Money(this.amount.plus(other.amount).toDecimalPlaces(2));
 	}
 
 	public subtract(other: Money): Money {
@@ -46,14 +44,14 @@ export class Money {
 			throw new Error("Insufficient funds");
 		}
 
-		return new Money(result);
+		return new Money(result.toDecimalPlaces(2));
 	}
 
 	public multiply(factor: number): Money {
 		if (!Number.isFinite(factor)) {
 			throw new Error("Multiplication factor must be a finite number");
 		}
-		return new Money(this.amount.mul(factor));
+		return new Money(this.amount.mul(factor).toDecimalPlaces(2));
 	}
 
 	public equals(other: Money): boolean {

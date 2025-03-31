@@ -20,8 +20,10 @@ async function bootstrap() {
 		.addCookieAuth("refreshToken")
 		.addBearerAuth()
 		.build();
-	const documentFactory = () => SwaggerModule.createDocument(app, swaggerConfig);
-	SwaggerModule.setup("swagger", app, documentFactory);
+
+	const document = SwaggerModule.createDocument(app, swaggerConfig);
+
+	SwaggerModule.setup("swagger", app, document);
 
 	const port = config.get<number>("APP_PORT");
 
