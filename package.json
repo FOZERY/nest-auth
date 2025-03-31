@@ -12,7 +12,7 @@
 		"start:dev": "nest start --watch",
 		"start:debug": "nest start --debug --watch",
 		"start:prod": "node dist/main",
-		"type-check": "tsc --noEmit",
+		"type-check": "tsc --noEmit src/**/*.ts",
 		"format": "prettier --write --ignore-unknown \"src/**/*.{ts,js,json}\" \"test/**/*.{ts,js,json}\"",
 		"lint": "eslint \"{src,apps,libs,test}/**/*.{ts,js,jsx,tsx,json}\" --fix",
 		"test": "jest",

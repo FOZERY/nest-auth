@@ -1,3 +1,3 @@
-export enum FileModuleQueues {
+export enum FileQueues {
 	FileProcessing = "file-processing",
 }

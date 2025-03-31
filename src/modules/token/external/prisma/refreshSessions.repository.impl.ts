@@ -2,8 +2,8 @@ import { TransactionHost } from "@nestjs-cls/transactional";
 import { TransactionalAdapterPrisma } from "@nestjs-cls/transactional-adapter-prisma";
 import { Injectable } from "@nestjs/common";
 import { RefreshSession } from "../../../token/entities/RefreshSession";
+import { RefreshSessionsPrismaMapper } from "../../mappers/refreshSessions-prisma.mapper";
 import { RefreshSessionsRepository } from "../../repositories/refreshSessions.repository";
-import { RefreshSessionsMapper } from "./mappers/refreshSessions.mapper";
 
 @Injectable()
 export class RefreshSessionsRepositoryImpl implements RefreshSessionsRepository {
@@ -20,7 +20,7 @@ export class RefreshSessionsRepositoryImpl implements RefreshSessionsRepository 
 			return null;
 		}
 
-		return await RefreshSessionsMapper.toEntity(refreshSession);
+		return await RefreshSessionsPrismaMapper.toEntity(refreshSession);
 	}
 
 	public async getAllRefreshSessionsByUserIdOrderedByCreatedAtAsc(
@@ -36,7 +36,9 @@ export class RefreshSessionsRepositoryImpl implements RefreshSessionsRepository 
 		});
 
 		return await Promise.all(
-			refreshSessions.map(async (session) => await RefreshSessionsMapper.toEntity(session))
+			refreshSessions.map(
+				async (session) => await RefreshSessionsPrismaMapper.toEntity(session)
+			)
 		);
 	}
 

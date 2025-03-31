@@ -3,19 +3,19 @@ import { TransactionalAdapterPrisma } from "@nestjs-cls/transactional-adapter-pr
 import { BadRequestException, Inject, Injectable, Logger, NotFoundException } from "@nestjs/common";
 import { randomUUID } from "node:crypto";
 import { Order } from "../../../common/dtos/pagination/page-options.request.dto";
+import { AccessRefreshTokens } from "../../../common/types/common.types";
 import { comparePassword, hashPassword } from "../../../common/utils/hash-password";
 import { Money } from "../../../core/value-objects/Money";
 import { S3Service } from "../../../external/s3/s3.service";
-import { AccessRefreshTokens } from "../../auth/types/auth.types";
 import { TokenService } from "../../token/services/token.service";
-import { RemoveAvatarDTO } from "../dto/profiles/services/remove-avatar.dto";
-import { UpdatePersonalPasswordServiceDTO } from "../dto/profiles/services/update-profile-password.request.dto";
-import { UploadAvatarDTO } from "../dto/profiles/services/upload-avatar.dto";
 import { FindAllUsersWithPaginationOutputDTO } from "../dtos/find-all-users-w-pagination.dto";
 import { CreateUserRequestDTO } from "../dtos/requests/create-user.request.dto";
 import { UsersPaginatedRequestDTO } from "../dtos/requests/get-all-users.request.dto";
+import { RemoveAvatarRequestDTO } from "../dtos/requests/remove-avatar.request.dto";
+import { UpdatePersonalProfilePasswordRequestDTO } from "../dtos/requests/update-profile-password.request.dto";
 import { UpdateUserRequestDTO } from "../dtos/requests/update-user.request.dto";
 import { UserAvatarResponseDTO } from "../dtos/responses/user-avatar.response.dto";
+import { UploadAvatarDTO } from "../dtos/upload-avatar.dto";
 import { User } from "../entities/User";
 import { UserAvatar } from "../entities/UserAvatar";
 import { UsersRepositoryImpl } from "../external/prisma/users.repository.impl";
@@ -296,7 +296,12 @@ export class UsersService {
 
 	@Transactional()
 	public async updatePersonalProfilePassword(
-		dto: UpdatePersonalPasswordServiceDTO
+		dto: UpdatePersonalProfilePasswordRequestDTO & {
+			userId: string;
+			fingerprint: string;
+			ipAddress: string;
+			userAgent: string;
+		}
 	): Promise<AccessRefreshTokens> {
 		this.LOGGER.log(
 			{
@@ -479,7 +484,7 @@ export class UsersService {
 	}
 
 	@Transactional()
-	public async softDeletePersonalProfileAvatar(dto: RemoveAvatarDTO) {
+	public async softDeletePersonalProfileAvatar(dto: RemoveAvatarRequestDTO & { userId: string }) {
 		this.LOGGER.log(
 			{
 				userId: dto.userId,

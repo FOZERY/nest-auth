@@ -21,9 +21,9 @@ import { AccessTokenGuard } from "../../auth/guards/access-token-auth.guard";
 import { UsersPaginatedRequestDTO } from "../dtos/requests/get-all-users.request.dto";
 import { UserAvatarResponseDTO } from "../dtos/responses/user-avatar.response.dto";
 import { UserPublicResponseDTO } from "../dtos/responses/user-public.response.dto";
-import { CachedUser } from "../interfaces/cached-user.interface";
 import { AvatarMapper } from "../mappers/avatar.mapper";
 import { UsersService } from "../services/users.service";
+import { CachedUser } from "../types/cached-user.types";
 
 @Controller("users")
 export class UsersController {

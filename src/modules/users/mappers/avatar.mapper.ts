@@ -1,7 +1,7 @@
 import { avatars as PrismaAvatar } from "@prisma/client";
 import { UserAvatarResponseDTO } from "../dtos/responses/user-avatar.response.dto";
 import { UserAvatar } from "../entities/UserAvatar";
-import { CachedAvatar } from "../interfaces/cached-user.interface";
+import { CachedAvatar } from "../types/cached-user.types";
 
 export class AvatarMapper {
 	public static toResponseDTO(

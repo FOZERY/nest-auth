@@ -2,7 +2,7 @@ import { ObjectCannedACL } from "@aws-sdk/client-s3";
 import { InjectQueue } from "@nestjs/bullmq";
 import { Injectable, Logger } from "@nestjs/common";
 import { JobsOptions, Queue } from "bullmq";
-import { FileModuleQueues } from "../file.constants";
+import { FileQueues } from "../types/file-queues.enum";
 
 export enum FileOperationTypes {
 	DELETE = "DELETE",
@@ -20,7 +20,7 @@ export interface S3CommandOptions {
 export class FileProcessingQueueProducer {
 	private readonly LOGGER = new Logger(FileProcessingQueueProducer.name);
 	constructor(
-		@InjectQueue(FileModuleQueues.FileProcessing)
+		@InjectQueue(FileQueues.FileProcessing)
 		private readonly fileProcessingQueue: Queue
 	) {}
 

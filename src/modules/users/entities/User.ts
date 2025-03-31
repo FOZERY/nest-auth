@@ -20,7 +20,7 @@ import { NoSpaces } from "../../../common/class-validator/noSpaces.decorator";
 import { Entity } from "../../../core/entity/Entity";
 import { Nullable } from "../../../core/types/utility.types";
 import { Money } from "../../../core/value-objects/Money";
-import { AvatarLengthConflict } from "../errors/errors";
+import { AvatarLengthConflict } from "../errors/user.errors";
 import { UserAvatar } from "./UserAvatar";
 
 export interface UserProps {

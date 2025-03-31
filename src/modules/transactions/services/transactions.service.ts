@@ -7,9 +7,9 @@ import { UsersService } from "../../users/services/users.service";
 import { CreateDepositRequestDto } from "../dtos/requests/create-deposit.request.dto";
 import { CreateTransferRequestDto } from "../dtos/requests/create-transfer.request.dto";
 import { Transaction } from "../entities/Transaction";
-import { TransactionsRepositoryImpl } from "../external/persistence/prisma/transactions.repository.impl";
+import { TransactionsRepositoryImpl } from "../external/prisma/transactions.repository.impl";
 import { TransactionsRepository } from "../repositories/transactions.repository";
-import { TransactionType } from "../types/transaction-type.enum";
+import { TransactionTypes } from "../types/transaction-types.enum";
 
 @Injectable()
 export class TransactionsService {
@@ -30,7 +30,7 @@ export class TransactionsService {
 		createdAt: Date;
 		from: Nullable<string>;
 		to: string;
-		type: TransactionType;
+		type: TransactionTypes;
 	}> {
 		this.LOGGER.log(
 			"Creating transfer transaction from user %s to user %s for amount %s",
@@ -71,7 +71,7 @@ export class TransactionsService {
 			from: dto.from,
 			to: dto.to,
 			amount: amount,
-			type: TransactionType.TRANSFER,
+			type: TransactionTypes.TRANSFER,
 		});
 
 		this.LOGGER.debug("Creating transaction record");
@@ -103,7 +103,7 @@ export class TransactionsService {
 		amount: number;
 		createdAt: Date;
 		to: string;
-		type: TransactionType;
+		type: TransactionTypes;
 	}> {
 		this.LOGGER.log(
 			"Creating deposit transaction for user %s with amount %s",
@@ -126,7 +126,7 @@ export class TransactionsService {
 		const transaction = await Transaction.create({
 			to: dto.userId,
 			amount: amount,
-			type: TransactionType.SYSTEM_DEPOSIT,
+			type: TransactionTypes.SYSTEM_DEPOSIT,
 		});
 
 		this.LOGGER.debug("Creating transaction record");

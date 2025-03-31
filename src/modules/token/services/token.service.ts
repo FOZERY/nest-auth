@@ -2,15 +2,15 @@ import { Inject, Logger } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { JwtService } from "@nestjs/jwt";
 import { randomUUID } from "crypto";
+import { AccessRefreshTokens } from "../../../common/types/common.types";
 import { parseTimeToMilliseconds } from "../../auth/helpers/parseTimeToMilliseconds";
-import { AccessRefreshTokens } from "../../auth/types/auth.types";
 import { CreateAccessRefreshTokensServiceDTO } from "../dtos/services/create-access-refresh.service.dto";
 import { CreateAccessTokenServiceDTO } from "../dtos/services/create-access-token.service.dto";
 import { CreateRefreshServiceDTO } from "../dtos/services/create-refresh-session.service.dto";
 import { RefreshSession } from "../entities/RefreshSession";
 import { RefreshSessionsRedisRepositoryImpl } from "../external/redis/refreshSessions.repository.impl";
-import { CreateRefreshSessionResult } from "../interfaces/create-refreshSession-result";
 import { RefreshSessionsRepository } from "../repositories/refreshSessions.repository";
+import { CreateRefreshSessionResult } from "../types/create-refreshSession-result.type";
 
 export class TokenService {
 	private readonly LOGGER = new Logger(TokenService.name);

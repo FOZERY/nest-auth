@@ -2,10 +2,10 @@ import { Processor, WorkerHost } from "@nestjs/bullmq";
 import { Logger } from "@nestjs/common";
 import { Job } from "bullmq";
 import { S3Service } from "../../../external/s3/s3.service";
-import { FileModuleQueues } from "../file.constants";
+import { FileQueues } from "../types/file-queues.enum";
 import { FileOperationTypes, S3CommandOptions } from "./file-processing.producer";
 
-@Processor(FileModuleQueues.FileProcessing)
+@Processor(FileQueues.FileProcessing)
 export class FileProcessingQueueConsumer extends WorkerHost {
 	private readonly LOGGER = new Logger(FileProcessingQueueConsumer.name);
 	constructor(private readonly s3Service: S3Service) {

@@ -1,7 +1,7 @@
 import { MiddlewareConsumer, Module, NestModule } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
+import { RequestContextMiddleware } from "../../common/middlewares/request-context.middleware";
 import { S3Module } from "../../external/s3/s3.module";
-import { RequestContextMiddleware } from "../auth/middleware/request-context.middleware";
 import { FileModule } from "../file/file.module";
 import { TokenModule } from "../token/token.module";
 import { PersonalProfileController } from "./controllers/personal-profile.controller";

@@ -1,7 +1,7 @@
 import { RefreshSession } from "../entities/RefreshSession";
 import { RefreshSessionCached } from "../types/refreshSession-cached.type";
 
-export class RefreshSessionMapper {
+export class RefreshSessionsCachedMapper {
 	public static fromEntityToCached(session: RefreshSession): RefreshSessionCached {
 		return {
 			refreshToken: session.refreshToken,

@@ -1,7 +1,7 @@
 import { refresh_sessions } from "@prisma/client";
-import { RefreshSession } from "../../../../token/entities/RefreshSession";
+import { RefreshSession } from "../entities/RefreshSession";
 
-export class RefreshSessionsMapper {
+export class RefreshSessionsPrismaMapper {
 	static async toEntity(prismaRefreshSession: refresh_sessions): Promise<RefreshSession> {
 		return await RefreshSession.create({
 			userId: prismaRefreshSession.user_id,

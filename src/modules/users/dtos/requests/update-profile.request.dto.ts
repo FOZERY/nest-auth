@@ -11,7 +11,7 @@ import {
 	Min,
 	MinLength,
 } from "class-validator";
-import { NoSpaces } from "../../../../../common/class-validator/noSpaces.decorator";
+import { NoSpaces } from "../../../../common/class-validator/noSpaces.decorator";
 
 export class UpdatePersonalProfileRequestDTO {
 	@ApiPropertyOptional({

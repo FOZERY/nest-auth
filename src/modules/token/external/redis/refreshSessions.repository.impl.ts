@@ -1,7 +1,7 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { RedisService } from "../../../../external/cache/redis/redis.service";
 import { RefreshSession } from "../../entities/RefreshSession";
-import { RefreshSessionMapper } from "../../mappers/refreshSession.mapper";
+import { RefreshSessionsCachedMapper } from "../../mappers/refreshSessions-cached.mapper";
 import { RefreshSessionsRepository } from "../../repositories/refreshSessions.repository";
 import { RefreshSessionCached } from "../../types/refreshSession-cached.type";
 
@@ -26,7 +26,7 @@ export class RefreshSessionsRedisRepositoryImpl implements RefreshSessionsReposi
 		pipeline.psetex(
 			sessionKey,
 			session.expiresInMs,
-			JSON.stringify(RefreshSessionMapper.fromEntityToCached(session))
+			JSON.stringify(RefreshSessionsCachedMapper.fromEntityToCached(session))
 		);
 
 		// Добавляем ID сессии в список сессий пользователя
@@ -71,7 +71,7 @@ export class RefreshSessionsRedisRepositoryImpl implements RefreshSessionsReposi
 
 		if (!session) return null;
 
-		return await RefreshSessionMapper.fromCachedToEntity(session);
+		return await RefreshSessionsCachedMapper.fromCachedToEntity(session);
 	}
 
 	public async getAllRefreshSessionsByUserIdOrderedByCreatedAtAsc(
@@ -113,7 +113,7 @@ export class RefreshSessionsRedisRepositoryImpl implements RefreshSessionsReposi
 
 			// Преобразуем в доменные сущности
 			return Promise.all(
-				sessions.map((session) => RefreshSessionMapper.fromCachedToEntity(session))
+				sessions.map((session) => RefreshSessionsCachedMapper.fromCachedToEntity(session))
 			);
 		} catch (error) {
 			throw new Error(`Failed to get refresh sessions: ${error.message}`);

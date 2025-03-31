@@ -1,10 +1,8 @@
 import { InjectQueue } from "@nestjs/bullmq";
 import { Injectable, Logger } from "@nestjs/common";
 import { Queue } from "bullmq";
-import {
-	UserBalanceResetModuleJobs,
-	UserBalanceResetModuleQueues,
-} from "../constants/user-balance-reset.constants";
+import { UserBalanceResetModuleJobs } from "../types/user-balance-reset-jobs.enum";
+import { UserBalanceResetModuleQueues } from "../types/user-balance-reset-queues.enum";
 
 @Injectable()
 export class UserBalanceResetProducer {

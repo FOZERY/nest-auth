@@ -17,3 +17,11 @@ export type RequestWithUser = Request & {
 export type RequestWithContext = Request & {
 	requestContext: RequestContext;
 };
+
+export type AccessRefreshTokens = {
+	accessToken: string;
+	refreshSession: {
+		refreshToken: string;
+		expiresIn: number;
+	};
+};

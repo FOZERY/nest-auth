@@ -1,10 +1,10 @@
 import { MiddlewareConsumer, Module, NestModule } from "@nestjs/common";
 import { PassportModule } from "@nestjs/passport";
+import { RequestContextMiddleware } from "../../common/middlewares/request-context.middleware";
 import { PrismaModule } from "../../external/persistence/prisma/prisma.module";
 import { TokenModule } from "../token/token.module";
 import { UsersModule } from "../users/users.module";
 import { AuthController } from "./controllers/auth.controller";
-import { RequestContextMiddleware } from "./middleware/request-context.middleware";
 import { AuthService } from "./services/auth.service";
 import { AccessTokenStrategy } from "./strategies/access-token.strategy";
 

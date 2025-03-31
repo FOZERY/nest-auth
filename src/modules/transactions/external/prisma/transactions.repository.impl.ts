@@ -1,10 +1,10 @@
 import { TransactionalAdapterPrisma } from "@nestjs-cls/transactional-adapter-prisma";
 import { TransactionHost } from "@nestjs-cls/transactional/dist/src/lib/transaction-host";
 import { Injectable } from "@nestjs/common";
-import { Nullable } from "../../../../../core/types/utility.types";
-import { Transaction } from "../../../entities/Transaction";
-import { TransactionsRepository } from "../../../repositories/transactions.repository";
-import { TransactionType } from "../../../types/transaction-type.enum";
+import { Nullable } from "../../../../core/types/utility.types";
+import { Transaction } from "../../entities/Transaction";
+import { TransactionsRepository } from "../../repositories/transactions.repository";
+import { TransactionTypes } from "../../types/transaction-types.enum";
 
 @Injectable()
 export class TransactionsRepositoryImpl implements TransactionsRepository {
@@ -16,9 +16,9 @@ export class TransactionsRepositoryImpl implements TransactionsRepository {
 		createdAt: Date;
 		from: Nullable<string>;
 		to: string;
-		type: TransactionType;
+		type: TransactionTypes;
 	}> {
-		if (transaction.type !== TransactionType.SYSTEM_DEPOSIT && !transaction.from) {
+		if (transaction.type !== TransactionTypes.SYSTEM_DEPOSIT && !transaction.from) {
 			throw new Error("From user is required");
 		}
 
@@ -38,7 +38,7 @@ export class TransactionsRepositoryImpl implements TransactionsRepository {
 			createdAt: createdTransaction.created_at,
 			from: createdTransaction.from_user_id ?? null,
 			to: createdTransaction.to_user_id,
-			type: createdTransaction.type as TransactionType,
+			type: createdTransaction.type as TransactionTypes,
 		};
 	}
 }

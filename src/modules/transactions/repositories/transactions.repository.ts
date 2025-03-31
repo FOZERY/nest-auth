@@ -1,6 +1,6 @@
 import { Nullable } from "../../../core/types/utility.types";
 import { Transaction } from "../entities/Transaction";
-import { TransactionType } from "../types/transaction-type.enum";
+import { TransactionTypes } from "../types/transaction-types.enum";
 
 export interface TransactionsRepository {
 	create(transaction: Transaction): Promise<{
@@ -9,6 +9,6 @@ export interface TransactionsRepository {
 		createdAt: Date;
 		from: Nullable<string>;
 		to: string;
-		type: TransactionType;
+		type: TransactionTypes;
 	}>;
 }

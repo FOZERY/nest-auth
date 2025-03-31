@@ -33,20 +33,20 @@ import {
 	ApiUnauthorizedResponse,
 } from "@nestjs/swagger";
 import { Response } from "express";
+import { RequiredHeaders } from "../../../common/decorators/required-headers.decorator";
 import { AccessTokenResponse } from "../../../common/dtos/tokens/access-token.response";
+import { SecurityHeadersGuard } from "../../../common/guards/security-headers.guard";
 import { RequestWithContext, RequestWithUser } from "../../../common/types/common.types";
 import { RedisService } from "../../../external/cache/redis/redis.service";
 import { setCookieSwaggerHeader } from "../../../external/swagger/setCookieHeader.swagger";
-import { RequiredHeaders } from "../../auth/decorators/required-headers.decorator";
 import { AccessTokenGuard } from "../../auth/guards/access-token-auth.guard";
-import { SecurityHeadersGuard } from "../../auth/guards/security-headers.guard";
-import { RemoveAvatarRequestDTO } from "../dto/profiles/requests/remove-avatar.request.dto";
-import { UpdatePersonalProfilePasswordRequestDTO } from "../dto/profiles/requests/update-profile-password.request.dto";
-import { UpdatePersonalProfileRequestDTO } from "../dto/profiles/requests/update-profile.request.dto";
+import { RemoveAvatarRequestDTO } from "../dtos/requests/remove-avatar.request.dto";
+import { UpdatePersonalProfilePasswordRequestDTO } from "../dtos/requests/update-profile-password.request.dto";
+import { UpdatePersonalProfileRequestDTO } from "../dtos/requests/update-profile.request.dto";
 import { UserAvatarResponseDTO } from "../dtos/responses/user-avatar.response.dto";
 import { UserPersonalProfileResponseDto } from "../dtos/responses/user-personal-profile.response.dto";
-import { CachedUser } from "../interfaces/cached-user.interface";
 import { UsersService } from "../services/users.service";
+import { CachedUser } from "../types/cached-user.types";
 
 @ApiBearerAuth()
 @ApiUnauthorizedResponse({ description: "Пользователь не авторизован" })

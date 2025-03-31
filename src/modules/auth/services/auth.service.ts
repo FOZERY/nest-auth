@@ -1,11 +1,11 @@
 import { ConflictException, Injectable, Logger, UnauthorizedException } from "@nestjs/common";
+import { AccessRefreshTokens } from "../../../common/types/common.types";
 import { comparePassword } from "../../../common/utils/hash-password";
 import { TokenService } from "../../token/services/token.service";
 import { UsersService } from "../../users/services/users.service";
-import { LoginUserRequestDTO } from "../dto/requests/login-user.request.dto";
-import { RegisterUserRequestDTO } from "../dto/requests/register-user.request.dto";
-import { RefreshTokenServiceDTO } from "../dto/services/refresh-token.service.dto";
-import { AccessRefreshTokens } from "../types/auth.types";
+import { LoginUserRequestDTO } from "../dtos/requests/login-user.request.dto";
+import { RegisterUserRequestDTO } from "../dtos/requests/register-user.request.dto";
+import { RefreshTokenServiceDTO } from "../dtos/services/refresh-token.service.dto";
 
 @Injectable()
 export class AuthService {
@@ -247,13 +247,7 @@ export class AuthService {
 		return tokens;
 	}
 
-	public async refreshToken(
-		dto: RefreshTokenServiceDTO & {
-			ipAddress: string;
-			fingerprint: string;
-			userAgent: string;
-		}
-	): Promise<AccessRefreshTokens> {
+	public async refreshToken(dto: RefreshTokenServiceDTO): Promise<AccessRefreshTokens> {
 		this.LOGGER.log(
 			{
 				refreshToken: dto.refreshToken.substring(0, 10) + "...",

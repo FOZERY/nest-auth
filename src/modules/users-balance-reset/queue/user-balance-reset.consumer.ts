@@ -2,10 +2,8 @@ import { Processor, WorkerHost } from "@nestjs/bullmq";
 import { Logger } from "@nestjs/common";
 import { Job } from "bullmq";
 import { UsersService } from "../../users/services/users.service";
-import {
-	UserBalanceResetModuleJobs,
-	UserBalanceResetModuleQueues,
-} from "../constants/user-balance-reset.constants";
+import { UserBalanceResetModuleJobs } from "../types/user-balance-reset-jobs.enum";
+import { UserBalanceResetModuleQueues } from "../types/user-balance-reset-queues.enum";
 
 @Processor(UserBalanceResetModuleQueues.UserBalanceReset)
 export class UserBalanceResetConsumer extends WorkerHost {

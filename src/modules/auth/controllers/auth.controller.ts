@@ -20,14 +20,14 @@ import {
 	ApiUnauthorizedResponse,
 } from "@nestjs/swagger";
 import { Response } from "express";
+import { RequiredHeaders } from "../../../common/decorators/required-headers.decorator";
 import { AccessTokenResponse } from "../../../common/dtos/tokens/access-token.response";
+import { SecurityHeadersGuard } from "../../../common/guards/security-headers.guard";
 import { RequestWithContext, RequestWithUser } from "../../../common/types/common.types";
 import { setCookieSwaggerHeader } from "../../../external/swagger/setCookieHeader.swagger";
-import { RequiredHeaders } from "../decorators/required-headers.decorator";
-import { LoginUserRequestDTO } from "../dto/requests/login-user.request.dto";
-import { RegisterUserRequestDTO } from "../dto/requests/register-user.request.dto";
+import { LoginUserRequestDTO } from "../dtos/requests/login-user.request.dto";
+import { RegisterUserRequestDTO } from "../dtos/requests/register-user.request.dto";
 import { AccessTokenGuard } from "../guards/access-token-auth.guard";
-import { SecurityHeadersGuard } from "../guards/security-headers.guard";
 import { AuthService } from "../services/auth.service";
 
 @Controller("auth")

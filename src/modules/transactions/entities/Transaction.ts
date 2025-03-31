@@ -11,14 +11,14 @@ import { randomUUID } from "node:crypto";
 import { Entity } from "../../../core/entity/Entity";
 import { Nullable } from "../../../core/types/utility.types";
 import { Money } from "../../../core/value-objects/Money";
-import { TransactionType } from "../types/transaction-type.enum";
+import { TransactionTypes } from "../types/transaction-types.enum";
 
 export interface TransactionProps {
 	id?: string;
 	from?: Nullable<string>;
 	to: string;
 	amount: Money;
-	type: TransactionType;
+	type: TransactionTypes;
 	createdAt?: Nullable<Date>;
 }
 
@@ -26,7 +26,7 @@ export class Transaction extends Entity {
 	@IsUUID()
 	public id: string;
 
-	@ValidateIf((o: Transaction) => o.type !== TransactionType.SYSTEM_DEPOSIT)
+	@ValidateIf((o: Transaction) => o.type !== TransactionTypes.SYSTEM_DEPOSIT)
 	@IsUUID()
 	from: Nullable<string>;
 
@@ -38,8 +38,8 @@ export class Transaction extends Entity {
 	@Type(() => Money)
 	amount: Money;
 
-	@IsEnum(TransactionType)
-	type: TransactionType;
+	@IsEnum(TransactionTypes)
+	type: TransactionTypes;
 
 	@IsOptional()
 	createdAt: Nullable<Date>;
