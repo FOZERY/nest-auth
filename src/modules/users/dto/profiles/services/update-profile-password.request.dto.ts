@@ -2,7 +2,7 @@ export interface UpdatePersonalPasswordServiceDTO {
 	userId: string;
 	oldPassword: string;
 	newPassword: string;
-	ipAddress?: string;
+	ipAddress: string;
 	fingerprint: string;
-	userAgent?: string;
+	userAgent: string;
 }

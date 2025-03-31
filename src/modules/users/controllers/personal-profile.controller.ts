@@ -25,6 +25,7 @@ import {
 	ApiBody,
 	ApiConsumes,
 	ApiCreatedResponse,
+	ApiHeader,
 	ApiNotFoundResponse,
 	ApiOkResponse,
 	ApiOperation,
@@ -33,10 +34,12 @@ import {
 } from "@nestjs/swagger";
 import { Response } from "express";
 import { AccessTokenResponse } from "../../../common/dtos/tokens/access-token.response";
-import { RequestWithUser } from "../../../common/types/common.types";
+import { RequestWithContext, RequestWithUser } from "../../../common/types/common.types";
 import { RedisService } from "../../../external/cache/redis/redis.service";
 import { setCookieSwaggerHeader } from "../../../external/swagger/setCookieHeader.swagger";
+import { RequiredHeaders } from "../../auth/decorators/required-headers.decorator";
 import { AccessTokenGuard } from "../../auth/guards/access-token-auth.guard";
+import { SecurityHeadersGuard } from "../../auth/guards/security-headers.guard";
 import { RemoveAvatarRequestDTO } from "../dto/profiles/requests/remove-avatar.request.dto";
 import { UpdatePersonalProfilePasswordRequestDTO } from "../dto/profiles/requests/update-profile-password.request.dto";
 import { UpdatePersonalProfileRequestDTO } from "../dto/profiles/requests/update-profile.request.dto";
@@ -192,6 +195,13 @@ export class PersonalProfileController {
 			"Обновление пароля пользователем. После обновления пароля, все предыдущие refreshToken'ы становятся недействительными",
 		summary: "Обновление пароля пользователя",
 	})
+	@ApiHeader({
+		name: "X-Fingerprint",
+		description: "Уникальный идентификатор устройства",
+		required: true,
+		schema: { type: "string" },
+		example: "550e8400-e29b-41d4-a716-446655440000",
+	})
 	@ApiOkResponse({
 		description: "Пароль был успешно обновлен",
 		headers: {
@@ -205,10 +215,12 @@ export class PersonalProfileController {
 	@ApiNotFoundResponse({
 		description: "Пользователь не найден",
 	})
+	@UseGuards(SecurityHeadersGuard)
+	@RequiredHeaders(["X-Fingerprint", "User-Agent"])
 	@HttpCode(200)
 	@Post("update-password")
 	public async updatePersonalProfilePassword(
-		@Req() req: RequestWithUser,
+		@Req() req: RequestWithUser & RequestWithContext,
 		@Res({ passthrough: true }) res: Response,
 		@Body() dto: UpdatePersonalProfilePasswordRequestDTO
 	): Promise<AccessTokenResponse> {
@@ -217,16 +229,14 @@ export class PersonalProfileController {
 				oldPassword: dto.oldPassword,
 				newPassword: dto.newPassword,
 				userId: req.user.id,
-				fingerprint: dto.fingerprint,
-				ipAddress: dto.ipAddress,
-				userAgent: dto.userAgent,
+				fingerprint: req.requestContext.fingerprint,
+				ipAddress: req.requestContext.ipAddress,
+				userAgent: req.requestContext.userAgent,
 			});
 
 		res.cookie("refreshToken", refreshSession.refreshToken, {
 			httpOnly: true,
 			maxAge: Number(refreshSession.expiresIn),
-			// sameSite: 'strict',
-			// secure:
 		});
 
 		return {

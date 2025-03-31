@@ -1,6 +1,7 @@
-import { Module } from "@nestjs/common";
+import { MiddlewareConsumer, Module, NestModule } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { S3Module } from "../../external/s3/s3.module";
+import { RequestContextMiddleware } from "../auth/middleware/request-context.middleware";
 import { FileModule } from "../file/file.module";
 import { TokenModule } from "../token/token.module";
 import { PersonalProfileController } from "./controllers/personal-profile.controller";
@@ -23,4 +24,8 @@ import { UsersService } from "./services/users.service";
 	controllers: [UsersController, PersonalProfileController],
 	exports: [UsersService],
 })
-export class UsersModule {}
+export class UsersModule implements NestModule {
+	configure(consumer: MiddlewareConsumer) {
+		consumer.apply(RequestContextMiddleware).forRoutes("personalProfile/update-password");
+	}
+}
