@@ -109,7 +109,7 @@ export class RefreshSessionsRedisRepositoryImpl implements RefreshSessionsReposi
 					(session): session is RefreshSessionCached =>
 						session !== null && session.expiresAt > Date.now() // проверяем, что срок действия сессии не истек, ибо могли не успеть очистить по кроне ведь в SET нет TTL
 				)
-				.sort((a, b) => a.createdAt - b.createdAt); // сортируем по createdAt
+				.toSorted((a, b) => a.createdAt - b.createdAt); // сортируем по createdAt
 
 			// Преобразуем в доменные сущности
 			return Promise.all(
