@@ -19,23 +19,61 @@ export class FileProcessingQueueConsumer extends WorkerHost {
 				name: job.name,
 				data: job.data,
 			},
-			`Processing job ${job.id} ${job.name}`
+			`Starting processing of job ${job.id} (${job.name})`
 		);
+
 		const operation = job.data;
-		switch (job.name) {
-			case FileOperationTypes.DELETE:
-				this.LOGGER.log(
-					{
-						bucket: operation.bucket,
-						key: operation.key,
-					},
-					"Deleting file"
-				);
-				await this.s3Service.deleteFile({
-					Bucket: operation.bucket,
-					Key: operation.key,
-				});
-				break;
+		try {
+			switch (job.name) {
+				case FileOperationTypes.DELETE:
+					this.LOGGER.debug(
+						{
+							bucket: operation.bucket,
+							key: operation.key,
+						},
+						"Attempting to delete file from S3"
+					);
+					await this.s3Service.deleteFile({
+						Bucket: operation.bucket,
+						Key: operation.key,
+					});
+					this.LOGGER.log(
+						{
+							bucket: operation.bucket,
+							key: operation.key,
+						},
+						"File successfully deleted from S3"
+					);
+					break;
+				default:
+					this.LOGGER.warn(
+						{
+							jobName: job.name,
+						},
+						"Unknown job type received"
+					);
+					throw new Error(`Unknown job type: ${job.name}`);
+			}
+
+			this.LOGGER.log(
+				{
+					id: job.id,
+					name: job.name,
+					duration: Date.now() - job.timestamp,
+				},
+				`Job ${job.id} completed successfully`
+			);
+		} catch (error) {
+			this.LOGGER.error(
+				{
+					id: job.id,
+					name: job.name,
+					error: error.message,
+					stack: error.stack,
+				},
+				`Failed to process job ${job.id}`
+			);
+			throw error;
 		}
 	}
 }

@@ -1,6 +1,6 @@
 import { Transactional } from "@nestjs-cls/transactional";
 import { TransactionalAdapterPrisma } from "@nestjs-cls/transactional-adapter-prisma";
-import { BadRequestException, Inject, Injectable, NotFoundException } from "@nestjs/common";
+import { BadRequestException, Inject, Injectable, Logger, NotFoundException } from "@nestjs/common";
 import { Nullable } from "../../../core/types/utility.types";
 import { Money } from "../../../core/value-objects/Money";
 import { UsersService } from "../../users/services/users.service";
@@ -13,6 +13,8 @@ import { TransactionType } from "../types/transaction-type.enum";
 
 @Injectable()
 export class TransactionsService {
+	private readonly LOGGER = new Logger(TransactionsService.name);
+
 	constructor(
 		@Inject(TransactionsRepositoryImpl)
 		private readonly transactionsRepository: TransactionsRepository,
@@ -30,19 +32,38 @@ export class TransactionsService {
 		to: string;
 		type: TransactionType;
 	}> {
+		this.LOGGER.log(
+			"Creating transfer transaction from user %s to user %s for amount %s",
+			dto.from,
+			dto.to,
+			dto.amount
+		);
+
 		const amount = Money.fromNumber(dto.amount);
 
 		const fromUser = await this.usersService.getByIdForUpdate(dto.from);
 		const toUser = await this.usersService.getByIdForUpdate(dto.to);
 
 		if (!fromUser || !toUser) {
+			this.LOGGER.warn(
+				"Transfer failed: user not found (from: %s, to: %s)",
+				dto.from,
+				dto.to
+			);
 			throw new NotFoundException("User not found");
 		}
 
 		if (fromUser.balance.isLessThan(amount)) {
+			this.LOGGER.warn(
+				"Transfer failed: insufficient balance for user %s (balance: %s, amount: %s)",
+				dto.from,
+				fromUser.balance.toNumber(),
+				amount.toNumber()
+			);
 			throw new BadRequestException("Insufficient balance");
 		}
 
+		this.LOGGER.debug("Updating balances for transfer");
 		await fromUser.setBalance(fromUser.balance.subtract(amount));
 		await toUser.setBalance(toUser.balance.add(amount));
 
@@ -53,10 +74,17 @@ export class TransactionsService {
 			type: TransactionType.TRANSFER,
 		});
 
+		this.LOGGER.debug("Creating transaction record");
 		const createdTransaction = await this.transactionsRepository.create(transaction);
+
+		this.LOGGER.debug("Updating user balances in database");
 		await this.usersService.updateBalance(fromUser.id, fromUser.balance);
 		await this.usersService.updateBalance(toUser.id, toUser.balance);
 
+		this.LOGGER.log(
+			"Transfer transaction created successfully with id %s",
+			createdTransaction.id
+		);
 		return {
 			id: createdTransaction.id,
 			amount: createdTransaction.amount,
@@ -77,14 +105,22 @@ export class TransactionsService {
 		to: string;
 		type: TransactionType;
 	}> {
+		this.LOGGER.log(
+			"Creating deposit transaction for user %s with amount %s",
+			dto.userId,
+			dto.amount
+		);
+
 		const amount = Money.fromNumber(dto.amount);
 
 		const user = await this.usersService.getByIdForUpdate(dto.userId);
 
 		if (!user) {
+			this.LOGGER.warn("Deposit failed: user not found (userId: %s)", dto.userId);
 			throw new NotFoundException("User not found");
 		}
 
+		this.LOGGER.debug("Updating user balance for deposit");
 		await user.setBalance(user.balance.add(amount));
 
 		const transaction = await Transaction.create({
@@ -93,9 +129,16 @@ export class TransactionsService {
 			type: TransactionType.SYSTEM_DEPOSIT,
 		});
 
+		this.LOGGER.debug("Creating transaction record");
 		const createdTransaction = await this.transactionsRepository.create(transaction);
+
+		this.LOGGER.debug("Updating user balance in database");
 		await this.usersService.updateBalance(user.id, user.balance);
 
+		this.LOGGER.log(
+			"Deposit transaction created successfully with id %s",
+			createdTransaction.id
+		);
 		return {
 			id: createdTransaction.id,
 			amount: createdTransaction.amount,

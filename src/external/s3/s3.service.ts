@@ -28,8 +28,6 @@ export class S3Service {
 	}
 
 	public getFileUrl(path: string, bucket?: string): string {
-		console.log("bucket", bucket, this.defaultBucket);
-
 		if (!this.defaultBucket && !bucket) {
 			throw new Error("Bucket is required");
 		}

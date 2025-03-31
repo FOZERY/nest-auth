@@ -27,6 +27,7 @@ import { UsersService } from "../services/users.service";
 
 @Controller("users")
 export class UsersController {
+	private readonly userKey = "user:";
 	private LOGGER = new Logger(UsersController.name);
 
 	constructor(
@@ -47,6 +48,7 @@ export class UsersController {
 	public async paginate(
 		@Query() queryDto: UsersPaginatedRequestDTO
 	): Promise<PaginatedResponseDto<UserPublicResponseDTO>> {
+		this.LOGGER.log({ queryDto }, "Paginating users");
 		const users = await this.usersService.paginate(queryDto);
 		const pageMetaDto = new PageMetaDto({ itemCount: users.total, pageOptionsDto: queryDto });
 
@@ -69,8 +71,10 @@ export class UsersController {
 	public async getUser(
 		@Param("id", ParseUUIDPipe) userId: string
 	): Promise<UserPublicResponseDTO> {
+		this.LOGGER.log("Getting user with id %s", userId);
+
 		const cachedUser = await this.redisService.getJson<CachedUser>(
-			`user:${userId}`,
+			`${this.userKey}${userId}`,
 			(key, value) => {
 				if (key === "createdAt") {
 					return new Date(value);
@@ -103,7 +107,7 @@ export class UsersController {
 		}
 
 		await this.redisService.setJson<CachedUser>(
-			`user:${user.id}`,
+			`${this.userKey}${user.id}`,
 			{
 				id: user.id,
 				age: user.age,
@@ -148,12 +152,14 @@ export class UsersController {
 	public async getUserActiveAvatarUrl(
 		@Param("id", ParseUUIDPipe) userId: string
 	): Promise<UserAvatarResponseDTO> {
+		this.LOGGER.log("Getting user active avatar for user %s", userId);
 		const avatar = await this.usersService.getActiveUserAvatar(userId);
 
 		if (!avatar) {
 			throw new NotFoundException("Avatar not found");
 		}
 
+		this.LOGGER.log({ avatar }, "User active avatar found");
 		return avatar;
 	}
 
@@ -172,6 +178,7 @@ export class UsersController {
 	public async getAllUserAvatarsUrl(
 		@Param("id", ParseUUIDPipe) userId: string
 	): Promise<UserAvatarResponseDTO[]> {
+		this.LOGGER.log("Getting all user avatars for user %s", userId);
 		return await this.usersService.getAllUserAvatars(userId);
 	}
 }

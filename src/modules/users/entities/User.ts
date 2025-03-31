@@ -88,6 +88,7 @@ export class User extends Entity {
 
 	@IsNotEmpty()
 	@ValidateNested()
+	@Type(() => Money)
 	public balance: Money;
 
 	@IsArray()

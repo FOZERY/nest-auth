@@ -14,7 +14,27 @@ export class SessionCleanupService {
 
 	@Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
 	public async cleanupExpiredSessions(): Promise<void> {
-		this.LOGGER.log("Cleaning up expired sessions");
-		await this.refreshSessionRepository.cleanupExpiredSessions();
+		this.LOGGER.log("Starting cleanup of expired sessions");
+
+		try {
+			const deletedCount = await this.refreshSessionRepository.cleanupExpiredSessions();
+
+			this.LOGGER.log(
+				{
+					deletedCount,
+					timestamp: new Date().toISOString(),
+				},
+				"Cleanup completed successfully"
+			);
+		} catch (error) {
+			this.LOGGER.error(
+				{
+					error: error.message,
+					stack: error.stack,
+				},
+				"Failed to cleanup expired sessions"
+			);
+			throw error;
+		}
 	}
 }

@@ -54,6 +54,8 @@ import { UsersService } from "../services/users.service";
 @Controller("personalProfile")
 @UseGuards(AccessTokenGuard)
 export class PersonalProfileController {
+	private readonly userKey = "user:";
+
 	private LOGGER = new Logger(PersonalProfileController.name);
 
 	constructor(
@@ -78,8 +80,10 @@ export class PersonalProfileController {
 	public async getPersonalProfile(
 		@Req() req: RequestWithUser
 	): Promise<UserPersonalProfileResponseDto> {
+		this.LOGGER.log("Getting personal profile for user %s", req.user.id);
+
 		const cachedUser = await this.redisService.getJson<CachedUser>(
-			req.user.id,
+			`${this.userKey}${req.user.id}`,
 			(key, value) => {
 				if (key === "createdAt") {
 					return new Date(value);
@@ -116,7 +120,7 @@ export class PersonalProfileController {
 		}
 
 		await this.redisService.setJson<CachedUser>(
-			user.id,
+			`${this.userKey}${user.id}`,
 			{
 				id: user.id,
 				login: user.login,
@@ -164,7 +168,10 @@ export class PersonalProfileController {
 	@HttpCode(200)
 	@Get("balance")
 	public async getPersonalProfileBalance(@Req() req: RequestWithUser) {
-		return await this.usersService.getUserBalance(req.user.id);
+		this.LOGGER.log("Getting personal profile balance for user %s", req.user.id);
+		const balance = await this.usersService.getUserBalance(req.user.id);
+
+		return balance.toNumber();
 	}
 
 	@ApiOperation({
@@ -183,11 +190,14 @@ export class PersonalProfileController {
 		@Req() req: RequestWithUser,
 		@Body() dto: UpdatePersonalProfileRequestDTO
 	) {
-		await this.redisService.del(req.user.id);
+		this.LOGGER.log("Updating personal profile for user %s", req.user.id);
+		await this.redisService.del(`${this.userKey}${req.user.id}`);
+		this.LOGGER.log("Personal profile for user %s was deleted from cache", req.user.id);
 		await this.usersService.update({
 			id: req.user.id,
 			...dto,
 		});
+		this.LOGGER.log("Personal profile for user %s was updated", req.user.id);
 	}
 
 	@ApiOperation({
@@ -224,6 +234,7 @@ export class PersonalProfileController {
 		@Res({ passthrough: true }) res: Response,
 		@Body() dto: UpdatePersonalProfilePasswordRequestDTO
 	): Promise<AccessTokenResponse> {
+		this.LOGGER.log("Updating personal profile password for user %s", req.user.id);
 		const { refreshSession, accessToken } =
 			await this.usersService.updatePersonalProfilePassword({
 				oldPassword: dto.oldPassword,
@@ -234,10 +245,13 @@ export class PersonalProfileController {
 				userAgent: req.requestContext.userAgent,
 			});
 
+		this.LOGGER.log("Personal profile password for user %s was updated", req.user.id);
+
 		res.cookie("refreshToken", refreshSession.refreshToken, {
 			httpOnly: true,
 			maxAge: Number(refreshSession.expiresIn),
 		});
+		this.LOGGER.log("Refresh token for user %s was set", req.user.id);
 
 		return {
 			accessToken,
@@ -254,8 +268,15 @@ export class PersonalProfileController {
 	@HttpCode(200)
 	@Delete()
 	public async deletePersonalProfile(@Req() req: RequestWithUser) {
-		await this.redisService.del(req.user.id);
+		this.LOGGER.log("Deleting personal profile for user %s", req.user.id);
+
+		await this.redisService.del(`${this.userKey}${req.user.id}`);
+
+		this.LOGGER.log("Personal profile for user %s was deleted from cache", req.user.id);
+
 		await this.usersService.deleteById(req.user.id);
+
+		this.LOGGER.log("Personal profile for user %s was deleted", req.user.id);
 	}
 
 	@ApiOperation({
@@ -292,10 +313,13 @@ export class PersonalProfileController {
 		)
 		file: Express.Multer.File
 	): Promise<UserAvatarResponseDTO> {
-		return await this.usersService.uploadPersonalProfileAvatar({
+		this.LOGGER.log("Uploading avatar for user %s", req.user.id);
+		const avatar = await this.usersService.uploadPersonalProfileAvatar({
 			userId: req.user.id,
 			file: file,
 		});
+		this.LOGGER.log("Avatar for user %s was uploaded", req.user.id);
+		return avatar;
 	}
 
 	@ApiOperation({
@@ -311,9 +335,11 @@ export class PersonalProfileController {
 		@Req() req: RequestWithUser,
 		@Body() dto: RemoveAvatarRequestDTO
 	): Promise<void> {
+		this.LOGGER.log("Deleting avatar for user %s", req.user.id);
 		await this.usersService.softDeletePersonalProfileAvatar({
 			userId: req.user.id,
 			avatarId: dto.avatarId,
 		});
+		this.LOGGER.log("Avatar for user %s was deleted", req.user.id);
 	}
 }
