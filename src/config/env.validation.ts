@@ -105,6 +105,30 @@ export class EnvironmentVariables {
 	})
 	@IsBoolean()
 	LOG_TO_CONSOLE: boolean;
+
+	@Transform(({ value }) => {
+		if (value === "true") return true;
+		if (value === "false") return false;
+		return value;
+	})
+	@IsBoolean()
+	LOG_AUTO_LOGGING: boolean;
+
+	@Transform(({ value }) => {
+		if (value === "true") return true;
+		if (value === "false") return false;
+		return value;
+	})
+	@IsBoolean()
+	LOG_QUIET_REQ_LOGGER: boolean;
+
+	@Transform(({ value }) => {
+		if (value === "true") return true;
+		if (value === "false") return false;
+		return value;
+	})
+	@IsBoolean()
+	LOG_QUIET_RES_LOGGER: boolean;
 }
 
 export function validate(config: Record<string, unknown>) {

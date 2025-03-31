@@ -37,10 +37,12 @@ export class UsersService {
 	): Promise<FindAllUsersWithPaginationOutputDTO> {
 		this.LOGGER.log(
 			{
-				login: dto.login,
-				take: dto.take,
-				skip: dto.skip,
-				order: dto.order,
+				dto: {
+					login: dto.login,
+					take: dto.take,
+					skip: dto.skip,
+					order: dto.order,
+				},
 			},
 			"Attempting to paginate users"
 		);
@@ -128,9 +130,11 @@ export class UsersService {
 
 		this.LOGGER.debug(
 			{
-				userId: id,
-				login: user.login,
-				email: user.email,
+				user: {
+					id: user.id,
+					login: user.login,
+					email: user.email,
+				},
 			},
 			"User found successfully"
 		);

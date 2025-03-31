@@ -51,7 +51,9 @@ export const pinoConfig: LoggerModuleAsyncParams = {
 					res.setHeader("X-Request-Id", id);
 					return id;
 				},
-				autoLogging: true,
+				autoLogging: config.get<boolean>("LOG_AUTO_LOGGING"),
+				quietReqLogger: config.get<boolean>("LOG_QUIET_REQ_LOGGER"),
+				quietResLogger: config.get<boolean>("LOG_QUIET_RES_LOGGER"),
 				stream: stream,
 				base: {
 					pid: process.pid,
