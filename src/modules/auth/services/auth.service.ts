@@ -67,7 +67,7 @@ export class AuthService {
 			this.LOGGER.debug(
 				{
 					userId: user.id,
-					sessionId: sameFingerprintSession.id,
+					sessionId: sameFingerprintSession.refreshToken,
 				},
 				"Found session with same fingerprint, deleting it"
 			);
@@ -277,7 +277,7 @@ export class AuthService {
 
 		this.LOGGER.debug(
 			{
-				sessionId: existingSession.id,
+				sessionId: existingSession.refreshToken,
 				userId: existingSession.userId,
 			},
 			"Deleting old refresh token"
