@@ -14,21 +14,24 @@ import {
 	ApiConflictResponse,
 	ApiCookieAuth,
 	ApiCreatedResponse,
+	ApiHeader,
 	ApiOkResponse,
 	ApiOperation,
 	ApiUnauthorizedResponse,
 } from "@nestjs/swagger";
-import { Request, Response } from "express";
+import { Response } from "express";
 import { AccessTokenResponse } from "../../../common/dtos/tokens/access-token.response";
-import { RequestWithUser } from "../../../common/types/common.types";
+import { RequestWithContext, RequestWithUser } from "../../../common/types/common.types";
 import { setCookieSwaggerHeader } from "../../../external/swagger/setCookieHeader.swagger";
+import { RequiredHeaders } from "../decorators/required-headers.decorator";
 import { LoginUserRequestDTO } from "../dto/requests/login-user.request.dto";
-import { RefreshTokenRequestDTO } from "../dto/requests/refresh-token.request.dto";
 import { RegisterUserRequestDTO } from "../dto/requests/register-user.request.dto";
 import { AccessTokenGuard } from "../guards/access-token-auth.guard";
+import { SecurityHeadersGuard } from "../guards/security-headers.guard";
 import { AuthService } from "../services/auth.service";
 
 @Controller("auth")
+@UseGuards(SecurityHeadersGuard)
 export class AuthController {
 	private readonly LOGGER = new Logger(AuthController.name);
 
@@ -37,6 +40,13 @@ export class AuthController {
 	@ApiOperation({
 		summary: "Аутентификация пользователя",
 		description: "Аутентификация пользователя",
+	})
+	@ApiHeader({
+		name: "X-Fingerprint",
+		description: "Уникальный идентификатор устройства",
+		required: true,
+		schema: { type: "string" },
+		example: "550e8400-e29b-41d4-a716-446655440000",
 	})
 	@ApiOkResponse({
 		description: "Пользователь успешно аутентифицирован",
@@ -48,30 +58,39 @@ export class AuthController {
 	@ApiUnauthorizedResponse({
 		description: "Неправильно указан логин/email или пароль",
 	})
+	@RequiredHeaders(["X-Fingerprint", "User-Agent"])
 	@HttpCode(200)
 	@Post("login")
 	public async login(
-		@Body() dto: LoginUserRequestDTO,
+		@Req() req: RequestWithContext,
+		@Body() loginUserDto: LoginUserRequestDTO,
 		@Res({ passthrough: true }) res: Response
 	): Promise<AccessTokenResponse> {
-		const { accessToken, refreshSession } = await this.authService.login(dto);
+		const { accessToken, refreshSession } = await this.authService.login({
+			...loginUserDto,
+			...req.requestContext,
+		});
 
 		res.cookie("refreshToken", refreshSession.refreshToken, {
 			httpOnly: true,
 			maxAge: refreshSession.expiresIn,
-
-			// sameSite: 'strict',
-			// secure:
 		});
 
 		return {
-			accessToken: accessToken,
+			accessToken,
 		};
 	}
 
 	@ApiOperation({
 		summary: "Регистрация пользователя",
 		description: "Регистрация пользователя",
+	})
+	@ApiHeader({
+		name: "X-Fingerprint",
+		description: "Уникальный идентификатор устройства",
+		required: true,
+		schema: { type: "string" },
+		example: "550e8400-e29b-41d4-a716-446655440000",
 	})
 	@ApiCreatedResponse({
 		description: "Пользователь успешно зарегистрирован",
@@ -83,24 +102,26 @@ export class AuthController {
 	@ApiConflictResponse({
 		description: "Пользователь с таким логином или email уже существует",
 	})
+	@RequiredHeaders(["X-Fingerprint", "User-Agent"])
 	@HttpCode(201)
 	@Post("register")
 	public async register(
-		@Body() dto: RegisterUserRequestDTO,
+		@Req() req: RequestWithContext,
+		@Body() registerUserDto: RegisterUserRequestDTO,
 		@Res({ passthrough: true }) res: Response
 	): Promise<AccessTokenResponse> {
-		const { accessToken, refreshSession } = await this.authService.register(dto);
+		const { accessToken, refreshSession } = await this.authService.register({
+			...registerUserDto,
+			...req.requestContext,
+		});
 
 		res.cookie("refreshToken", refreshSession.refreshToken, {
 			httpOnly: true,
 			maxAge: refreshSession.expiresIn,
-
-			// sameSite: 'strict',
-			// secure:
 		});
 
 		return {
-			accessToken: accessToken,
+			accessToken,
 		};
 	}
 
@@ -169,6 +190,13 @@ export class AuthController {
 		description:
 			"Обновление access token. При обновлении access token также обновляется refresh token",
 	})
+	@ApiHeader({
+		name: "X-Fingerprint",
+		description: "Уникальный идентификатор устройства",
+		required: true,
+		schema: { type: "string" },
+		example: "550e8400-e29b-41d4-a716-446655440000",
+	})
 	@ApiOkResponse({
 		description: "Access token успешно обновлен",
 		type: AccessTokenResponse,
@@ -180,13 +208,13 @@ export class AuthController {
 		description:
 			"Refresh token не был предоставлен, либо истек, либо нет такой сессии, либо пользователь не найден/удален",
 	})
-	@HttpCode(200)
 	@ApiCookieAuth()
+	@RequiredHeaders(["X-Fingerprint", "User-Agent"])
+	@HttpCode(200)
 	@Post("refresh-token")
 	public async refreshToken(
-		@Req() req: Request,
-		@Res({ passthrough: true }) res: Response,
-		@Body() dto: RefreshTokenRequestDTO
+		@Req() req: RequestWithContext,
+		@Res({ passthrough: true }) res: Response
 	): Promise<AccessTokenResponse> {
 		const refreshToken: string = req.cookies["refreshToken"];
 		this.LOGGER.log("refreshToken %s", refreshToken);
@@ -197,16 +225,12 @@ export class AuthController {
 
 		const { accessToken, refreshSession } = await this.authService.refreshToken({
 			refreshToken,
-			fingerprint: dto.fingerprint,
-			ipAddress: dto.ipAddress,
-			userAgent: dto.userAgent,
+			...req.requestContext,
 		});
 
 		res.cookie("refreshToken", refreshSession.refreshToken, {
 			httpOnly: true,
 			maxAge: refreshSession.expiresIn,
-			// sameSite: 'strict',
-			// secure:
 		});
 
 		return {

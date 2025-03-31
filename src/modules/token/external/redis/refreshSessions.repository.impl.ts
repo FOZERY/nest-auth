@@ -180,7 +180,7 @@ export class RefreshSessionsRedisRepositoryImpl implements RefreshSessionsReposi
 				count: BATCH_SIZE,
 			});
 
-			stream.on("data", (keys: Array<string | undefined>) => {
+			stream.on("data", (keys: Array<string>) => {
 				this.LOGGER.verbose(`Get user_sessions:* batch with ${keys.length} keys`);
 
 				stream.pause();
@@ -191,8 +191,8 @@ export class RefreshSessionsRedisRepositoryImpl implements RefreshSessionsReposi
 				}
 
 				Promise.all(
-					keys.map(async (key: string | undefined) => {
-						const sessions = await this.redis.smembers(key as string);
+					keys.map(async (key: string) => {
+						const sessions = await this.redis.smembers(key);
 
 						this.LOGGER.verbose(`Found ${sessions.length} sessions for user ${key}`);
 						if (sessions.length === 0) return;
@@ -207,7 +207,7 @@ export class RefreshSessionsRedisRepositoryImpl implements RefreshSessionsReposi
 
 						if (sessionsToDelete.length === 0) return;
 
-						await this.redis.srem(key as string, ...sessionsToDelete);
+						await this.redis.srem(key, ...sessionsToDelete);
 						this.LOGGER.verbose(`Deleted ${sessionsToDelete.length} expired sessions`);
 						totalCleaned += sessionsToDelete.length;
 					})

@@ -1,9 +1,10 @@
-import { Module } from "@nestjs/common";
+import { MiddlewareConsumer, Module, NestModule } from "@nestjs/common";
 import { PassportModule } from "@nestjs/passport";
 import { PrismaModule } from "../../external/persistence/prisma/prisma.module";
 import { TokenModule } from "../token/token.module";
 import { UsersModule } from "../users/users.module";
 import { AuthController } from "./controllers/auth.controller";
+import { RequestContextMiddleware } from "./middleware/request-context.middleware";
 import { AuthService } from "./services/auth.service";
 import { AccessTokenStrategy } from "./strategies/access-token.strategy";
 
@@ -12,4 +13,10 @@ import { AccessTokenStrategy } from "./strategies/access-token.strategy";
 	controllers: [AuthController],
 	providers: [AuthService, AccessTokenStrategy],
 })
-export class AuthModule {}
+export class AuthModule implements NestModule {
+	configure(consumer: MiddlewareConsumer) {
+		consumer
+			.apply(RequestContextMiddleware)
+			.forRoutes("auth/login", "auth/register", "auth/refresh-token");
+	}
+}

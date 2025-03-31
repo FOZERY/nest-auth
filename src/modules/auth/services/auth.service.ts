@@ -16,7 +16,13 @@ export class AuthService {
 		private readonly tokenService: TokenService
 	) {}
 
-	public async login(dto: LoginUserRequestDTO): Promise<AccessRefreshTokens> {
+	public async login(
+		dto: LoginUserRequestDTO & {
+			ipAddress: string;
+			userAgent: string;
+			fingerprint: string;
+		}
+	): Promise<AccessRefreshTokens> {
 		const user = dto.login
 			? await this.usersService.getByLogin(dto.login)
 			: await this.usersService.getByEmail(dto.email!);
@@ -73,7 +79,13 @@ export class AuthService {
 		await this.tokenService.deleteAllRefreshSessionsByUserIdExceptToken(userId, refreshToken);
 	}
 
-	public async register(dto: RegisterUserRequestDTO): Promise<AccessRefreshTokens> {
+	public async register(
+		dto: RegisterUserRequestDTO & {
+			ipAddress: string;
+			fingerprint: string;
+			userAgent: string;
+		}
+	): Promise<AccessRefreshTokens> {
 		const candidateByLogin = await this.usersService.getByLogin(dto.login);
 
 		if (candidateByLogin) {
@@ -98,7 +110,13 @@ export class AuthService {
 		});
 	}
 
-	public async refreshToken(dto: RefreshTokenServiceDTO): Promise<AccessRefreshTokens> {
+	public async refreshToken(
+		dto: RefreshTokenServiceDTO & {
+			ipAddress: string;
+			fingerprint: string;
+			userAgent: string;
+		}
+	): Promise<AccessRefreshTokens> {
 		// проверяем что такая сессия вообще есть
 		const existingSession = await this.tokenService.getRefreshSessionByToken(dto.refreshToken);
 
