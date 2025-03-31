@@ -497,7 +497,7 @@ export class UsersService {
 
 		// ищем последний аватар и делаем его активным
 		const avatars = await this.usersRepository.findUserAvatarsByUserIdSortedDesc(dto.userId);
-		if (avatars.length !== 0) {
+		if (avatars.length !== 0 && !avatars.some((avatar) => avatar.active)) {
 			await this.usersRepository.updateAvatarActiveStatusByAvatarId(avatars[0].id, true);
 		}
 
