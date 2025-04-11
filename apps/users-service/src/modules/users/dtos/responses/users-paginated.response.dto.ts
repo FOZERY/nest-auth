@@ -1,5 +1,5 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { PageMetaDto } from "@shared";
+import { PageMetaDto } from "@shared/dtos/pagination/with-pagination.response.dto";
 import { UserPublicResponseDTO } from "./user-public.response.dto";
 
 export class UsersPaginatedResponseDto {

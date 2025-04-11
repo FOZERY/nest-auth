@@ -1,9 +1,7 @@
 import { Logger, UseGuards } from "@nestjs/common";
-import { Interval } from "@nestjs/schedule";
 import {
 	OnGatewayConnection,
 	OnGatewayDisconnect,
-	SubscribeMessage,
 	WebSocketGateway,
 	WebSocketServer,
 	type OnGatewayInit,
@@ -34,9 +32,9 @@ export class NotificationGateway
 		});
 	}
 
-	public handleConnection(client: Socket) {
+	public async handleConnection(client: Socket) {
 		this.logger.log(`Client connected: ${client.id}`);
-		client.emit("notification", { message: "Connected to notification service" });
+		await client.join(client.data.user.id);
 	}
 
 	public handleDisconnect(client: Socket) {

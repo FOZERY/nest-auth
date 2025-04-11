@@ -1,5 +1,5 @@
 import { ApiPropertyOptional } from "@nestjs/swagger";
-import { PageOptionsRequestDTO } from "@shared";
+import { PageOptionsRequestDTO } from "@shared/dtos/pagination/page-options.request.dto";
 import { IsOptional, IsString } from "class-validator";
 
 export class UsersPaginatedRequestDTO extends PageOptionsRequestDTO {

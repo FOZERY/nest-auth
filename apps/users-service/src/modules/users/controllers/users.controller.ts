@@ -10,7 +10,10 @@ import {
 	UseGuards,
 } from "@nestjs/common";
 import { ApiBearerAuth, ApiNotFoundResponse, ApiOkResponse, ApiOperation } from "@nestjs/swagger";
-import { PageMetaDto, PaginatedResponseDto } from "@shared";
+import {
+	PageMetaDto,
+	PaginatedResponseDto,
+} from "@shared/dtos/pagination/with-pagination.response.dto";
 import { RedisService } from "../../../external/cache/redis/redis.service";
 import { S3Service } from "../../../external/s3/s3.service";
 import { ApiPaginatedOkResponse } from "../../../external/swagger/decorators/apiPaginatedOkResponse.swagger";

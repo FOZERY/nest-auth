@@ -102,6 +102,15 @@ class EnvironmentVariables {
 	@IsString()
 	S3_REGION: string;
 
+	@IsString()
+	NATS_URL: string;
+
+	@IsString()
+	NATS_USER: string;
+
+	@IsString()
+	NATS_PASSWORD: string;
+
 	@IsEnum(LogLevel)
 	LOG_LEVEL: LogLevel;
 

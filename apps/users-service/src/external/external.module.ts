@@ -6,6 +6,7 @@ import { getPinoConfig } from "@pino-shared";
 import { ClsModule } from "nestjs-cls";
 import { LoggerModule } from "nestjs-pino";
 import { RedisModule } from "./cache/redis/redis.module";
+import { NatsModule } from "./nats/nats.module";
 import { clsConfig } from "./persistence/cls-transactional/cls.config";
 import { S3Module } from "./s3/s3.module";
 
@@ -49,6 +50,8 @@ import { S3Module } from "./s3/s3.module";
 			}),
 			inject: [ConfigService],
 		}),
+		NatsModule,
 	],
+	exports: [],
 })
 export class ExternalModule {}

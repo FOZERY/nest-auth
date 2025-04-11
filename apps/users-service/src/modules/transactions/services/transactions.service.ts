@@ -10,6 +10,7 @@ import { Transaction } from "../entities/Transaction";
 import { TransactionsRepositoryImpl } from "../external/prisma/transactions.repository.impl";
 import { TransactionsRepository } from "../repositories/transactions.repository";
 import { TransactionTypes } from "../types/transaction-types.enum";
+import { TransactionsEventsPublisher } from "./transactions-event.publisher";
 
 @Injectable()
 export class TransactionsService {
@@ -18,7 +19,8 @@ export class TransactionsService {
 	constructor(
 		@Inject(TransactionsRepositoryImpl)
 		private readonly transactionsRepository: TransactionsRepository,
-		private readonly usersService: UsersService
+		private readonly usersService: UsersService,
+		private readonly transactionsEventsPublisher: TransactionsEventsPublisher
 	) {}
 
 	@Transactional<TransactionalAdapterPrisma>({
@@ -85,6 +87,16 @@ export class TransactionsService {
 			"Transfer transaction created successfully with id %s",
 			createdTransaction.id
 		);
+
+		this.LOGGER.log("Publishing transfer created event");
+		this.transactionsEventsPublisher.transferCreated({
+			from: dto.from,
+			to: dto.to,
+			amount: createdTransaction.amount,
+			createdAt: createdTransaction.createdAt,
+		});
+		this.LOGGER.log("Transfer created event published");
+
 		return {
 			id: createdTransaction.id,
 			amount: createdTransaction.amount,
@@ -139,6 +151,15 @@ export class TransactionsService {
 			"Deposit transaction created successfully with id %s",
 			createdTransaction.id
 		);
+
+		this.LOGGER.log("Publishing deposit created event");
+		this.transactionsEventsPublisher.depositCreated({
+			userId: dto.userId,
+			amount: createdTransaction.amount,
+			createdAt: createdTransaction.createdAt,
+		});
+		this.LOGGER.log("Deposit created event published");
+
 		return {
 			id: createdTransaction.id,
 			amount: createdTransaction.amount,

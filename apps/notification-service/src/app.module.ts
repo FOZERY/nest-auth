@@ -1,10 +1,10 @@
 import { Module } from "@nestjs/common";
-import { SharedConfigModule } from "@shared";
+import { SharedConfigModule } from "@shared/config/shared-config.module";
 import { ExternalModule } from "./external/external.module";
-import { ModulesModule } from "./modules/modules.module";
+import { FeaturesModule } from "./modules/features.module";
 
 @Module({
-	imports: [SharedConfigModule, ExternalModule, ModulesModule],
+	imports: [SharedConfigModule, ExternalModule, FeaturesModule],
 	controllers: [],
 	providers: [],
 })

@@ -1,7 +1,7 @@
 import { Transactional } from "@nestjs-cls/transactional";
 import { TransactionalAdapterPrisma } from "@nestjs-cls/transactional-adapter-prisma";
 import { BadRequestException, Inject, Injectable, Logger, NotFoundException } from "@nestjs/common";
-import { PaginationOrder } from "@shared";
+import { PaginationOrder } from "@shared/dtos/pagination/page-options.request.dto";
 import { comparePassword, hashPassword } from "@utils";
 import { randomUUID } from "node:crypto";
 import { AccessRefreshTokens } from "../../../common/types/common.types";

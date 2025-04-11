@@ -7,4 +7,4 @@ import { UsersModule } from "./users/users.module";
 @Module({
 	imports: [AuthModule, TransactionsModule, UsersModule, UsersBalanceResetModule],
 })
-export class ModulesModule {}
+export class FeaturesModule {}

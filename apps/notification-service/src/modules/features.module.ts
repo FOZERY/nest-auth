@@ -4,4 +4,4 @@ import { NotificationModule } from "./notification/notification.module";
 @Module({
 	imports: [NotificationModule],
 })
-export class ModulesModule {}
+export class FeaturesModule {}

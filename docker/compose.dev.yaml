@@ -58,12 +58,23 @@ services:
     nats:
         container_name: nats-dev
         image: nats:alpine3.21
+        command: "-js -m 8222 --store_dir /var/lib/nats"
         ports:
-            - "4222:4222"
-            - "6222:6222"
-            - "8222:8222"
+            - "4222:4222" # Client connections
+            - "6222:6222" # Cluster routes
+            - "8222:8222" # Monitoring
+        environment:
+            - NATS_USER=${NATS_USER}
+            - NATS_PASSWORD=${NATS_PASSWORD}
         volumes:
             - nats-data-dev:/var/lib/nats
+        restart: unless-stopped
+        healthcheck:
+            test: ["CMD", "nats", "ping"]
+            interval: 30s
+            timeout: 10s
+            retries: 3
+
 volumes:
     postgres-data-dev:
     minio-storage:
