@@ -85,10 +85,11 @@ export class RefreshSessionsRedisRepositoryImpl implements RefreshSessionsReposi
 
 			// Получаем все сессии одним запросом через pipeline
 			const pipeline = this.redis.pipeline();
-			userSessions.forEach((session) => {
+
+			for (const session of userSessions) {
 				const token = session.split(":")[0];
 				pipeline.get(`${this.sessionKeyPrefix}${token}`);
-			});
+			}
 
 			const sessionsData = await pipeline.exec();
 			if (!sessionsData) return [];
@@ -129,10 +130,10 @@ export class RefreshSessionsRedisRepositoryImpl implements RefreshSessionsReposi
 		const pipeline = this.redis.pipeline();
 
 		// Удаляем все сессии
-		userSessions.forEach((session) => {
+		for (const session of userSessions) {
 			const token = session.split(":")[0];
 			pipeline.del(`${this.sessionKeyPrefix}${token}`);
-		});
+		}
 
 		// Удаляем ключ со списком сессий пользователя
 		pipeline.del(userSessionsKey);
@@ -158,10 +159,10 @@ export class RefreshSessionsRedisRepositoryImpl implements RefreshSessionsReposi
 		const pipeline = this.redis.pipeline();
 
 		// Удаляем сессии
-		sessionsToDelete.forEach((session) => {
+		for (const session of sessionsToDelete) {
 			const token = session.split(":")[0];
 			pipeline.del(`${this.sessionKeyPrefix}${token}`);
-		});
+		}
 
 		// Удаляем записи из множества пользователя
 		pipeline.srem(userSessionsKey, ...sessionsToDelete);
