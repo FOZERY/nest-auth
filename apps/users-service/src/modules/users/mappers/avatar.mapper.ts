@@ -1,4 +1,4 @@
-import { avatars as PrismaAvatar } from "@prisma/client";
+import { avatars as PrismaAvatar } from "@prisma/users-client";
 import { UserAvatarResponseDTO } from "../dtos/responses/user-avatar.response.dto";
 import { UserAvatar } from "../entities/UserAvatar";
 import { CachedAvatar } from "../types/cached-user.types";

@@ -1,4 +1,4 @@
-import { avatars as PrismaAvatar, users as PrismaUser } from "@prisma/client";
+import { avatars as PrismaAvatar, users as PrismaUser } from "@prisma/users-client";
 import { Money } from "../../../core/value-objects/Money";
 import { User } from "../entities/User";
 import { AvatarMapper } from "./avatar.mapper";

@@ -1,10 +1,10 @@
 import { INestApplication } from "@nestjs/common";
 import { Test, TestingModule } from "@nestjs/testing";
-import { Prisma, PrismaClient } from "@prisma/client";
+import { Prisma, PrismaClient } from "@prisma/users-client";
+import { PaginatedResponseDto } from "@shared/dtos/pagination/with-pagination.response.dto";
 import assert from "node:assert";
 import request from "supertest";
 import { AppModule } from "../../src/app.module";
-import { PaginatedResponseDto } from "../../src/common/dtos/pagination/with-pagination.response.dto";
 import { initMainConfig } from "../../src/main.config";
 import { UserPublicResponseDTO } from "../../src/modules/users/dtos/responses/user-public.response.dto";
 
