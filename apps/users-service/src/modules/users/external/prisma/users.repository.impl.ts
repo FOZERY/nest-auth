@@ -1,8 +1,8 @@
-import { TransactionHost } from "@nestjs-cls/transactional";
-import { TransactionalAdapterPrisma } from "@nestjs-cls/transactional-adapter-prisma";
-import { Injectable } from "@nestjs/common";
-import { users as PrismaUser } from "@prisma/client";
+import { Inject, Injectable } from "@nestjs/common";
+import { users as PrismaUser } from "@prisma/users-client";
 
+import { TransactionHost } from "@nestjs-cls/transactional";
+import { PrismaAdapterType } from "apps/users-service/src/external/persistence/cls-transactional/prisma-adapter.type";
 import {
 	FindAllUsersWithPaginationInputDTO,
 	FindAllUsersWithPaginationRepositoryResultDTO,
@@ -14,7 +14,9 @@ import { UserPrismaMapper } from "../../mappers/users-prisma.mapper";
 import { UsersRepository } from "../../repositories/users.repository";
 @Injectable()
 export class UsersRepositoryImpl implements UsersRepository {
-	constructor(private readonly txHost: TransactionHost<TransactionalAdapterPrisma>) {}
+	constructor(
+		@Inject(TransactionHost) private readonly txHost: TransactionHost<PrismaAdapterType>
+	) {}
 
 	public async exists(id: string): Promise<boolean> {
 		const user = await this.txHost.tx.users.findUnique({
