@@ -13,7 +13,7 @@
     "start:users-service": "nest start users-service",
     "start:notification-service": "nest start notification-service",
     "start:dev:users-service": "nest start --watch users-service",
-    "start:dev:notification-service": "nest start --watch notification-service",
+    "start:dev:notification-service": "node -v && nest start --watch notification-service",
     "start:debug:users-service": "nest start --debug --watch users-service",
     "start:debug:notification-service": "nest start --debug --watch notification-service",
     "start:prod:users-service": "node dist/apps/users-service/main",
@@ -29,9 +29,10 @@
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./apps/nestjs-auth/test/e2e/jest-e2e.json",
-    "migration:test": "dotenv -e ./env/.env.test -- pnpm prisma migrate dev",
-    "migration:dev": "dotenv -e ./env/.env.dev -- pnpm prisma migrate dev",
-    "migration:prod": "prisma migrate deploy",
+    "migration:test": "dotenv -e ./env/.env.test -- pnpm prisma migrate dev --schema=./apps/users-service/prisma/schema.prisma",
+    "migration:dev": "dotenv -e ./env/.env.dev -- pnpm prisma migrate dev --schema=./apps/users-service/prisma/schema.prisma",
+    "migration:prod": "prisma migrate deploy --schema=./apps/users-service/prisma/schema.prisma",
+    "prisma:generate:users": "prisma generate --schema=./apps/users-service/prisma/schema.prisma",
     "docker:test:build": "docker compose -f ./docker/compose.spec.yaml build",
     "docker:test:run": "docker compose -f ./docker/compose.spec.yaml --env-file ./env/.env.test up -d",
     "docker:dev:build": "docker compose -f ./docker/compose.dev.yaml build",
@@ -46,13 +47,16 @@
     "@keyv/redis": "^4.3.2",
     "@nestjs-cls/transactional": "^2.5.0",
     "@nestjs-cls/transactional-adapter-prisma": "^1.2.16",
+    "@nestjs-plugins/nestjs-nats-jetstream-transport": "^2.2.6",
     "@nestjs/bullmq": "^11.0.2",
     "@nestjs/cache-manager": "^3.0.0",
     "@nestjs/common": "^11.0.1",
     "@nestjs/config": "^4.0.0",
     "@nestjs/core": "^11.0.1",
+    "@nestjs/event-emitter": "^3.0.1",
     "@nestjs/jwt": "^11.0.0",
     "@nestjs/microservices": "^11.0.15",
+    "@nestjs/mongoose": "^11.0.3",
     "@nestjs/passport": "^11.0.5",
     "@nestjs/platform-express": "^11.0.1",
     "@nestjs/platform-socket.io": "^11.0.13",
@@ -70,9 +74,12 @@
     "concurrently": "^9.1.2",
     "cookie-parser": "^1.4.7",
     "ioredis": "^5.6.0",
+    "limiter": "^3.0.0",
+    "mongoose": "^8.13.2",
     "nats": "^2.29.3",
     "nestjs-cls": "^5.4.0",
     "nestjs-pino": "^4.3.1",
+    "p-retry": "^6.2.1",
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.1",
     "passport-local": "^1.0.0",
@@ -102,6 +109,7 @@
     "dotenv-cli": "^8.0.0",
     "eslint": "^9.18.0",
     "eslint-config-prettier": "^10.0.1",
+    "eslint-plugin-github": "^6.0.0",
     "eslint-plugin-prettier": "^5.2.2",
     "globals": "^15.14.0",
     "husky": "^9.1.7",
@@ -147,7 +155,8 @@
   },
   "pnpm": {
     "overrides": {
-      "@babel/helpers@<7.26.10": ">=7.26.10"
+      "@babel/helpers@<7.26.10": ">=7.26.10",
+      "@nestjs/common@>=11.0.0-next.1 <11.0.16": ">=11.0.16"
     }
   },
   "lint-staged": {
@@ -155,5 +164,8 @@
       "prettier --write --ignore-unknown",
       "eslint --fix"
     ]
+  },
+  "volta": {
+    "node": "22.14.0"
   }
 }

@@ -75,9 +75,28 @@ services:
             timeout: 10s
             retries: 3
 
+    mongo:
+        container_name: mongo-dev
+        image: mongo:latest
+        restart: unless-stopped
+        ports:
+            - "27017:27017"
+        volumes:
+            - mongo-data-dev:/data/db
+        environment:
+            MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
+            MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
+        healthcheck:
+            test: ["CMD", "mongo", "--eval", "db.runCommand('ping').ok"]
+            interval: 30s
+            timeout: 10s
+            retries: 3
+            start_period: 30s
+
 volumes:
     postgres-data-dev:
     minio-storage:
     minio-config:
     cache:
     nats-data-dev:
+    mongo-data-dev:
