@@ -1,4 +1,3 @@
-import { AccessJwtPayload } from "@auth";
 import { Injectable, Logger, NestMiddleware } from "@nestjs/common";
 import { Socket } from "socket.io";
 import { NoAuthorizationError } from "../../../core/errors/auth.errors";
@@ -20,7 +19,7 @@ export class SocketAuthMiddleware implements NestMiddleware {
 			}
 
 			const token = authorization.replace("Bearer ", "");
-			const payload = (await this.authService.validateTokenAsync(token)) as AccessJwtPayload;
+			const payload = await this.authService.validateUserTokenAsync(token);
 			this.LOGGER.log({ socketId: socket.id }, "Token validated successfully");
 			socket.data.user = payload;
 			next();

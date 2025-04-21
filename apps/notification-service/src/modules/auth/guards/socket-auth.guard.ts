@@ -1,4 +1,4 @@
-import { AccessJwtPayload } from "@auth";
+import { AccessJwtPayload } from "@auth/types/access-jwt-payload.type";
 import {
 	CanActivate,
 	ExecutionContext,
@@ -6,7 +6,6 @@ import {
 	Logger,
 	UnauthorizedException,
 } from "@nestjs/common";
-import { JwtService } from "@nestjs/jwt";
 import { Socket } from "socket.io";
 import { InvalidTokenError } from "../../../core/errors/auth.errors";
 import { AuthService } from "../services/auth.service";
@@ -45,9 +44,7 @@ export class SocketAuthGuard implements CanActivate {
 
 			try {
 				this.LOGGER.log(token, "Token");
-				const payload: AccessJwtPayload = this.authService.validateToken(
-					token
-				) as AccessJwtPayload;
+				const payload: AccessJwtPayload = this.authService.validateUserToken(token);
 				socket.data.user = payload;
 				this.LOGGER.log({ socketId: socket.id }, "Token validated successfully");
 				return true;
