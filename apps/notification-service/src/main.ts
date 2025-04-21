@@ -1,6 +1,7 @@
+import { NatsJetStreamServer } from "@nestjs-plugins/nestjs-nats-jetstream-transport";
 import { ConfigService } from "@nestjs/config";
 import { NestFactory } from "@nestjs/core";
-import { MicroserviceOptions, NatsStatus, Transport } from "@nestjs/microservices";
+import { MicroserviceOptions } from "@nestjs/microservices";
 import { Logger } from "nestjs-pino";
 import { AppModule } from "./app.module";
 
@@ -12,16 +13,23 @@ async function bootstrap() {
 	const config = app.get(ConfigService);
 	const logger = app.get(Logger);
 
-	const server = app.connectMicroservice<MicroserviceOptions>({
-		transport: Transport.NATS,
-		options: {
-			servers: config.get<string>("NATS_URL")!,
-			user: config.get<string>("NATS_USER")!,
-			password: config.get<string>("NATS_PASSWORD")!,
-		},
-	});
-	server.status.subscribe((status: NatsStatus) => {
-		logger.log(status, "NATS_STATUS");
+	app.connectMicroservice<MicroserviceOptions>({
+		strategy: new NatsJetStreamServer({
+			connectionOptions: {
+				servers: config.get<string>("NATS_URL")!,
+				name: "notification-service",
+				user: config.get<string>("NATS_USER")!,
+				pass: config.get<string>("NATS_PASSWORD")!,
+			},
+			consumerOptions: {
+				manualAck: true,
+				ackWait: 10000,
+				durable: "notification-service",
+				deliverGroup: "notification-service",
+				deliverTo: "notification-service",
+				ackPolicy: "Explicit",
+			},
+		}),
 	});
 
 	app.setGlobalPrefix("/api");

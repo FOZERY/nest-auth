@@ -1,11 +1,31 @@
+import { BullModule } from "@nestjs/bullmq";
 import { Module } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
-import { ScheduleModule } from "@nestjs/schedule";
+import { EventEmitterModule } from "@nestjs/event-emitter";
+import { MongooseModule } from "@nestjs/mongoose";
 import { getPinoConfig } from "@pino-shared";
 import { LoggerModule } from "nestjs-pino";
 
 @Module({
 	imports: [
+		BullModule.forRootAsync({
+			inject: [ConfigService],
+			useFactory: (configService: ConfigService) => ({
+				connection: {
+					host: configService.get<string>("REDIS_HOST"),
+					port: configService.get<number>("REDIS_PORT"),
+					password: configService.get<string>("REDIS_PASSWORD"),
+				},
+			}),
+		}),
+		MongooseModule.forRootAsync({
+			inject: [ConfigService],
+			useFactory: (configService: ConfigService) => ({
+				uri: configService.get<string>("MONGO_URI")!,
+				dbName: configService.get<string>("MONGO_DB_NAME")!,
+			}),
+		}),
+		EventEmitterModule.forRoot(),
 		LoggerModule.forRootAsync({
 			inject: [ConfigService],
 			useFactory: (configService: ConfigService) => {
