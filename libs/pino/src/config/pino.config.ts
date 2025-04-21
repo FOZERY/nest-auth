@@ -1,9 +1,9 @@
 import { randomUUID } from "crypto";
+import { Request, Response } from "express";
 import os from "node:os";
 import { DestinationStream } from "pino";
 import PinoPretty from "pino-pretty";
 import { LogMessage } from "../transports/pino-pretty-transport";
-
 // export const pinoConfig: LoggerModuleAsyncParams = {
 // 	imports: [],
 // 	inject: [ConfigService],
@@ -109,7 +109,7 @@ export function getPinoConfig(options: PinoConfigOptions) {
 		pinoHttp: {
 			level: level,
 			enabled: options.logToConsole,
-			genReqId: (req, res) => {
+			genReqId: (req: Request, res: Response) => {
 				// trace logging
 				const existingID = req.id ?? req.headers["X-Request-Id"];
 				if (existingID) return existingID;

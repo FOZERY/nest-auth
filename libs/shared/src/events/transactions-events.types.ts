@@ -4,6 +4,7 @@ export enum TransactionEvents {
 }
 
 export type TransferCreatedEvent = {
+	transactionId: string;
 	from: string;
 	to: string;
 	amount: number;
@@ -11,6 +12,7 @@ export type TransferCreatedEvent = {
 };
 
 export type DepositCreatedEvent = {
+	transactionId: string;
 	userId: string;
 	amount: number;
 	createdAt: Date;
