@@ -7,7 +7,10 @@ import { UsersService } from "../../users/services/users.service";
 import { CreateDepositRequestDto } from "../dtos/requests/create-deposit.request.dto";
 import { CreateTransferRequestDto } from "../dtos/requests/create-transfer.request.dto";
 import { Transaction } from "../entities/Transaction";
+import { TransactionOutbox, TransactionOutboxEventName } from "../entities/TransactionOutbox";
+import { TransactionsOutboxRepositoryImpl } from "../external/prisma/transactions-outbox.repository.impl";
 import { TransactionsRepositoryImpl } from "../external/prisma/transactions.repository.impl";
+import { TransactionsOutboxRepository } from "../repositories/transactions-outbox.repository";
 import { TransactionsRepository } from "../repositories/transactions.repository";
 import { TransactionTypes } from "../types/transaction-types.enum";
 import { TransactionsEventsPublisher } from "./transactions-event.publisher";
@@ -19,6 +22,8 @@ export class TransactionsService {
 	constructor(
 		@Inject(TransactionsRepositoryImpl)
 		private readonly transactionsRepository: TransactionsRepository,
+		@Inject(TransactionsOutboxRepositoryImpl)
+		private readonly transactionsOutboxRepository: TransactionsOutboxRepository,
 		private readonly usersService: UsersService,
 		private readonly transactionsEventsPublisher: TransactionsEventsPublisher
 	) {}
@@ -88,14 +93,19 @@ export class TransactionsService {
 			createdTransaction.id
 		);
 
-		this.LOGGER.log("Publishing transfer created event");
-		this.transactionsEventsPublisher.transferCreated({
-			from: dto.from,
-			to: dto.to,
-			amount: createdTransaction.amount,
-			createdAt: createdTransaction.createdAt,
+		this.LOGGER.log("Creating transaction outbox record");
+		const transactionOutbox = new TransactionOutbox({
+			eventName: TransactionOutboxEventName.TransferCreated,
+			payload: {
+				transactionId: transaction.id,
+				from: dto.from,
+				to: dto.to,
+				amount: createdTransaction.amount,
+				createdAt: createdTransaction.createdAt,
+			},
 		});
-		this.LOGGER.log("Transfer created event published");
+		await this.transactionsOutboxRepository.create(transactionOutbox);
+		this.LOGGER.log("Transaction outbox record created successfully");
 
 		return {
 			id: createdTransaction.id,
@@ -152,13 +162,18 @@ export class TransactionsService {
 			createdTransaction.id
 		);
 
-		this.LOGGER.log("Publishing deposit created event");
-		this.transactionsEventsPublisher.depositCreated({
-			userId: dto.userId,
-			amount: createdTransaction.amount,
-			createdAt: createdTransaction.createdAt,
+		const transactionOutbox = new TransactionOutbox({
+			eventName: TransactionOutboxEventName.DepositCreated,
+			payload: {
+				transactionId: transaction.id,
+				userId: dto.userId,
+				amount: createdTransaction.amount,
+				createdAt: createdTransaction.createdAt,
+			},
 		});
-		this.LOGGER.log("Deposit created event published");
+		this.LOGGER.log("Creating transaction outbox record");
+		await this.transactionsOutboxRepository.create(transactionOutbox);
+		this.LOGGER.log("Transaction outbox record created successfully");
 
 		return {
 			id: createdTransaction.id,

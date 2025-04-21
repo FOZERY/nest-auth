@@ -1,6 +1,6 @@
-import { TransactionalAdapterPrisma } from "@nestjs-cls/transactional-adapter-prisma";
-import { TransactionHost } from "@nestjs-cls/transactional/dist/src/lib/transaction-host";
+import { TransactionHost } from "@nestjs-cls/transactional";
 import { Injectable } from "@nestjs/common";
+import { PrismaAdapterType } from "apps/users-service/src/external/persistence/cls-transactional/prisma-adapter.type";
 import { Nullable } from "../../../../core/types/utility.types";
 import { Transaction } from "../../entities/Transaction";
 import { TransactionsRepository } from "../../repositories/transactions.repository";
@@ -8,7 +8,7 @@ import { TransactionTypes } from "../../types/transaction-types.enum";
 
 @Injectable()
 export class TransactionsRepositoryImpl implements TransactionsRepository {
-	constructor(private readonly txHost: TransactionHost<TransactionalAdapterPrisma>) {}
+	constructor(private readonly txHost: TransactionHost<PrismaAdapterType>) {}
 
 	public async create(transaction: Transaction): Promise<{
 		id: string;

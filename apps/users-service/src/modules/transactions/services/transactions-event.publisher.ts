@@ -10,11 +10,17 @@ import { EventsPublisher } from "apps/users-service/src/core/interfaces/event-pu
 export class TransactionsEventsPublisher {
 	constructor(private readonly eventPublisher: EventsPublisher) {}
 
-	transferCreated(event: TransferCreatedEvent): void {
-		this.eventPublisher.publish(TransactionEvents.TRANSFER_CREATED, [event]);
+	async transferCreated(event: TransferCreatedEvent): Promise<void> {
+		await this.eventPublisher.publish(TransactionEvents.TRANSFER_CREATED, event, {
+			maxRetries: 4,
+			baseDelay: 1000,
+		});
 	}
 
-	depositCreated(event: DepositCreatedEvent): void {
-		this.eventPublisher.publish(TransactionEvents.DEPOSIT_CREATED, [event]);
+	async depositCreated(event: DepositCreatedEvent): Promise<void> {
+		await this.eventPublisher.publish(TransactionEvents.DEPOSIT_CREATED, event, {
+			maxRetries: 4,
+			baseDelay: 1000,
+		});
 	}
 }
