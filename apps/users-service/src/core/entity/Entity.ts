@@ -7,13 +7,13 @@ export abstract class Entity {
 		const errors = await validate(this);
 
 		if (errors.length > 0) {
-			errors.forEach((error) => {
+			for (const error of errors) {
 				domainErrors.push({
 					property: error.property,
 					value: error.value,
 					message: error.constraints ? Object.values(error.constraints) : [],
 				});
-			});
+			}
 
 			throw new DomainValidationError(this, domainErrors);
 		}

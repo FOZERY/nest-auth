@@ -1,4 +1,8 @@
+export interface PublishConfig {
+	maxRetries: number; // -1 for infinite retries
+	baseDelay: number;
+}
+
 export interface EventsPublisher {
-	publish(topic: string, events: Array<any>): void;
-	publishWithKey(topic: string, key: string, events: Array<any>): void;
+	publish(topic: string, event: any, config?: Partial<PublishConfig>): Promise<void>;
 }
