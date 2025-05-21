@@ -33,6 +33,7 @@ export class NotificationConsumer {
 				.exists({
 					type: NotificationType.TRANSACTION,
 					transactionId: data.transactionId,
+
 					userId: { $in: [data.to, data.from] },
 				})
 				.lean();
