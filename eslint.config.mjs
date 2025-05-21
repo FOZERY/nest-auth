@@ -1,5 +1,6 @@
 // @ts-check
 import eslint from "@eslint/js";
+import github from "eslint-plugin-github";
 import eslintPluginPrettierRecommended from "eslint-plugin-prettier/recommended";
 import globals from "globals";
 import tseslint from "typescript-eslint";
@@ -12,12 +13,20 @@ export default tseslint.config(
 	tseslint.configs.recommendedTypeChecked,
 	eslintPluginPrettierRecommended,
 	{
+		plugins: {
+			github,
+		},
+		rules: {
+			"github/array-foreach": "error",
+		},
+	},
+	{
 		languageOptions: {
 			globals: {
 				...globals.node,
 				...globals.jest,
 			},
-			ecmaVersion: 2024,
+			ecmaVersion: "latest",
 			sourceType: "module",
 			parserOptions: {
 				projectService: true,

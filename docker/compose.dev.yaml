@@ -55,8 +55,48 @@ services:
             timeout: 20s
             retries: 3
 
+    nats:
+        container_name: nats-dev
+        image: nats:alpine3.21
+        command: "-js -m 8222 --store_dir /var/lib/nats"
+        ports:
+            - "4222:4222" # Client connections
+            - "6222:6222" # Cluster routes
+            - "8222:8222" # Monitoring
+        environment:
+            - NATS_USER=${NATS_USER}
+            - NATS_PASSWORD=${NATS_PASSWORD}
+        volumes:
+            - nats-data-dev:/var/lib/nats
+        restart: unless-stopped
+        healthcheck:
+            test: ["CMD", "nats", "ping"]
+            interval: 30s
+            timeout: 10s
+            retries: 3
+
+    mongo:
+        container_name: mongo-dev
+        image: mongo:latest
+        restart: unless-stopped
+        ports:
+            - "27017:27017"
+        volumes:
+            - mongo-data-dev:/data/db
+        environment:
+            MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
+            MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
+        healthcheck:
+            test: ["CMD", "mongo", "--eval", "db.runCommand('ping').ok"]
+            interval: 30s
+            timeout: 10s
+            retries: 3
+            start_period: 30s
+
 volumes:
     postgres-data-dev:
     minio-storage:
     minio-config:
     cache:
+    nats-data-dev:
+    mongo-data-dev:
